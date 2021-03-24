@@ -77,10 +77,10 @@ MhxLayers = [
 
 
 class MHX_PT_Layers(MhxPanel):
-    bl_label = "MHX Layers"
+    bl_label = "Layers"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
-    bl_category = "MHX RTS"
+    bl_category = "MHX"
     bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
@@ -104,10 +104,10 @@ class MHX_PT_Layers(MhxPanel):
 #------------------------------------------------------------------------
 
 class MHX_PT_FKIK(MhxPanel):
-    bl_label = "MHX FK/IK Switch"
+    bl_label = "FK/IK Switch"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
-    bl_category = "MHX RTS"
+    bl_category = "MHX"
     bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
@@ -146,21 +146,21 @@ class MHX_PT_FKIK(MhxPanel):
         row = self.layout.row()
         row.label(text = "FK Arm")
         row.operator("mhx.snap_fk_left_arm")
-        row.operator("mhx.snap_fk_rigft_arm")
+        row.operator("mhx.snap_fk_right_arm")
         row = self.layout.row()
         row.label(text = "IK Arm")
         row.operator("mhx.snap_ik_left_arm")
-        row.operator("mhx.snap_ik_rigft_arm")
+        row.operator("mhx.snap_ik_right_arm")
 
         self.layout.label(text = "Snap Leg Bones")
         row = self.layout.row()
         row.label(text = "FK Leg")
         row.operator("mhx.snap_fk_left_leg")
-        row.operator("mhx.snap_fk_rigft_leg")
+        row.operator("mhx.snap_fk_right_leg")
         row = self.layout.row()
         row.label(text = "IK Leg")
         row.operator("mhx.snap_ik_left_leg")
-        row.operator("mhx.snap_ik_rigft_leg")
+        row.operator("mhx.snap_ik_right_leg")
 
         self.layout.separator()
         icon = 'CHECKBOX_HLT' if amt["MhaHintsOn"] else 'CHECKBOX_DEHLT'
@@ -181,7 +181,7 @@ class MHX_PT_Animation(MhxPanel):
     bl_label = "Animation"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
-    bl_category = "MHX RTS"
+    bl_category = "MHX"
     bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
@@ -200,10 +200,10 @@ class MHX_PT_Animation(MhxPanel):
 #------------------------------------------------------------------------
 
 class MHX_PT_Properties(MhxPanel):
-    bl_label = "MHX Properties"
+    bl_label = "Properties"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
-    bl_category = "MHX RTS"
+    bl_category = "MHX"
     bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
@@ -272,6 +272,7 @@ classes = [
 
     MHX_PT_Layers,
     MHX_PT_FKIK,
+    MHX_PT_Animation,
     MHX_PT_Properties,
 ]
 

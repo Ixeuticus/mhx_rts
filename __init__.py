@@ -46,6 +46,7 @@ if "bpy" in locals():
     imp.reload(layers)
     imp.reload(fkik)
     imp.reload(mhx)
+    imp.reload(animation)
     imp.reload(panel)
 
 else:
@@ -55,6 +56,7 @@ else:
     from . import layers
     from . import fkik
     from . import mhx
+    from . import animation
     from . import panel
 
 import bpy
@@ -66,10 +68,12 @@ import bpy
 def register():
     fkik.register()
     mhx.register()
+    animation.register()
     panel.register()
 
 def unregister():
     panel.unregister()
+    animation.unregister()
     mhx.unregister()
     fkik.unregister()
 

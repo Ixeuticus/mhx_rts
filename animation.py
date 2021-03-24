@@ -51,6 +51,32 @@ class FrameRange:
         self.layout.prop(self, "startFrame")
         self.layout.prop(self, "endFrame")
 
+
+    def getActiveFrames(ob):
+        def getActiveFrames0(ob):
+            active = {}
+            if ob.animation_data is None:
+                return active
+            action = ob.animation_data.action
+            if action is None:
+                return active
+            for fcu in action.fcurves:
+                for kp in fcu.keyframe_points:
+                    active[kp.co[0]] = True
+            return active
+
+        active = getActiveFrames0(ob)
+        frames = list(active.keys())
+        frames.sort()
+        while frames[0] < self.startFrame:
+            frames = frames[1:]
+        frames.reverse()
+        while frames[0] > self.endFrame:
+            frames = frames[1:]
+        frames.reverse()
+        return frames
+
+
 #-------------------------------------------------------------
 #   Limbs bend positive
 #-------------------------------------------------------------
@@ -123,10 +149,9 @@ class MHX_OT_LimbsBendPositive(HidePropsOperator, IsArmature, Bender, FrameRange
         return (rig, list(rig.data.layers))
 
     def run(self, context):
-        from .loop import getActiveFrames
         scn = context.scene
         rig = context.object
-        frames = getActiveFrames(rig, self.startFrame, self.endFrame)
+        frames = self.getActiveFrames(rig)
         self.limbsBendPositive(rig, frames)
         print("Limbs bent positive")
 
@@ -138,219 +163,6 @@ class MHX_OT_LimbsBendPositive(HidePropsOperator, IsArmature, Bender, FrameRange
 #-------------------------------------------------------------
 #
 #-------------------------------------------------------------
-
-theUseAccurate = True
-
-def updatePose():
-    if theUseAccurate:
-        #updateScene()
-        bpy.context.view_layer.update()
-
-
-def matchPoseTransform(pb, src):
-    pmat = getPoseMatrix(src.matrix, pb)
-    insertRotation(pb, pmat)
-    #pb.scale = pmat.to_scale()
-    #pb.keyframe_insert("scale", group=pb.name)
-
-
-def matchPoseLocRot(pb, src):
-    pmat = getPoseMatrix(src.matrix, pb)
-    insertLocation(pb, pmat)
-    insertRotation(pb, pmat)
-
-
-def matchPoseTranslation(pb, src):
-    pmat = getPoseMatrix(src.matrix, pb)
-    insertLocation(pb, pmat)
-
-
-def matchPoseRotation(pb, src):
-    pmat = getPoseMatrix(src.matrix, pb)
-    insertRotation(pb, pmat)
-
-
-def matchPoseTwist(pb, src):
-    pmat0 = src.matrix_basis
-    euler = pmat0.to_3x3().to_euler('YZX')
-    euler.z = 0
-    pmat = euler.to_matrix().to_4x4()
-    pmat.col[3] = pmat0.col[3]
-    insertRotation(pb, pmat)
-
-
-def printMatrix(string,mat):
-    print(string)
-    for i in range(4):
-        print("    %.4g %.4g %.4g %.4g" % tuple(mat[i]))
-
-
-def matchIkLeg(legIk, toeFk, mBall, mToe, mHeel):
-    rmat = toeFk.matrix.to_3x3()
-    tHead = Vector(toeFk.matrix.col[3][:3])
-    ty = rmat.col[1]
-    tail = tHead + ty * toeFk.bone.length
-
-    zBall = mBall.matrix.col[3][2]
-    zToe = mToe.matrix.col[3][2]
-    zHeel = mHeel.matrix.col[3][2]
-
-    x = Vector(rmat.col[0])
-    y = Vector(rmat.col[1])
-    z = Vector(rmat.col[2])
-
-    if zHeel > zBall and zHeel > zToe:
-        # 1. foot.ik is flat
-        if abs(y[2]) > abs(z[2]):
-            y = -z
-        y[2] = 0
-    else:
-        # 2. foot.ik starts at heel
-        hHead = Vector(mHeel.matrix.col[3][:3])
-        y = tail - hHead
-
-    y.normalize()
-    x -= x.dot(y)*y
-    x.normalize()
-    z = x.cross(y)
-    head = tail - y * legIk.bone.length
-
-    # Create matrix
-    gmat = Matrix()
-    gmat.col[0][:3] = x
-    gmat.col[1][:3] = y
-    gmat.col[2][:3] = z
-    gmat.col[3][:3] = head
-    pmat = getPoseMatrix(gmat, legIk)
-
-    insertLocation(legIk, pmat)
-    insertRotation(legIk, pmat)
-
-
-def matchPoleTarget(pb, above, below):
-    ay = Vector(above.matrix.col[1][:3])
-    by = Vector(below.matrix.col[1][:3])
-    az = Vector(above.matrix.col[2][:3])
-    bz = Vector(below.matrix.col[2][:3])
-    p0 = Vector(below.matrix.col[3][:3])
-    n = ay.cross(by)
-    if abs(n.length) > 1e-4:
-        d = ay - by
-        n.normalize()
-        d -= d.dot(n)*n
-        d.normalize()
-        if d.dot(az) > 0:
-            d = -d
-        p = p0 + 6*pb.bone.length*d
-    else:
-        p = p0
-    gmat = Matrix.Translation(p)
-    pmat = getPoseMatrix(gmat, pb)
-    insertLocation(pb, pmat)
-
-
-def matchPoseReverse(pb, src):
-    gmat = src.matrix
-    tail = gmat.col[3] + src.length * gmat.col[1]
-    rmat = Matrix((gmat.col[0], -gmat.col[1], -gmat.col[2], tail))
-    rmat.transpose()
-    bpy.ops.object.mode_set(mode='OBJECT')
-    bpy.ops.object.mode_set(mode='POSE')
-    pmat = getPoseMatrix(rmat, pb)
-    pb.matrix_basis = pmat
-    insertRotation(pb, pmat)
-
-
-def snapFkArm(rig, snapIk, snapFk, frame):
-
-    (uparmFk, loarmFk, handFk) = snapFk
-    (uparmIk, loarmIk, elbow, elbowPt, handIk) = snapIk
-
-    matchPoseTransform(uparmFk, uparmIk)
-    updatePose()
-    matchPoseTransform(loarmFk, loarmIk)
-    updatePose()
-    matchPoseTransform(handFk, handIk)
-
-
-def snapIkArm(rig, snapIk, snapFk, frame):
-
-    (uparmIk, loarmIk, elbow, elbowPt, handIk) = snapIk
-    (uparmFk, loarmFk, handFk) = snapFk
-
-    matchPoseLocRot(handIk, handFk)
-    updatePose()
-    matchPoleTarget(elbowPt, uparmFk, loarmFk)
-
-
-def snapFkLeg(rig, snapIk, snapFk, frame, legIkToAnkle):
-    (uplegIk, lolegIk, kneePt, ankle, ankleIk, legIk, footRev, toeRev, mBall, mToe, mHeel) = snapIk
-    (uplegFk, lolegFk, footFk, toeFk) = snapFk
-
-    matchPoseTransform(uplegFk, uplegIk)
-    updatePose()
-    matchPoseTransform(lolegFk, lolegIk)
-    if not legIkToAnkle:
-        updatePose()
-        matchPoseReverse(footFk, footRev)
-        updatePose()
-        matchPoseReverse(toeFk, toeRev)
-
-
-def snapIkLeg(rig, snapIk, snapFk, frame, legIkToAnkle):
-    (uplegIk, lolegIk, kneePt, ankle, ankleIk, legIk, footRev, toeRev, mBall, mToe, mHeel) = snapIk
-    (uplegFk, lolegFk, footFk, toeFk) = snapFk
-
-    matchPoseTranslation(ankle, footFk)
-    updatePose()
-    matchIkLeg(legIk, toeFk, mBall, mToe, mHeel)
-    updatePose()
-    matchPoseReverse(toeRev, toeFk)
-    updatePose()
-    matchPoseReverse(footRev, footFk)
-    updatePose()
-    matchPoseTranslation(ankleIk, footFk)
-    updatePose()
-    matchPoleTarget(kneePt, uplegFk, lolegFk)
-
-
-SnapBonesAlpha8 = {
-    "Arm"   : ["upper_arm", "forearm", "hand"],
-    "ArmFK" : ["upper_arm.fk", "forearm.fk", "hand.fk"],
-    "ArmIK" : ["upper_arm.ik", "forearm.ik", None, "elbow.pt.ik", "hand.ik"],
-    "Leg"   : ["thigh", "shin", "foot", "toe"],
-    "LegFK" : ["thigh.fk", "shin.fk", "foot.fk", "toe.fk"],
-    "LegIK" : ["thigh.ik", "shin.ik", "knee.pt.ik", "ankle", "ankle.ik", "foot.ik", "foot.rev", "toe.rev", "ball.marker", "toe.marker", "heel.marker"],
-}
-
-def getSnapBones(rig, key, suffix):
-    try:
-        rig.pose.bones["thigh.fk.L"]
-        names = SnapBonesAlpha8[key]
-        suffix = '.' + suffix[1:]
-    except KeyError:
-        names = None
-    if not names:
-        raise MHXError("Not an mhx armature")
-
-    pbones = []
-    constraints = []
-    for name in names:
-        if name:
-            pb = rig.pose.bones[name+suffix]
-            pbones.append(pb)
-            for cns in pb.constraints:
-                if cns.type == 'LIMIT_ROTATION' and not cns.mute:
-                    constraints.append(cns)
-        else:
-            pbones.append(None)
-    return tuple(pbones),constraints
-
-
-def muteConstraints(constraints, value):
-    for cns in constraints:
-        cns.mute = value
-
 
 class Transferer:
     useArms : BoolProperty(
@@ -416,18 +228,16 @@ class Transferer:
 
 
     def transferMhxToFk(self, rig, context):
-        from .loop import getActiveFrames
-
         scn = context.scene
 
-        lArmSnapIk,lArmCnsIk = getSnapBones(rig, "ArmIK", "_L")
-        lArmSnapFk,lArmCnsFk = getSnapBones(rig, "ArmFK", "_L")
-        rArmSnapIk,rArmCnsIk = getSnapBones(rig, "ArmIK", "_R")
-        rArmSnapFk,rArmCnsFk = getSnapBones(rig, "ArmFK", "_R")
-        lLegSnapIk,lLegCnsIk = getSnapBones(rig, "LegIK", "_L")
-        lLegSnapFk,lLegCnsFk = getSnapBones(rig, "LegFK", "_L")
-        rLegSnapIk,rLegCnsIk = getSnapBones(rig, "LegIK", "_R")
-        rLegSnapFk,rLegCnsFk = getSnapBones(rig, "LegFK", "_R")
+        lArmSnapIk,lArmCnsIk = self.getSnapBones(rig, "ArmIK", "_L")
+        lArmSnapFk,lArmCnsFk = self.getSnapBones(rig, "ArmFK", "_L")
+        rArmSnapIk,rArmCnsIk = self.getSnapBones(rig, "ArmIK", "_R")
+        rArmSnapFk,rArmCnsFk = self.getSnapBones(rig, "ArmFK", "_R")
+        lLegSnapIk,lLegCnsIk = self.getSnapBones(rig, "LegIK", "_L")
+        lLegSnapFk,lLegCnsFk = self.getSnapBones(rig, "LegFK", "_L")
+        rLegSnapIk,rLegCnsIk = self.getSnapBones(rig, "LegIK", "_R")
+        rLegSnapFk,rLegCnsFk = self.getSnapBones(rig, "LegFK", "_R")
 
         oldLayers = list(rig.data.layers)
         setMhxIk(rig, self.useArms, self.useLegs, 1.0)
@@ -436,7 +246,7 @@ class Transferer:
         lLegIkToAnkle = rig["MhaLegIkToAnkle_L"]
         rLegIkToAnkle = rig["MhaLegIkToAnkle_R"]
 
-        frames = getActiveFrames(rig, self.startFrame, self.endFrame)
+        frames = self.getActiveFrames(rig)
         nFrames = len(frames)
         self.useKnees = self.useElbows = True
         self.limbsBendPositive(rig, frames)
@@ -458,18 +268,16 @@ class Transferer:
 
 
     def transferMhxToIk(self, rig, context):
-        from .loop import getActiveFrames
-
         scn = context.scene
 
-        lArmSnapIk,lArmCnsIk = getSnapBones(rig, "ArmIK", "_L")
-        lArmSnapFk,lArmCnsFk = getSnapBones(rig, "ArmFK", "_L")
-        rArmSnapIk,rArmCnsIk = getSnapBones(rig, "ArmIK", "_R")
-        rArmSnapFk,rArmCnsFk = getSnapBones(rig, "ArmFK", "_R")
-        lLegSnapIk,lLegCnsIk = getSnapBones(rig, "LegIK", "_L")
-        lLegSnapFk,lLegCnsFk = getSnapBones(rig, "LegFK", "_L")
-        rLegSnapIk,rLegCnsIk = getSnapBones(rig, "LegIK", "_R")
-        rLegSnapFk,rLegCnsFk = getSnapBones(rig, "LegFK", "_R")
+        lArmSnapIk,lArmCnsIk = self.getSnapBones(rig, "ArmIK", "_L")
+        lArmSnapFk,lArmCnsFk = self.getSnapBones(rig, "ArmFK", "_L")
+        rArmSnapIk,rArmCnsIk = self.getSnapBones(rig, "ArmIK", "_R")
+        rArmSnapFk,rArmCnsFk = self.getSnapBones(rig, "ArmFK", "_R")
+        lLegSnapIk,lLegCnsIk = self.getSnapBones(rig, "LegIK", "_L")
+        lLegSnapFk,lLegCnsFk = self.getSnapBones(rig, "LegFK", "_L")
+        rLegSnapIk,rLegCnsIk = self.getSnapBones(rig, "LegIK", "_R")
+        rLegSnapFk,rLegCnsFk = self.getSnapBones(rig, "LegFK", "_R")
 
         oldLayers = list(rig.data.layers)
         setMhxIk(rig, self.useArms, self.useLegs, 0.0)
@@ -478,7 +286,7 @@ class Transferer:
         lLegIkToAnkle = rig["MhaLegIkToAnkle_L"]
         rLegIkToAnkle = rig["MhaLegIkToAnkle_R"]
 
-        frames = getActiveFrames(rig, self.startFrame, self.endFrame)
+        frames = self.getActiveFrames(rig)
         nFrames = len(frames)
         for n,frame in enumerate(frames):
             showProgress(n, frame, nFrames)
@@ -494,26 +302,6 @@ class Transferer:
         rig.data.layers = oldLayers
         setMhxIk(rig, self.useArms, self.useLegs, 1.0)
         setInterpolation(rig)
-
-
-def muteAllConstraints(rig, value):
-    lArmSnapIk,lArmCnsIk = getSnapBones(rig, "ArmIK", "_L")
-    lArmSnapFk,lArmCnsFk = getSnapBones(rig, "ArmFK", "_L")
-    rArmSnapIk,rArmCnsIk = getSnapBones(rig, "ArmIK", "_R")
-    rArmSnapFk,rArmCnsFk = getSnapBones(rig, "ArmFK", "_R")
-    lLegSnapIk,lLegCnsIk = getSnapBones(rig, "LegIK", "_L")
-    lLegSnapFk,lLegCnsFk = getSnapBones(rig, "LegFK", "_L")
-    rLegSnapIk,rLegCnsIk = getSnapBones(rig, "LegIK", "_R")
-    rLegSnapFk,rLegCnsFk = getSnapBones(rig, "LegFK", "_R")
-
-    muteConstraints(lArmCnsIk, value)
-    muteConstraints(lArmCnsFk, value)
-    muteConstraints(rArmCnsIk, value)
-    muteConstraints(rArmCnsFk, value)
-    muteConstraints(lLegCnsIk, value)
-    muteConstraints(lLegCnsFk, value)
-    muteConstraints(rLegCnsIk, value)
-    muteConstraints(rLegCnsFk, value)
 
 #------------------------------------------------------------------------
 #
@@ -712,6 +500,283 @@ class MHX_OT_ClearPoleTargets(MhxPropsOperator, Transferer):
             pb = rig.pose.bones[bname]
             pb.matrix_basis = Matrix()
 
+#-------------------------------------------------------------
+#   Toe below ball
+#-------------------------------------------------------------
+
+class MHX_OT_OffsetToes(HidePropsOperator, FrameRange):
+    bl_idname = "mhx.offset_toes"
+    bl_label = "Offset Toes"
+    bl_description = "Keep toes below the ball of the feet"
+    bl_options = {'UNDO'}
+
+    def draw(self, context):
+        FrameRange.draw(self, context)
+
+
+    def run(self, context):
+        rig = context.object
+        scn = context.scene
+        rig,plane = getRigAndPlane(context)
+        try:
+            useIk = rig["MhaLegIk_L"] or rig["MhaLegIk_R"]
+        except KeyError:
+            useIk = False
+        if useIk:
+            raise MocapError("Toe Below Ball only for FK feet")
+
+        layers = list(rig.data.layers)
+        startProgress("Keep toes down")
+        frames = self.getActiveFrames(rig)
+        print("Left toe")
+        self.toeBelowBall(context, frames, rig, plane, ".L")
+        print("Right toe")
+        self.toeBelowBall(context, frames, rig, plane, ".R")
+        rig.data.layers = layers
+        raise MocapMessage("Toes kept down")
+
+
+    def toeBelowBall(self, context, frames, rig, plane, suffix):
+        from .retarget import getLocks
+        from .fkik import getPoseMatrix
+
+        scn = context.scene
+        foot,toe,mBall,mToe,mHeel = getFkFeetBones(rig, suffix)
+        ez,origin,rot = getPlaneInfo(plane)
+        order,lock = getLocks(toe, context)
+        factor = 1.0/toe.length
+        nFrames = len(frames)
+        if mBall:
+            for n,frame in enumerate(frames):
+                scn.frame_set(frame)
+                showProgress(n, frame, nFrames)
+                zToe = getProjection(mToe.matrix.col[3], ez)
+                zBall = getProjection(mBall.matrix.col[3], ez)
+                if zToe > zBall:
+                    pmat = self.offsetToeRotation(toe, ez, factor, order, lock, context)
+                else:
+                    pmat = getPoseMatrix(toe.matrix, toe)
+                pmat = self.keepToeRotationNegative(pmat, scn)
+                insertRotation(toe, pmat)
+        else:
+            for n,frame in enumerate(frames):
+                scn.frame_set(frame)
+                showProgress(n, frame, nFrames)
+                dzToe = getProjection(toe.matrix.col[1], ez)
+                if dzToe > 0:
+                    pmat = self.offsetToeRotation(toe, ez, factor, order, lock, context)
+                else:
+                    pmat = getPoseMatrix(toe.matrix, toe)
+                pmat = self.keepToeRotationNegative(pmat, scn)
+                insertRotation(toe, pmat)
+
+
+    def offsetToeRotation(self, toe, ez, factor, order, lock, context):
+        from .retarget import correctMatrixForLocks
+        from .fkik import getPoseMatrix
+
+        mat = toe.matrix.to_3x3()
+        y = mat.col[1]
+        y -= ez.dot(y)*ez
+        y.normalize()
+        x = mat.col[0]
+        x -= x.dot(y)*y
+        x.normalize()
+        z = x.cross(y)
+        mat.col[0] = x
+        mat.col[1] = y
+        mat.col[2] = z
+        gmat = mat.to_4x4()
+        gmat.col[3] = toe.matrix.col[3]
+        pmat = getPoseMatrix(gmat, toe)
+        return correctMatrixForLocks(pmat, order, lock, toe, context.scene.McpUseLimits)
+
+
+    def keepToeRotationNegative(self, pmat, scn):
+        euler = pmat.to_3x3().to_euler('YZX')
+        if euler.x > 0:
+            pmat0 = pmat
+            euler.x = 0
+            pmat = euler.to_matrix().to_4x4()
+            pmat.col[3] = pmat0.col[3]
+        return pmat
+
+#-------------------------------------------------------------
+#   Floor
+#-------------------------------------------------------------
+
+def getFkFeetBones(rig, suffix):
+    foot = getTrgBone("foot" + suffix, rig)
+    toe = getTrgBone("toe" + suffix, rig)
+    try:
+        mBall = rig.pose.bones["ball.marker" + suffix]
+        mToe = rig.pose.bones["toe.marker" + suffix]
+        mHeel = rig.pose.bones["heel.marker" + suffix]
+    except KeyError:
+        mBall = mToe = mHeel = None
+    return foot,toe,mBall,mToe,mHeel
+
+
+class MHX_OT_FloorFoot(MhxPropsOperator, IsArmature, FrameRange):
+    bl_idname = "mhx.floor_foot"
+    bl_label = "Keep Feet Above Floor"
+    bl_description = "Keep Feet Above Plane"
+    bl_options = {'UNDO'}
+
+    useLeft : BoolProperty(
+        name="Left",
+        description="Keep left foot above floor",
+        default=True)
+
+    useRight : BoolProperty(
+        name="Right",
+        description="Keep right foot above floor",
+        default=True)
+
+    useHips : BoolProperty(
+        name="Hips",
+        description="Also adjust character COM when keeping feet above floor",
+        default=True)
+
+    def draw(self, context):
+        self.layout.prop(self, "useLeft")
+        self.layout.prop(self, "useRight")
+        self.layout.prop(self, "useHips")
+        FrameRange.draw(self, context)
+
+
+    def run(self, context):
+        startProgress("Keep feet above floor")
+        self.findTarget(context, context.object)
+        scn = context.scene
+        rig,plane = getRigAndPlane(context)
+        try:
+            useIk = rig["MhaLegIk_L"] or rig["MhaLegIk_R"]
+        except KeyError:
+            useIk = False
+        frames = self.getActiveFrames(rig)
+        if useIk:
+            self.floorIkFoot(rig, plane, scn, frames)
+        else:
+            self.floorFkFoot(rig, plane, scn, frames)
+        raise MocapMessage("Feet kept above floor")
+
+
+    def floorFkFoot(self, rig, plane, scn, frames):
+        hips = getTrgBone("hips", rig)
+        lFoot,lToe,lmBall,lmToe,lmHeel = getFkFeetBones(rig, ".L")
+        rFoot,rToe,rmBall,rmToe,rmHeel = getFkFeetBones(rig, ".R")
+        ez,origin,rot = getPlaneInfo(plane)
+
+        nFrames = len(frames)
+        for n,frame in enumerate(frames):
+            scn.frame_set(frame)
+            updateScene()
+            offset = 0
+            if self.useLeft:
+                offset = self.getFkOffset(rig, ez, origin, lFoot, lToe, lmBall, lmToe, lmHeel)
+            if self.useRight:
+                rOffset = self.getFkOffset(rig, ez, origin, rFoot, rToe, rmBall, rmToe, rmHeel)
+                if rOffset > offset:
+                    offset = rOffset
+            showProgress(n, frame, nFrames)
+            if offset > 0:
+                addOffset(hips, offset, ez)
+
+
+    def getFkOffset(self, rig, ez, origin, foot, toe, mBall, mToe, mHeel):
+        if mBall:
+            offset = toeOffset = getHeadOffset(mToe, ez, origin)
+            ballOffset = getHeadOffset(mBall, ez, origin)
+            if ballOffset > offset:
+                offset = ballOffset
+            heelOffset = getHeadOffset(mHeel, ez, origin)
+            if heelOffset > offset:
+                offset = heelOffset
+        elif toe:
+            offset = getTailOffset(toe, ez, origin)
+            ballOffset = getHeadOffset(toe, ez, origin)
+            if ballOffset > offset:
+                offset = ballOffset
+            ball = toe.matrix.col[3]
+            y = toe.matrix.col[1]
+            heel = ball - y*foot.length
+            heelOffset = getOffset(heel, ez, origin)
+            if heelOffset > offset:
+                offset = heelOffset
+        else:
+            offset = 0
+
+        return offset
+
+
+    def floorIkFoot(self, rig, plane, scn, frames):
+        root = rig.pose.bones["root"]
+        lleg = rig.pose.bones["foot.ik.L"]
+        rleg = rig.pose.bones["foot.ik.R"]
+        ez,origin,rot = getPlaneInfo(plane)
+
+        self.fillKeyFrames(lleg, rig, frames, 3, mode='location')
+        self.fillKeyFrames(rleg, rig, frames, 3, mode='location')
+        if self.useHips:
+            self.fillKeyFrames(root, rig, frames, 3, mode='location')
+
+        nFrames = len(frames)
+        for n,frame in enumerate(frames):
+            scn.frame_set(frame)
+            showProgress(n, frame, nFrames)
+
+            if self.useLeft:
+                lOffset = self.getIkOffset(rig, ez, origin, lleg)
+                if lOffset > 0:
+                    addOffset(lleg, lOffset, ez)
+            else:
+                lOffset = 0
+            if self.useRight:
+                rOffset = self.getIkOffset(rig, ez, origin, rleg)
+                if rOffset > 0:
+                    addOffset(rleg, rOffset, ez)
+            else:
+                rOffset = 0
+
+            hOffset = min(lOffset,rOffset)
+            if hOffset > 0 and self.useHips:
+                addOffset(root, hOffset, ez)
+
+
+    def fillKeyFrames(self, pb, rig, frames, nIndices, mode='rotation'):
+        for index in range(nIndices):
+            fcu = findBoneFCurve(pb, rig, index, mode)
+            if fcu is None:
+                return
+            for frame in frames:
+                y = fcu.evaluate(frame)
+                fcu.keyframe_points.insert(frame, y, options={'FAST'})
+
+
+    def getIkOffset(self, rig, ez, origin, leg):
+        offset = getHeadOffset(leg, ez, origin)
+        tailOffset = getTailOffset(leg, ez, origin)
+        if tailOffset > offset:
+            offset = tailOffset
+        return offset
+
+        foot = rig.pose.bones["foot.rev" + suffix]
+        toe = rig.pose.bones["toe.rev" + suffix]
+
+        ballOffset = getTailOffset(toe, ez, origin)
+        if ballOffset > offset:
+            offset = ballOffset
+
+        ball = foot.matrix.col[3]
+        y = toe.matrix.col[1]
+        heel = ball + y*foot.length
+        heelOffset = getOffset(heel, ez, origin)
+        if heelOffset > offset:
+            offset = heelOffset
+
+        return offset
+
 #----------------------------------------------------------
 #   Initialize
 #----------------------------------------------------------
@@ -722,6 +787,8 @@ classes = [
     MHX_OT_TransferToIk,
     MHX_OT_ClearAnimation,
     MHX_OT_ClearPoleTargets,
+    MHX_OT_OffsetToes,
+    MHX_OT_FloorFoot,
 ]
 
 def register():
