@@ -46,6 +46,17 @@ def isKeyed(rig, pb, path):
                     return True
     return False
 
+#----------------------------------------------------------
+#   Update
+#----------------------------------------------------------
+
+theUseAccurate = True
+
+def updatePose():
+    if theUseAccurate:
+        #updateScene()
+        bpy.context.view_layer.update()
+
 #-------------------------------------------------------------
 #   Overridable properties
 #-------------------------------------------------------------
@@ -217,7 +228,7 @@ class IsMhx:
 class MhxOperator(bpy.types.Operator):
     def execute(self, context):
         clearErrorMessage()
-        data = self.prequel(context)
+        self.prequel(context)
         try:
             self.run(context)
         except MHXError:
@@ -235,13 +246,13 @@ class MhxOperator(bpy.types.Operator):
             theErrorLines = ["Keyboard interrupt"]
             bpy.ops.mhx.error('INVOKE_DEFAULT')
         finally:
-            self.sequel(context, data)
+            self.sequel(context)
         return{'FINISHED'}
 
     def prequel(self, context):
         return None
 
-    def sequel(self, context, data):
+    def sequel(self, context):
         pass
 
     def run(self, context):
@@ -282,7 +293,7 @@ class HideOperator(MhxOperator):
         return ok
 
 
-    def sequel(self, context, _data):
+    def sequel(self, context):
         MhxOperator.prequel(self, context)
         for layer in self.layerColls:
             layer.exclude = False

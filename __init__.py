@@ -65,17 +65,26 @@ import bpy
 #   Register
 #----------------------------------------------------------
 
+classes = [
+    utils.ErrorOperator,
+    utils.MessageOperator,
+]
+
 def register():
     fkik.register()
     mhx.register()
     animation.register()
     panel.register()
+    for cls in classes:
+        bpy.utils.register_class(cls)
 
 def unregister():
     panel.unregister()
     animation.unregister()
     mhx.unregister()
     fkik.unregister()
+    for cls in classes:
+        bpy.utils.unregister_class(cls)
 
 if __name__ == "__main__":
     register()
