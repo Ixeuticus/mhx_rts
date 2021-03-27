@@ -230,14 +230,14 @@ class Transferer:
     def transferMhxToFk(self, rig, context):
         scn = context.scene
 
-        lArmSnapIk,lArmCnsIk = self.getSnapBones(rig, "ArmIK", "_L")
-        lArmSnapFk,lArmCnsFk = self.getSnapBones(rig, "ArmFK", "_L")
-        rArmSnapIk,rArmCnsIk = self.getSnapBones(rig, "ArmIK", "_R")
-        rArmSnapFk,rArmCnsFk = self.getSnapBones(rig, "ArmFK", "_R")
-        lLegSnapIk,lLegCnsIk = self.getSnapBones(rig, "LegIK", "_L")
-        lLegSnapFk,lLegCnsFk = self.getSnapBones(rig, "LegFK", "_L")
-        rLegSnapIk,rLegCnsIk = self.getSnapBones(rig, "LegIK", "_R")
-        rLegSnapFk,rLegCnsFk = self.getSnapBones(rig, "LegFK", "_R")
+        lArmSnapIk,lArmCnsIk = self.getSnapBones(rig, "ArmIK", "L")
+        lArmSnapFk,lArmCnsFk = self.getSnapBones(rig, "ArmFK", "L")
+        rArmSnapIk,rArmCnsIk = self.getSnapBones(rig, "ArmIK", "R")
+        rArmSnapFk,rArmCnsFk = self.getSnapBones(rig, "ArmFK", "R")
+        lLegSnapIk,lLegCnsIk = self.getSnapBones(rig, "LegIK", "L")
+        lLegSnapFk,lLegCnsFk = self.getSnapBones(rig, "LegFK", "L")
+        rLegSnapIk,rLegCnsIk = self.getSnapBones(rig, "LegIK", "R")
+        rLegSnapFk,rLegCnsFk = self.getSnapBones(rig, "LegFK", "R")
 
         oldLayers = list(rig.data.layers)
         setMhxIk(rig, self.useArms, self.useLegs, 1.0)
@@ -270,14 +270,14 @@ class Transferer:
     def transferMhxToIk(self, rig, context):
         scn = context.scene
 
-        lArmSnapIk,lArmCnsIk = self.getSnapBones(rig, "ArmIK", "_L")
-        lArmSnapFk,lArmCnsFk = self.getSnapBones(rig, "ArmFK", "_L")
-        rArmSnapIk,rArmCnsIk = self.getSnapBones(rig, "ArmIK", "_R")
-        rArmSnapFk,rArmCnsFk = self.getSnapBones(rig, "ArmFK", "_R")
-        lLegSnapIk,lLegCnsIk = self.getSnapBones(rig, "LegIK", "_L")
-        lLegSnapFk,lLegCnsFk = self.getSnapBones(rig, "LegFK", "_L")
-        rLegSnapIk,rLegCnsIk = self.getSnapBones(rig, "LegIK", "_R")
-        rLegSnapFk,rLegCnsFk = self.getSnapBones(rig, "LegFK", "_R")
+        lArmSnapIk,lArmCnsIk = self.getSnapBones(rig, "ArmIK", "L")
+        lArmSnapFk,lArmCnsFk = self.getSnapBones(rig, "ArmFK", "L")
+        rArmSnapIk,rArmCnsIk = self.getSnapBones(rig, "ArmIK", "R")
+        rArmSnapFk,rArmCnsFk = self.getSnapBones(rig, "ArmFK", "R")
+        lLegSnapIk,lLegCnsIk = self.getSnapBones(rig, "LegIK", "L")
+        lLegSnapFk,lLegCnsFk = self.getSnapBones(rig, "LegFK", "L")
+        rLegSnapIk,rLegCnsIk = self.getSnapBones(rig, "LegIK", "R")
+        rLegSnapFk,rLegCnsFk = self.getSnapBones(rig, "LegFK", "R")
 
         oldLayers = list(rig.data.layers)
         setMhxIk(rig, self.useArms, self.useLegs, 0.0)

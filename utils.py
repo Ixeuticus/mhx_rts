@@ -34,6 +34,18 @@ import bpy
 def propRef(prop):
     return '["%s"]' % prop
 
+
+def isKeyed(rig, pb, path):
+    if rig.animation_data:
+        act = rig.animation_data.action
+        if act:
+            if pb:
+                path = ('pose.bones["%s"].%s' % (pb.name, path))
+            for fcu in act.fcurves:
+                if fcu.data_path == path:
+                    return True
+    return False
+
 #-------------------------------------------------------------
 #   Overridable properties
 #-------------------------------------------------------------

@@ -38,7 +38,7 @@ class MhxPanel(bpy.types.Panel):
     @classmethod
     def poll(cls, context):
         ob = context.object
-        return (ob and (ob.MhxRig == "mhx" or ob.MhxRig == True))
+        return (ob and (ob.DazRig == "mhx" or ob.MhxRig == True))
 
     def needsMhxUpdate(self, rig):
         if rig is None:
@@ -124,12 +124,12 @@ class MHX_PT_FKIK(MhxPanel):
         self.layout.label(text = "FK/IK switch")
         row = self.layout.row()
         row.label(text = "Arm")
-        self.toggle(row, amt, "MhaArmIk_L", " 3", " 2")
-        self.toggle(row, amt, "MhaArmIk_R", " 19", " 18")
+        self.toggleFKIK(row, amt["MhaArmIk_L"], "mhx.toggle_left_arm")
+        self.toggleFKIK(row, amt["MhaArmIk_R"], "mhx.toggle_right_arm")
         row = self.layout.row()
         row.label(text = "Leg")
-        self.toggle(row, amt, "MhaLegIk_L", " 5", " 4")
-        self.toggle(row, amt, "MhaLegIk_R", " 21", " 20")
+        self.toggleFKIK(row, amt["MhaLegIk_L"], "mhx.toggle_left_leg")
+        self.toggleFKIK(row, amt["MhaLegIk_R"], "mhx.toggle_right_leg")
 
         self.layout.label(text = "IK Influence")
         row = self.layout.row()
@@ -167,11 +167,11 @@ class MHX_PT_FKIK(MhxPanel):
         self.layout.operator("mhx.toggle_hints", icon=icon, emboss=False)
 
 
-    def toggle(self, row, amt, prop, fk, ik):
-        if amt[prop] > 0.5:
-            row.operator("mhx.toggle_fk_ik", text="IK").toggle = prop + " 0" + fk + ik
+    def toggleFKIK(self, row, value, op):
+        if value > 0.5:
+            row.operator(op, text="IK")
         else:
-            row.operator("mhx.toggle_fk_ik", text="FK").toggle = prop + " 1" + ik + fk
+            row.operator(op, text="FK")
 
 #------------------------------------------------------------------------
 #    Mhx Animation Panel
