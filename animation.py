@@ -33,6 +33,36 @@ from .utils import *
 from .layers import *
 from .fkik import Snapper
 
+#----------------------------------------------------------
+#   Utilities
+#----------------------------------------------------------
+
+class Basic:
+
+    def getBone(self, bname):
+        return self.rig.pose.bones[bname]
+
+
+    def findBoneFCurve(self, pb, idx, mode='rotation'):
+        if self.rig.animation_data is None:
+            return None
+        act = self.rig.animation_data.action
+        if act is None:
+            return None
+        if mode == 'rotation':
+            if pb.rotation_mode == 'QUATERNION':
+                mode = "rotation_quaternion"
+            else:
+                mode = "rotation_euler"
+        path = 'pose.bones["%s"].%s' % (pb.name, mode)
+        for fcu in act.fcurves:
+            if (fcu.data_path == path and
+                fcu.array_index == idx):
+                return fcu
+        print('F-curve "%s" not found.' % path)
+        halt
+        return None
+
 #-------------------------------------------------------------
 #   Frame range
 #-------------------------------------------------------------
@@ -81,7 +111,7 @@ class FrameRange:
 #   Limbs bend positive
 #-------------------------------------------------------------
 
-class Bender:
+class Bender(Basic):
     useElbows : BoolProperty(
         name="Elbows",
         description="Keep elbow bending positive",
@@ -118,7 +148,7 @@ class Bender:
     def minimizeFCurve(self, pb, idx, frames):
         if pb is None:
             return
-        fcu = findBoneFCurve(pb, self.rig, idx)
+        fcu = self.findBoneFCurve(pb, idx)
         if fcu is None:
             return
         y0 = fcu.evaluate(0)
@@ -141,11 +171,6 @@ class MHX_OT_LimbsBendPositive(HidePropsOperator, IsArmature, Bender, FrameRange
     def draw(self, context):
         Bender.draw(self, context)
         FrameRange.draw(self, context)
-
-    def prequel(self, context):
-        rig = context.object
-        HidePropsOperator.prequel(self, context)
-        self.state = (rig, list(rig.data.layers))
 
     def run(self, context):
         scn = context.scene
@@ -174,28 +199,15 @@ class Transferer(Snapper):
         description="Include legs in FK/IK snapping",
         default=True)
 
-    accurate : BoolProperty(
+    useAccurate : BoolProperty(
         name="Accurate",
-        description="Update pose before transfer each bone.\nMore accurate but much slower",
+        description="Update pose before transfer each bone.\nMore useAccurate but much slower",
         default=True)
 
     def draw(self, context):
         self.layout.prop(self, "useArms")
         self.layout.prop(self, "useLegs")
-        self.layout.prop(self, "accurate")
-
-    def setAccuracy(self):
-        global theUseAccurate
-        theUseAccurate = self.accurate
-
-
-    def getCurrentAction(self, rig):
-        if not rig.animation_data:
-            raise MHXError("Rig has no animation data")
-        act = rig.animation_data.action
-        if not act:
-            raise MHXError("Rig has no action")
-        return act
+        self.layout.prop(self, "useAccurate")
 
 
     def setMhxIk(self, value):
@@ -212,47 +224,18 @@ class Transferer(Snapper):
             ikLayers += [L_LLEGIK, L_RLEGIK]
             fkLayers += [L_LLEGFK, L_RLEGFK]
         if value:
-            first = ikLayers
-            second = fkLayers
+            onLayers = ikLayers
+            offLayers = fkLayers
         else:
-            first = fkLayers
-            second = ikLayers
-        for n in first:
-            self.rig.data.layers[n] = True
-        for n in second:
-            self.rig.data.layers[n] = False
-
-
-    def clearAnimation(self, rig, context, act, type, snapBones):
-        scn = context.scene
-        bnames = []
-        if self.useArms:
-            for bname in snapBones["Arm" + type]:
-                if bname is not None:
-                    bnames += [bname+".L", bname+".R"]
-        if self.useLegs:
-            for bname in snapBones["Leg" + type]:
-                if bname is not None:
-                    bnames += [bname+".L", bname+".R"]
-        self.removeFcurves(act, type, bnames)
-
-
-    def removeFcurves(self, act, type, bnames):
-        fcus = []
-        for fcu in act.fcurves:
-            words = fcu.data_path.split('"')
-            if (words[0] == "pose.bones[" and
-                words[1] in bnames):
-                fcus.append(fcu)
-        if not fcus:
-            raise MHXError("%s bones have no animation" % type)
-        for fcu in fcus:
-            act.fcurves.remove(fcu)
+            onLayers = fkLayers
+            offLayers = ikLayers
+        for n in onLayers:
+            self.state[n] = self.rig.data.layers[n] = True
+        for n in offLayers:
+            self.state[n] = self.rig.data.layers[n] = False
 
 
     def transferMhxToFk(self, context):
-        scn = context.scene
-
         lArmSnapIk,lArmCnsIk = self.getSnapBones("ArmIK", "L")
         lArmSnapFk,lArmCnsFk = self.getSnapBones("ArmFK", "L")
         rArmSnapIk,rArmCnsIk = self.getSnapBones("ArmIK", "R")
@@ -262,6 +245,8 @@ class Transferer(Snapper):
         rLegSnapIk,rLegCnsIk = self.getSnapBones("LegIK", "R")
         rLegSnapFk,rLegCnsFk = self.getSnapBones("LegFK", "R")
 
+        scn = context.scene
+        self.auto = True
         self.setMhxIk(1.0)
         lLegIkToAnkle = self.amt["MhaLegIkToAnkle_L"]
         rLegIkToAnkle = self.amt["MhaLegIkToAnkle_R"]
@@ -273,18 +258,18 @@ class Transferer(Snapper):
         for n,frame in enumerate(frames):
             showProgress(n, frame, nFrames)
             scn.frame_set(frame)
+            self.frame = frame
+            self.updateScene()
             if self.useArms:
-                self.snapFkArm(lArmSnapFk, lArmSnapIk, frame)
-                self.snapFkArm(rArmSnapFk, rArmSnapIk, frame)
+                self.snapFkArm(lArmSnapFk, lArmSnapIk)
+                self.snapFkArm(rArmSnapFk, rArmSnapIk)
             if self.useLegs:
-                self.snapFkLeg(lLegSnapFk, lLegSnapIk, lLegIkToAnkle, frame)
-                self.snapFkLeg(rLegSnapFk, rLegSnapIk, rLegIkToAnkle, frame)
+                self.snapFkLeg(lLegSnapFk, lLegSnapIk, lLegIkToAnkle)
+                self.snapFkLeg(rLegSnapFk, rLegSnapIk, rLegIkToAnkle)
         self.setMhxIk(0.0)
 
 
     def transferMhxToIk(self, context):
-        scn = context.scene
-
         lArmSnapIk,lArmCnsIk = self.getSnapBones("ArmIK", "L")
         lArmSnapFk,lArmCnsFk = self.getSnapBones("ArmFK", "L")
         rArmSnapIk,rArmCnsIk = self.getSnapBones("ArmIK", "R")
@@ -294,31 +279,31 @@ class Transferer(Snapper):
         rLegSnapIk,rLegCnsIk = self.getSnapBones("LegIK", "R")
         rLegSnapFk,rLegCnsFk = self.getSnapBones("LegFK", "R")
 
+        scn = context.scene
+        self.auto = True
         self.setMhxIk(0.0)
-
         lLegIkToAnkle = self.amt["MhaLegIkToAnkle_L"]
         rLegIkToAnkle = self.amt["MhaLegIkToAnkle_R"]
-
         frames = self.getActiveFrames()
         nFrames = len(frames)
         for n,frame in enumerate(frames):
             showProgress(n, frame, nFrames)
             scn.frame_set(frame)
-            updatePose()
+            self.frame = frame
+            self.updateScene()
             if self.useArms:
-                self.snapIkArm(lArmSnapFk, lArmSnapIk, frame)
-                self.snapIkArm(rArmSnapFk, rArmSnapIk, frame)
+                self.snapIkArm(lArmSnapFk, lArmSnapIk)
+                self.snapIkArm(rArmSnapFk, rArmSnapIk)
             if self.useLegs:
-                self.snapIkLeg(lLegSnapFk, lLegSnapIk, lLegIkToAnkle, frame)
-                self.snapIkLeg(rLegSnapFk, rLegSnapIk, rLegIkToAnkle, frame)
-
+                self.snapIkLeg(lLegSnapFk, lLegSnapIk, lLegIkToAnkle)
+                self.snapIkLeg(rLegSnapFk, rLegSnapIk, rLegIkToAnkle)
         self.setMhxIk(1.0)
 
 #------------------------------------------------------------------------
-#   Buttons
+#   Transfer FK - IK
 #------------------------------------------------------------------------
 
-class MHX_OT_TransferToFk(HidePropsOperator, Transferer, Bender, FrameRange):
+class MHX_OT_TransferToFk(Transferer, HidePropsOperator, Bender, FrameRange):
     bl_idname = "mhx.transfer_to_fk"
     bl_label = "Transfer IK => FK"
     bl_description = "Transfer IK animation to FK bones"
@@ -328,24 +313,15 @@ class MHX_OT_TransferToFk(HidePropsOperator, Transferer, Bender, FrameRange):
         Transferer.draw(self, context)
         FrameRange.draw(self, context)
 
-    def prequel(self, context):
-        HidePropsOperator.prequel(self, context)
-        Snapper.prequel(self, context)
-
-    def sequel(self, context):
-        HidePropsOperator.sequel(self, context)
-        Snapper.sequel(self, context)
-
     def run(self, context):
         startProgress("Transfer to FK")
         time1 = time.perf_counter()
-        self.setAccuracy()
         self.transferMhxToFk(context)
         time2 = time.perf_counter()
         raise MHXMessage("Transfer to FK completed\nin %1f seconds" % (time2-time1))
 
 
-class MHX_OT_TransferToIk(HidePropsOperator, Transferer, FrameRange):
+class MHX_OT_TransferToIk(Transferer, HidePropsOperator, FrameRange):
     bl_idname = "mhx.transfer_to_ik"
     bl_label = "Transfer FK => IK"
     bl_description = "Transfer FK animation to IK bones"
@@ -355,22 +331,16 @@ class MHX_OT_TransferToIk(HidePropsOperator, Transferer, FrameRange):
         Transferer.draw(self, context)
         FrameRange.draw(self, context)
 
-    def prequel(self, context):
-        HidePropsOperator.prequel(self, context)
-        Snapper.prequel(self, context)
-
-    def sequel(self, context):
-        HidePropsOperator.sequel(self, context)
-        Snapper.sequel(self, context)
-
     def run(self, context):
         startProgress("Transfer to IK")
         time1 = time.perf_counter()
-        self.setAccuracy()
         self.transferMhxToIk(context)
         time2 = time.perf_counter()
         raise MHXMessage("Transfer to IK completed\nin %1f seconds" % (time2-time1))
 
+#------------------------------------------------------------------------
+#   Clear animation
+#------------------------------------------------------------------------
 
 class MHX_OT_ClearAnimation(HidePropsOperator):
     bl_idname = "mhx.clear_animation"
@@ -378,66 +348,127 @@ class MHX_OT_ClearAnimation(HidePropsOperator):
     bl_description = "Clear Animation For FK or IK Bones"
     bl_options = {'UNDO'}
 
-    type : StringProperty()
+    clearArmFK : BoolProperty(
+        name = "Clear FK Arm",
+        description = "Clear Arm FK animation",
+        default = False)
+
+    clearArmIK : BoolProperty(
+        name = "Clear IK Arm",
+        description = "Clear Arm IK animation",
+        default = False)
+
+    clearLegFK : BoolProperty(
+        name = "Clear FK Leg",
+        description = "Clear Leg FK animation",
+        default = False)
+
+    clearLegIK : BoolProperty(
+        name = "Clear IK Leg",
+        description = "Clear Leg IK animation",
+        default = False)
+
+    def draw(self, context):
+        self.layout.prop(self, "clearArmFK")
+        self.layout.prop(self, "clearLegFK")
+        self.layout.prop(self, "clearArmIK")
+        self.layout.prop(self, "clearLegIK")
 
     def run(self, context):
+        from .fkik import SnapBones
         startProgress("Clear animation")
-        self.setAccuracy()
         rig = context.object
-        scn = context.scene
         act = self.getCurrentAction(rig)
-
-        self.clearAnimation(rig, context, act, self.type, SnapBonesAlpha8)
-        if self.type == "FK":
-            value = 1.0
-        else:
-            value = 0.0
-        self.setMhxIk(value)
-        raise MHXMessage("Animation cleared")
-
-#----------------------------------------------------------
-#   Clear pole targets
-#----------------------------------------------------------
-
-class MHX_OT_ClearPoleTargets(HidePropsOperator):
-    bl_idname = "mhx.clear_pole_targets"
-    bl_label = "Clear Pole Targets"
-    bl_description = "Clear animation for pole targets"
-    bl_options = {'UNDO'}
-
-    def run(self, context):
-        rig = context.object
-        scn = context.scene
-        act = self.getCurrentAction(rig)
-        self.findTarget(context, rig)
         bnames = []
-        if self.useArms:
-            bnames += ["elbow.pt.ik.L", "elbow.pt.ik.R"]
-        if self.useLegs:
-            bnames += ["knee.pt.ik.L", "knee.pt.ik.R"]
-        self.removeFcurves(act, "Pole target", bnames)
-        for bname in bnames:
-            pb = rig.pose.bones[bname]
-            pb.matrix_basis = Matrix()
+        if self.clearArmFK:
+            bnames += SnapBones["ArmFK"]
+        if self.clearArmIK:
+            bnames += SnapBones["ArmIK"]
+        if self.clearLegFK:
+            bnames += SnapBones["LegFK"]
+        if self.clearLegIK:
+            bnames += SnapBones["LegIK"]
+        lBnames = [bname+".L" for bname in bnames]
+        rBnames = [bname+".R" for bname in bnames]
+        nfcus = self.removeFcurves(act, lBnames+rBnames)
+        if nfcus:
+            msg = "Animation cleared"
+        else:
+            msg = "No F-curves removed"
+        raise MHXMessage(msg)
+
+    def getCurrentAction(self, rig):
+        if not rig.animation_data:
+            raise MHXError("Rig has no animation data")
+        act = rig.animation_data.action
+        if not act:
+            raise MHXError("Rig has no action")
+        return act
+
+    def removeFcurves(self, act, bnames):
+        fcus = []
+        for fcu in act.fcurves:
+            words = fcu.data_path.split('"')
+            if (words[0] == "pose.bones[" and
+                words[1] in bnames):
+                fcus.append(fcu)
+        ncurves = len(fcus)
+        for fcu in fcus:
+            act.fcurves.remove(fcu)
+        return ncurves
 
 #-------------------------------------------------------------
 #   Toe below ball
 #-------------------------------------------------------------
 
-class Feet:
-    def getFkFeetBones(suffix):
-        foot = self.getBone("foot" + suffix)
-        toe = self.getBone("toe" + suffix)
+class FeetOperator(HidePropsOperator, Basic):
+
+    def getFkFeetBones(self, suffix):
+        foot = self.getBone("foot.fk" + suffix)
+        toe = self.getBone("toe.fk" + suffix)
         try:
-            mBall = self.getBone("ball.marker")
-            mToe = self.getBone("toe.marker")
-            mHeel = self.getBone("heel.marker")
+            mBall = self.getBone("ball.marker" + suffix)
+            mToe = self.getBone("toe.marker" + suffix)
+            mHeel = self.getBone("heel.marker" + suffix)
         except KeyError:
             mBall = mToe = mHeel = None
         return foot,toe,mBall,mToe,mHeel
 
 
-class MHX_OT_OffsetToes(HidePropsOperator, FrameRange, Feet):
+    def getRigAndPlane(self, context):
+        rig = None
+        plane = None
+        for ob in context.view_layer.objects:
+            if ob.select_get():
+                if ob.type == 'ARMATURE':
+                    if rig:
+                        raise MocapError("Two armatures selected: %s and %s" % (rig.name, ob.name))
+                    else:
+                        rig = ob
+                elif ob.type == 'MESH':
+                    if plane:
+                        raise MocapError("Two meshes selected: %s and %s" % (plane.name, ob.name))
+                    else:
+                        plane = ob
+        if rig is None:
+            raise MocapError("No rig selected")
+        return rig,plane
+
+
+    def getPlaneInfo(self):
+        if self.plane is None:
+            ez = Vector((0,0,1))
+            origin = Vector((0,0,0))
+            rot = Matrix()
+        else:
+            mat = self.plane.matrix_world.to_3x3().normalized()
+            ez = mat.col[2]
+            origin = self.plane.location
+            rot = mat.to_4x4()
+        return ez,origin,rot
+
+
+class MHX_OT_OffsetToes(FeetOperator, FrameRange, Snapper):
     bl_idname = "mhx.offset_toes"
     bl_label = "Offset Toes"
     bl_description = "Keep toes below the ball of the feet"
@@ -446,68 +477,60 @@ class MHX_OT_OffsetToes(HidePropsOperator, FrameRange, Feet):
     def draw(self, context):
         FrameRange.draw(self, context)
 
-
     def run(self, context):
-        rig = context.object
-        scn = context.scene
-        rig,plane = getRigAndPlane(context)
+        self.auto = True
+        self.rig, self.plane = self.getRigAndPlane(context)
         try:
-            useIk = rig["MhaLegIk_L"] or rig["MhaLegIk_R"]
+            useIk = self.rig["MhaLegIk_L"] or self.rig["MhaLegIk_R"]
         except KeyError:
             useIk = False
         if useIk:
-            raise MocapError("Toe Below Ball only for FK feet")
+            raise MhxError("Toe Below Ball only for FK feet")
 
-        layers = list(rig.data.layers)
         startProgress("Keep toes down")
         frames = self.getActiveFrames()
         print("Left toe")
-        self.toeBelowBall(context, frames, rig, plane, ".L")
+        self.toeBelowBall(context, frames, ".L")
         print("Right toe")
-        self.toeBelowBall(context, frames, rig, plane, ".R")
-        rig.data.layers = layers
-        raise MocapMessage("Toes kept down")
+        self.toeBelowBall(context, frames, ".R")
+        raise MHXMessage("Toes kept down")
 
 
-    def toeBelowBall(self, context, frames, rig, plane, suffix):
-        from .retarget import getLocks
-        from .fkik import getPoseMatrix
-
+    def toeBelowBall(self, context, frames, suffix):
         scn = context.scene
         foot,toe,mBall,mToe,mHeel = self.getFkFeetBones(suffix)
-        ez,origin,rot = getPlaneInfo(plane)
-        order,lock = getLocks(toe, context)
-        factor = 1.0/toe.length
+        ez,origin,rot = self.getPlaneInfo()
         nFrames = len(frames)
         if mBall:
             for n,frame in enumerate(frames):
                 scn.frame_set(frame)
+                self.frame = frame
                 showProgress(n, frame, nFrames)
                 zToe = getProjection(mToe.matrix.col[3], ez)
                 zBall = getProjection(mBall.matrix.col[3], ez)
                 if zToe > zBall:
-                    pmat = self.offsetToeRotation(toe, ez, factor, order, lock, context)
+                    gmat = self.offsetToeRotation(toe, ez)
                 else:
-                    pmat = getPoseMatrix(toe.matrix, toe)
-                pmat = self.keepToeRotationNegative(pmat, scn)
-                insertRotation(toe, pmat)
+                    gmat = toe.matrix
+                pmat = self.getPoseMatrix(gmat, toe)
+                pmat = self.keepToeRotationNegative(pmat, toe)
+                self.insertRotation(toe, pmat)
         else:
             for n,frame in enumerate(frames):
                 scn.frame_set(frame)
+                self.frame = frame
                 showProgress(n, frame, nFrames)
                 dzToe = getProjection(toe.matrix.col[1], ez)
                 if dzToe > 0:
-                    pmat = self.offsetToeRotation(toe, ez, factor, order, lock, context)
+                    gmat = self.offsetToeRotation(toe, ez)
                 else:
-                    pmat = getPoseMatrix(toe.matrix, toe)
-                pmat = self.keepToeRotationNegative(pmat, scn)
-                insertRotation(toe, pmat)
+                    gmat = toe.matrix
+                pmat = self.getPoseMatrix(gmat, toe)
+                pmat = self.keepToeRotationNegative(pmat, toe)
+                self.insertRotation(toe, pmat)
 
 
-    def offsetToeRotation(self, toe, ez, factor, order, lock, context):
-        from .retarget import correctMatrixForLocks
-        from .fkik import getPoseMatrix
-
+    def offsetToeRotation(self, toe, ez):
         mat = toe.matrix.to_3x3()
         y = mat.col[1]
         y -= ez.dot(y)*ez
@@ -521,12 +544,11 @@ class MHX_OT_OffsetToes(HidePropsOperator, FrameRange, Feet):
         mat.col[2] = z
         gmat = mat.to_4x4()
         gmat.col[3] = toe.matrix.col[3]
-        pmat = getPoseMatrix(gmat, toe)
-        return correctMatrixForLocks(pmat, order, lock, toe, context.scene.McpUseLimits)
+        return self.getPoseMatrix(gmat, toe)
 
 
-    def keepToeRotationNegative(self, pmat, scn):
-        euler = pmat.to_3x3().to_euler('YZX')
+    def keepToeRotationNegative(self, pmat, toe):
+        euler = pmat.to_3x3().to_euler(toe.rotation_mode)
         if euler.x > 0:
             pmat0 = pmat
             euler.x = 0
@@ -534,11 +556,42 @@ class MHX_OT_OffsetToes(HidePropsOperator, FrameRange, Feet):
             pmat.col[3] = pmat0.col[3]
         return pmat
 
+
+def getProjection(vec, ez):
+    return ez.dot(Vector(vec[:3]))
+
+
+def getOffset(point, ez, origin):
+    vec = Vector(point[:3]) - origin
+    offset = -ez.dot(vec)
+    return offset
+
+
+def getHeadOffset(pb, ez, origin):
+    head = pb.matrix.col[3]
+    return getOffset(head, ez, origin)
+
+
+def getTailOffset(pb, ez, origin):
+    head = pb.matrix.col[3]
+    y = pb.matrix.col[1]
+    tail = head + y*pb.length
+    return getOffset(tail, ez, origin)
+
+
+def addOffset(pb, offset, ez):
+    from .fkik import getPoseMatrix
+    gmat = pb.matrix.copy()
+    x,y,z = offset*ez
+    gmat.col[3] += Vector((x,y,z,0))
+    pmat = getPoseMatrix(gmat, pb)
+    insertLocation(pb, pmat)
+
 #-------------------------------------------------------------
 #   Floor
 #-------------------------------------------------------------
 
-class MHX_OT_FloorFoot(MhxPropsOperator, IsArmature, FrameRange, Feet):
+class MHX_OT_FloorFoot(FeetOperator, IsArmature, FrameRange):
     bl_idname = "mhx.floor_foot"
     bl_label = "Keep Feet Above Floor"
     bl_description = "Keep Feet Above Plane"
@@ -568,36 +621,35 @@ class MHX_OT_FloorFoot(MhxPropsOperator, IsArmature, FrameRange, Feet):
 
     def run(self, context):
         startProgress("Keep feet above floor")
-        self.findTarget(context, context.object)
         scn = context.scene
-        rig,plane = getRigAndPlane(context)
+        self.rig, self.plane = self.getRigAndPlane(context)
         try:
             useIk = rig["MhaLegIk_L"] or rig["MhaLegIk_R"]
         except KeyError:
             useIk = False
         frames = self.getActiveFrames()
         if useIk:
-            self.floorIkFoot(rig, plane, scn, frames)
+            self.floorIkFoot(scn, frames)
         else:
-            self.floorFkFoot(rig, plane, scn, frames)
+            self.floorFkFoot(scn, frames)
         raise MocapMessage("Feet kept above floor")
 
 
-    def floorFkFoot(self, rig, plane, scn, frames):
+    def floorFkFoot(self, scn, frames):
         hips = self.getBone("hips")
         lFoot,lToe,lmBall,lmToe,lmHeel = self.getFkFeetBones(".L")
         rFoot,rToe,rmBall,rmToe,rmHeel = self.getFkFeetBones(".R")
-        ez,origin,rot = getPlaneInfo(plane)
+        ez,origin,rot = self.getPlaneInfo()
 
         nFrames = len(frames)
         for n,frame in enumerate(frames):
             scn.frame_set(frame)
-            updateScene()
+            self.updateScene()
             offset = 0
             if self.useLeft:
-                offset = self.getFkOffset(rig, ez, origin, lFoot, lToe, lmBall, lmToe, lmHeel)
+                offset = self.getFkOffset(ez, origin, lFoot, lToe, lmBall, lmToe, lmHeel)
             if self.useRight:
-                rOffset = self.getFkOffset(rig, ez, origin, rFoot, rToe, rmBall, rmToe, rmHeel)
+                rOffset = self.getFkOffset(ez, origin, rFoot, rToe, rmBall, rmToe, rmHeel)
                 if rOffset > offset:
                     offset = rOffset
             showProgress(n, frame, nFrames)
@@ -605,7 +657,7 @@ class MHX_OT_FloorFoot(MhxPropsOperator, IsArmature, FrameRange, Feet):
                 addOffset(hips, offset, ez)
 
 
-    def getFkOffset(self, rig, ez, origin, foot, toe, mBall, mToe, mHeel):
+    def getFkOffset(self, ez, origin, foot, toe, mBall, mToe, mHeel):
         if mBall:
             offset = toeOffset = getHeadOffset(mToe, ez, origin)
             ballOffset = getHeadOffset(mBall, ez, origin)
@@ -631,16 +683,16 @@ class MHX_OT_FloorFoot(MhxPropsOperator, IsArmature, FrameRange, Feet):
         return offset
 
 
-    def floorIkFoot(self, rig, plane, scn, frames):
-        root = rig.pose.bones["root"]
-        lleg = rig.pose.bones["foot.ik.L"]
-        rleg = rig.pose.bones["foot.ik.R"]
-        ez,origin,rot = getPlaneInfo(plane)
+    def floorIkFoot(self, plane, scn, frames):
+        master = self.rig.pose.bones["master"]
+        lleg = self.rig.pose.bones["foot.ik.L"]
+        rleg = self.rig.pose.bones["foot.ik.R"]
+        ez,origin,rot = self.getPlaneInfo()
 
-        self.fillKeyFrames(lleg, rig, frames, 3, mode='location')
-        self.fillKeyFrames(rleg, rig, frames, 3, mode='location')
+        self.fillKeyFrames(lleg, frames, 3, mode='location')
+        self.fillKeyFrames(rleg, frames, 3, mode='location')
         if self.useHips:
-            self.fillKeyFrames(root, rig, frames, 3, mode='location')
+            self.fillKeyFrames(master, frames, 3, mode='location')
 
         nFrames = len(frames)
         for n,frame in enumerate(frames):
@@ -662,12 +714,12 @@ class MHX_OT_FloorFoot(MhxPropsOperator, IsArmature, FrameRange, Feet):
 
             hOffset = min(lOffset,rOffset)
             if hOffset > 0 and self.useHips:
-                addOffset(root, hOffset, ez)
+                addOffset(master, hOffset, ez)
 
 
-    def fillKeyFrames(self, pb, rig, frames, nIndices, mode='rotation'):
+    def fillKeyFrames(self, pb, frames, nIndices, mode='rotation'):
         for idx in range(nIndices):
-            fcu = findBoneFCurve(pb, self.rig, idx, mode)
+            fcu = self.findBoneFCurve(pb, idx, mode)
             if fcu is None:
                 return
             for frame in frames:
@@ -699,29 +751,6 @@ class MHX_OT_FloorFoot(MhxPropsOperator, IsArmature, FrameRange, Feet):
         return offset
 
 #----------------------------------------------------------
-#   Utilities
-#----------------------------------------------------------
-
-def findBoneFCurve(pb, rig, idx, mode='rotation'):
-    if rig.animation_data is None:
-        return None
-    act = rig.animation_data.action
-    if act is None:
-        return None
-    if mode == 'rotation':
-        if pb.rotation_mode == 'QUATERNION':
-            mode = "rotation_quaternion"
-        else:
-            mode = "rotation_euler"
-    path = 'pose.bones["%s"].%s' % (pb.name, mode)
-    for fcu in act.fcurves:
-        if (fcu.data_path == path and
-            fcu.array_index == idx):
-            return fcu
-    print('F-curve "%s" not found.' % path)
-    return None
-
-#----------------------------------------------------------
 #   Initialize
 #----------------------------------------------------------
 
@@ -730,7 +759,6 @@ classes = [
     MHX_OT_TransferToFk,
     MHX_OT_TransferToIk,
     MHX_OT_ClearAnimation,
-    MHX_OT_ClearPoleTargets,
     MHX_OT_OffsetToes,
     MHX_OT_FloorFoot,
 ]

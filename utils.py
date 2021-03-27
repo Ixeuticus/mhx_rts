@@ -46,17 +46,6 @@ def isKeyed(rig, pb, path):
                     return True
     return False
 
-#----------------------------------------------------------
-#   Update
-#----------------------------------------------------------
-
-theUseAccurate = True
-
-def updatePose():
-    if theUseAccurate:
-        #updateScene()
-        bpy.context.view_layer.update()
-
 #-------------------------------------------------------------
 #   Overridable properties
 #-------------------------------------------------------------
@@ -259,6 +248,7 @@ class MhxOperator(bpy.types.Operator):
         pass
 
 
+
 class MhxPropsOperator(MhxOperator):
     def invoke(self, context, event):
         clearErrorMessage()
@@ -270,33 +260,37 @@ class MhxPropsOperator(MhxOperator):
 #-------------------------------------------------------------
 
 class HideOperator(MhxOperator):
+
     def prequel(self, context):
-        MhxOperator.prequel(self, context)
+        self.rig = context.object
+        self.amt = self.rig.data
+        scn = context.scene
+        self.frame = scn.frame_current
+        self.state = list(self.rig.data.layers)
+        self.rig.data.layers = 32*[True]
         self.layerColls = []
-        rig = context.object
-        self.hideLayerColls(rig, context.view_layer.layer_collection)
-        return None
+        self.hideLayerColls(context.view_layer.layer_collection)
 
 
-    def hideLayerColls(self, rig, layer):
+    def sequel(self, context):
+        self.rig.data.layers = self.state
+        for layer in self.layerColls:
+            layer.exclude = False
+
+
+    def hideLayerColls(self, layer):
         if layer.exclude:
             return True
         ok = True
         for ob in layer.collection.objects:
-            if ob == rig:
+            if ob == self.rig:
                 ok = False
         for child in layer.children:
-            ok = (self.hideLayerColls(rig, child) and ok)
+            ok = (self.hideLayerColls(child) and ok)
         if ok:
             self.layerColls.append(layer)
             layer.exclude = True
         return ok
-
-
-    def sequel(self, context):
-        MhxOperator.prequel(self, context)
-        for layer in self.layerColls:
-            layer.exclude = False
 
 
 class HidePropsOperator(HideOperator):

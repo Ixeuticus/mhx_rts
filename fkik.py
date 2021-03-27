@@ -32,49 +32,42 @@ from .utils import *
 from .layers import *
 
 #------------------------------------------------------------------
-#   Get pose matrix
+#   Updater
 #------------------------------------------------------------------
 
-def getPoseMatrix(gmat, pb):
-    restInv = pb.bone.matrix_local.inverted()
-    if pb.parent:
-        parInv = pb.parent.matrix.inverted()
-        parRest = pb.parent.bone.matrix_local
-        return restInv @ parRest @ parInv @ gmat
-    else:
-        return restInv @ gmat
+class Updater:
+    useAccurate = True
 
+    def updatePose(self):
+        if self.useAccurate:
+            bpy.context.view_layer.update()
 
-def getGlobalMatrix(mat, pb):
-    gmat = pb.bone.matrix_local @ mat
-    if pb.parent:
-        parMat = pb.parent.matrix
-        parRest = pb.parent.bone.matrix_local
-        return parMat @ parRest.inverted() @ gmat
-    else:
-        return gmat
-
-
-def updatePose():
-    bpy.ops.object.mode_set(mode='OBJECT')
-    bpy.ops.object.mode_set(mode='POSE')
+    def updateScene(self):
+        deps = bpy.context.evaluated_depsgraph_get()
+        deps.update()
 
 #------------------------------------------------------------------
 #   Snapper class
 #------------------------------------------------------------------
 
-class Snapper:
+SnapBones = {
+    "Arm"   : ["upper_arm", "forearm", "hand"],
+    "ArmFK" : ["upper_arm.fk", "forearm.fk", "hand.fk"],
+    "ArmIK" : ["upper_arm.ik", "forearm.ik", "elbow.pt.ik", "hand.ik"],
+    "Leg"   : ["thigh", "shin", "foot", "toe"],
+    "LegFK" : ["thigh.fk", "shin.fk", "foot.fk", "toe.fk"],
+    "LegIK" : ["thigh.ik", "shin.ik", "knee.pt.ik", "ankle", "ankle.ik", "foot.ik", "foot.rev", "toe.rev", "ball.marker", "toe.marker", "heel.marker"],
+}
+
+class Snapper(Updater):
 
     def prequel(self, context):
-        self.rig = context.object
-        self.amt = self.rig.data
-        self.auto = context.scene.tool_settings.use_keyframe_insert_auto
-        self.state = list(self.rig.data.layers)
-        self.rig.data.layers = 32*[True]
+        HideOperator.prequel(self, context)
         self.muteAllConstraints(True)
 
 
     def sequel(self, context):
+        HideOperator.sequel(self, context)
         self.muteAllConstraints(False)
 
 
@@ -86,18 +79,18 @@ class Snapper:
                     cns.mute = value
 
 
-    def setup(self, value):
+    def setup(self, context, value):
         bpy.ops.object.mode_set(mode='POSE')
         self.amt[self.prop] = value
-        updatePose()
+        self.auto = context.scene.tool_settings.use_keyframe_insert_auto
+        self.updatePose()
 
 
-    def restore(self, value, ik, fk):
-        self.rig.data.layers = self.state
+    def restore(self, value, fk, ik):
         self.amt[self.prop] = value
-        self.rig.data.layers[self.fk] = fk
-        self.rig.data.layers[self.ik] = ik
-        updatePose()
+        self.state[self.fk] = fk
+        self.state[self.ik] = ik
+        self.updatePose()
 
 
     def getBone(self, bname):
@@ -108,30 +101,40 @@ class Snapper:
         raise MhxError("What? Bone %s not found" % bname)
 
 
+    def getPoseMatrix(self, gmat, pb):
+        restInv = pb.bone.matrix_local.inverted()
+        if pb.parent:
+            parInv = pb.parent.matrix.inverted()
+            parRest = pb.parent.bone.matrix_local
+            return restInv @ parRest @ parInv @ gmat
+        else:
+            return restInv @ gmat
+
+
     def matchPoseTranslation(self, pb, src):
-        pmat = getPoseMatrix(src.matrix, pb)
+        pmat = self.getPoseMatrix(src.matrix, pb)
         self.insertLocation(pb, pmat)
 
 
     def insertLocation(self, pb, mat):
         pb.location = mat.to_translation()
         if self.auto or isKeyed(self.rig, pb, "location"):
-            pb.keyframe_insert("location", group=pb.name)
+            pb.keyframe_insert("location", frame=self.frame, group=pb.name)
 
 
     def matchPoseRotation(self, pb, src):
-        pmat = getPoseMatrix(src.matrix, pb)
+        pmat = self.getPoseMatrix(src.matrix, pb)
         self.insertRotation(pb, pmat)
 
 
     def matchPoseLocRot(self, pb, src):
-        pmat = getPoseMatrix(src.matrix, pb)
+        pmat = self.getPoseMatrix(src.matrix, pb)
         self.insertLocation(pb, pmat)
         self.insertRotation(pb, pmat)
 
 
     def matchPoseTransform(self, pb, src):
-        pmat = getPoseMatrix(src.matrix, pb)
+        pmat = self.getPoseMatrix(src.matrix, pb)
         self.insertRotation(pb, pmat)
 
 
@@ -140,11 +143,11 @@ class Snapper:
         if pb.rotation_mode == 'QUATERNION':
             pb.rotation_quaternion = quat
             if self.auto or isKeyed(self.rig, pb, "rotation_quaternion"):
-                pb.keyframe_insert("rotation_quaternion", group=pb.name)
+                pb.keyframe_insert("rotation_quaternion", frame=self.frame, group=pb.name)
         else:
             pb.rotation_euler = quat.to_euler(pb.rotation_mode)
             if self.auto or isKeyed(self.rig, pb, "rotation_euler"):
-                pb.keyframe_insert("rotation_euler", group=pb.name)
+                pb.keyframe_insert("rotation_euler", frame=self.frame, group=pb.name)
 
 
     def matchPoseTwist(self, pb, src):
@@ -195,7 +198,7 @@ class Snapper:
         gmat.col[1][:3] = y
         gmat.col[2][:3] = z
         gmat.col[3][:3] = head
-        pmat = getPoseMatrix(gmat, legIk)
+        pmat = self.getPoseMatrix(gmat, legIk)
 
         self.insertLocation(legIk, pmat)
         self.insertRotation(legIk, pmat)
@@ -219,7 +222,7 @@ class Snapper:
         else:
             p = p0
         gmat = Matrix.Translation(p)
-        pmat = getPoseMatrix(gmat, pb)
+        pmat = self.getPoseMatrix(gmat, pb)
         self.insertLocation(pb, pmat)
 
 
@@ -228,27 +231,19 @@ class Snapper:
         tail = gmat.col[3] + src.length * gmat.col[1]
         rmat = Matrix((gmat.col[0], -gmat.col[1], -gmat.col[2], tail))
         rmat.transpose()
-        pmat = getPoseMatrix(rmat, pb)
+        pmat = self.getPoseMatrix(rmat, pb)
         pb.matrix_basis = pmat
         self.insertRotation(pb, pmat)
 
 
     def matchPoseScale(self, pb, src):
-        pmat = getPoseMatrix(src.matrix, pb)
+        pmat = self.getPoseMatrix(src.matrix, pb)
         pb.scale = pmat.to_scale()
         if self.auto or isKeyed(self.rig, pb, "scale"):
-            pb.keyframe_insert("scale", group=pb.name)
+            pb.keyframe_insert("scale", frame=self.frame, group=pb.name)
 
 
     def getSnapBones(self, key, suffix):
-        SnapBones = {
-            "Arm"   : ["upper_arm", "forearm", "hand"],
-            "ArmFK" : ["upper_arm.fk", "forearm.fk", "hand.fk"],
-            "ArmIK" : ["upper_arm.ik", "forearm.ik", "elbow.pt.ik", "hand.ik"],
-            "Leg"   : ["thigh", "shin", "foot", "toe"],
-            "LegFK" : ["thigh.fk", "shin.fk", "foot.fk", "toe.fk"],
-            "LegIK" : ["thigh.ik", "shin.ik", "knee.pt.ik", "ankle", "ankle.ik", "foot.ik", "foot.rev", "toe.rev", "ball.marker", "toe.marker", "heel.marker"],
-        }
         pbones = []
         constraints = []
         for name in SnapBones[key]:
@@ -266,58 +261,58 @@ class Snapper:
         return tuple(pbones),constraints
 
 
-    def snapFkArm(self, snapFk, snapIk, frame=None):
+    def snapFkArm(self, snapFk, snapIk):
         (uparmFk, loarmFk, handFk) = snapFk
         (uparmIk, loarmIk, elbowPt, handIk) = snapIk
 
         self.matchPoseTransform(uparmFk, uparmIk)
-        updatePose()
+        self.updatePose()
         self.matchPoseTransform(loarmFk, loarmIk)
-        updatePose()
+        self.updatePose()
         self.matchPoseTransform(handFk, handIk)
 
 
-    def snapIkArm(self, snapFk, snapIk, frame=None):
+    def snapIkArm(self, snapFk, snapIk):
         (uparmFk, loarmFk, handFk) = snapFk
         (uparmIk, loarmIk, elbowPt, handIk) = snapIk
 
         self.matchPoseLocRot(handIk, handFk)
-        updatePose()
+        self.updatePose()
         self.matchPoleTarget(elbowPt, uparmFk, loarmFk)
 
 
-    def snapFkLeg(self, snapFk, snapIk, legIkToAnkle, frame=None):
+    def snapFkLeg(self, snapFk, snapIk, legIkToAnkle):
         (uplegFk, lolegFk, footFk, toeFk) = snapFk
         (uplegIk, lolegIk, kneePt, ankle, ankleIk, legIk, footRev, toeRev, mBall, mToe, mHeel) = snapIk
 
         self.matchPoseTransform(uplegFk, uplegIk)
-        updatePose()
+        self.updatePose()
         self.matchPoseTransform(lolegFk, lolegIk)
         if not legIkToAnkle:
-            updatePose()
+            self.updatePose()
             self.matchPoseReverse(footFk, footRev)
-            updatePose()
+            self.updatePose()
             self.matchPoseReverse(toeFk, toeRev)
 
 
-    def snapIkLeg(self, snapFk, snapIk, legIkToAnkle, frame=None):
+    def snapIkLeg(self, snapFk, snapIk, legIkToAnkle):
         (uplegFk, lolegFk, footFk, toeFk) = snapFk
         (uplegIk, lolegIk, kneePt, ankle, ankleIk, legIk, footRev, toeRev, mBall, mToe, mHeel) = snapIk
 
         self.matchPoseTranslation(ankle, footFk)
-        updatePose()
+        self.updatePose()
         self.matchIkLeg(legIk, toeFk, mBall, mToe, mHeel)
-        updatePose()
+        self.updatePose()
         self.matchPoseReverse(toeRev, toeFk)
-        updatePose()
+        self.updatePose()
         self.matchPoseReverse(footRev, footFk)
-        updatePose()
+        self.updatePose()
         self.matchPoseTranslation(ankleIk, footFk)
-        updatePose()
+        self.updatePose()
         self.matchPoleTarget(kneePt, uplegFk, lolegFk)
 
 
-class MHX_OT_MhxSnapFkLeftArm(Snapper, MhxOperator):
+class MHX_OT_MhxSnapFkLeftArm(Snapper, HideOperator):
     bl_idname = "mhx.snap_fk_left_arm"
     bl_label = "Snap L FK Arm"
     bl_description = "Snap the left FK arm to the pose of the left IK arm"
@@ -330,15 +325,14 @@ class MHX_OT_MhxSnapFkLeftArm(Snapper, MhxOperator):
 
     def run(self, context):
         print("Snap Left FK Arm")
-        self.setup(1.0)
+        self.setup(context, 1.0)
         snapFk,_cnsFk = self.getSnapBones("ArmFK", "L")
         snapIk,_cnsIk = self.getSnapBones("ArmIK", "L")
-        print("MMM", snapFk, snapIk)
         self.snapFkArm(snapFk, snapIk)
-        self.restore(0.0, False, True)
+        self.restore(0.0, True, False)
 
 
-class MHX_OT_MhxSnapFkRightArm(Snapper, MhxOperator):
+class MHX_OT_MhxSnapFkRightArm(Snapper, HideOperator):
     bl_idname = "mhx.snap_fk_right_arm"
     bl_label = "Snap R FK Arm"
     bl_description = "Snap the right FK arm to the pose of the right IK arm"
@@ -351,14 +345,14 @@ class MHX_OT_MhxSnapFkRightArm(Snapper, MhxOperator):
 
     def run(self, context):
         print("Snap Right FK Arm")
-        self.setup(1.0)
+        self.setup(context, 1.0)
         snapFk,_cnsFk = self.getSnapBones("ArmFK", "R")
         snapIk,_cnsIk = self.getSnapBones("ArmIK", "R")
         self.snapFkArm(snapFk, snapIk)
-        self.restore(0.0, False, True)
+        self.restore(0.0, True, False)
 
 
-class MHX_OT_MhxSnapFkLeftLeg(Snapper, MhxOperator):
+class MHX_OT_MhxSnapFkLeftLeg(Snapper, HideOperator):
     bl_idname = "mhx.snap_fk_left_leg"
     bl_label = "Snap L FK Leg"
     bl_description = "Snap the left FK leg to the pose of the left IK leg"
@@ -371,14 +365,14 @@ class MHX_OT_MhxSnapFkLeftLeg(Snapper, MhxOperator):
 
     def run(self, context):
         print("Snap Left FK Leg")
-        self.setup(1.0)
+        self.setup(context, 1.0)
         snapFk,_cnsFk = self.getSnapBones("LegFK", "L")
         snapIk,_cnsIk = self.getSnapBones("LegIK", "L")
-        self.snapFkLeg(snapFk, snapIk)
-        self.restore(0.0, False, True)
+        self.snapFkLeg(snapFk, snapIk, self.amt["MhaLegIkToAnkle_L"])
+        self.restore(0.0, True, False)
 
 
-class MHX_OT_MhxSnapFkRightLeg(Snapper, MhxOperator):
+class MHX_OT_MhxSnapFkRightLeg(Snapper, HideOperator):
     bl_idname = "mhx.snap_fk_right_leg"
     bl_label = "Snap R FK Leg"
     bl_description = "Snap the right FK leg to the pose of the right IK leg"
@@ -391,14 +385,14 @@ class MHX_OT_MhxSnapFkRightLeg(Snapper, MhxOperator):
 
     def run(self, context):
         print("Snap Right FK Leg")
-        self.setup(1.0)
+        self.setup(context, 1.0)
         snapFk,_cnsFk = self.getSnapBones("LegFK", "R")
         snapIk,_cnsIk = self.getSnapBones("LegIK", "R")
-        self.snapFkLeg(snapFk, snapIk)
-        self.restore(0.0, False, True)
+        self.snapFkLeg(snapFk, snapIk, self.amt["MhaLegIkToAnkle_R"])
+        self.restore(0.0, True, False)
 
 
-class MHX_OT_MhxSnapIkLeftArm(Snapper, MhxOperator):
+class MHX_OT_MhxSnapIkLeftArm(Snapper, HideOperator):
     bl_idname = "mhx.snap_ik_left_arm"
     bl_label = "Snap L IK Arm"
     bl_description = "Snap the left IK arm to the pose of the left FK arm"
@@ -411,14 +405,14 @@ class MHX_OT_MhxSnapIkLeftArm(Snapper, MhxOperator):
 
     def run(self, context):
         print("Snap Left IK Arm")
-        self.setup(0.0)
+        self.setup(context, 0.0)
         snapFk,_cnsFk = self.getSnapBones("ArmFK", "L")
         snapIk,_cnsIk = self.getSnapBones("ArmIK", "L")
         self.snapIkArm(snapFk, snapIk)
         self.restore(1.0, False, True)
 
 
-class MHX_OT_MhxSnapIkRightArm(Snapper, MhxOperator):
+class MHX_OT_MhxSnapIkRightArm(Snapper, HideOperator):
     bl_idname = "mhx.snap_ik_right_arm"
     bl_label = "Snap R IK Arm"
     bl_description = "Snap the right IK arm to the pose of the right FK arm"
@@ -431,14 +425,14 @@ class MHX_OT_MhxSnapIkRightArm(Snapper, MhxOperator):
 
     def run(self, context):
         print("Snap Right IK Arm")
-        self.setup(0.0)
+        self.setup(context, 0.0)
         snapFk,_cnsFk = self.getSnapBones("ArmFK", "R")
         snapIk,_cnsIk = self.getSnapBones("ArmIK", "R")
         self.snapIkArm(snapFk, snapIk)
         self.restore(1.0, False, True)
 
 
-class MHX_OT_MhxSnapIkLeftLeg(Snapper, MhxOperator):
+class MHX_OT_MhxSnapIkLeftLeg(Snapper, HideOperator):
     bl_idname = "mhx.snap_ik_left_leg"
     bl_label = "Snap L IK Leg"
     bl_description = "Snap the left IK leg to the pose of the left FK leg"
@@ -451,14 +445,14 @@ class MHX_OT_MhxSnapIkLeftLeg(Snapper, MhxOperator):
 
     def run(self, context):
         print("Snap Left IK Leg")
-        self.setup(0.0)
+        self.setup(context, 0.0)
         snapFk,_cnsFk = self.getSnapBones("LegFK", "L")
         snapIk,_cnsIk = self.getSnapBones("LegIK", "L")
         self.snapIkLeg(snapFk, snapIk, self.amt["MhaLegIkToAnkle_L"])
         self.restore(1.0, False, True)
 
 
-class MHX_OT_MhxSnapIkRightLeg(Snapper, MhxOperator):
+class MHX_OT_MhxSnapIkRightLeg(Snapper, HideOperator):
     bl_idname = "mhx.snap_ik_right_leg"
     bl_label = "Snap R IK Leg"
     bl_description = "Snap the right IK leg to the pose of the right FK leg"
@@ -471,7 +465,7 @@ class MHX_OT_MhxSnapIkRightLeg(Snapper, MhxOperator):
 
     def run(self, context):
         print("Snap Right IK Leg")
-        self.setup(0.0)
+        self.setup(context, 0.0)
         snapFk,_cnsFk = self.getSnapBones("LegFK", "R")
         snapIk,_cnsIk = self.getSnapBones("LegIK", "R")
         self.snapIkLeg(snapFk, snapIk, self.amt["MhaLegIkToAnkle_R"])
@@ -481,7 +475,7 @@ class MHX_OT_MhxSnapIkRightLeg(Snapper, MhxOperator):
 #   Toggle FK - IK
 #----------------------------------------------------------
 
-class Toggler:
+class Toggler(Updater):
     def toggle(self, context, prop, fklayer, iklayer):
         rig = context.object
         scn = context.scene
@@ -500,7 +494,7 @@ class Toggler:
         path = (propRef(prop))
         if isKeyed(rig, None, path):
             rig.data.keyframe_insert(path, frame=scn.frame_current)
-        updatePose()
+        self.updatePose()
 
 
 class MHX_OT_MhxToggleLeftArm(MhxOperator, Toggler):
@@ -558,7 +552,7 @@ class MHX_OT_MhxToggleHints(MhxOperator):
                 if cns.type == 'LIMIT_ROTATION' and cns.name == "Hint":
                     cns.mute = not cns.mute
         rig.data["MhaHintsOn"] = not rig.data["MhaHintsOn"]
-        updatePose()
+        self.updatePose()
 
 #----------------------------------------------------------
 #   Initialize

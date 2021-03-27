@@ -191,9 +191,8 @@ class MHX_PT_Animation(MhxPanel):
         self.layout.operator("mhx.offset_toes")
         self.layout.operator("mhx.transfer_to_ik")
         self.layout.operator("mhx.transfer_to_fk")
-        self.layout.operator("mhx.clear_pole_targets")
-        self.layout.operator("mhx.clear_animation", text="Clear IK Animation").type = "IK"
-        self.layout.operator("mhx.clear_animation", text="Clear FK Animation").type = "FK"
+        self.layout.operator("mhx.clear_animation")
+        self.layout.operator("mhx.floor_foot")
 
 #------------------------------------------------------------------------
 #    Mhx Properties Panel
