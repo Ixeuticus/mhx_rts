@@ -29,6 +29,7 @@
 import bpy
 from bpy.props import EnumProperty
 from .utils import *
+from .layers import *
 
 # ---------------------------------------------------------------------
 #   Convert MHX actions from legacy to modern
@@ -82,21 +83,40 @@ class MHX_OT_ConvertMhxActions(MhxOperator):
         return self.invokeDialog(context)
 
 #-------------------------------------------------------------
-#   Set all limbs to FK.
-#   Used by load pose etc.
+#   Enable and disable layers
 #-------------------------------------------------------------
 
-def setToFk(rig, layers):
-    for pname in ["MhaArmIk_L", "MhaArmIk_R", "MhaLegIk_L", "MhaLegIk_R"]:
-        if pname in rig.keys():
-            rig[pname] = 0.0
-        if pname in rig.data.keys():
-            rig.data[pname] = 0.0
-    for layer in [L_LARMFK, L_RARMFK, L_LLEGFK, L_RLEGFK]:
-        layers[layer] = True
-    for layer in [L_LARMIK, L_RARMIK, L_LLEGIK, L_RLEGIK]:
-        layers[layer] = False
-    return layers
+class MHX_OT_EnableAllLayers(MhxOperator):
+    bl_idname = "mhx.enable_all_layers"
+    bl_label = "Enable all layers"
+    bl_options = {'UNDO'}
+
+    def run(self, context):
+        rig = context.object
+        for (left,right) in MhxLayers:
+            if type(left) != str:
+                for (n, name, prop) in [left,right]:
+                    rig.data.layers[n] = True
+
+
+class MHX_OT_DisableAllLayers(MhxOperator):
+    bl_idname = "mhx.disable_all_layers"
+    bl_label = "Disable all layers"
+    bl_options = {'UNDO'}
+
+    def run(self, context):
+        rig = context.object
+        layers = 32*[False]
+        pb = context.active_pose_bone
+        if pb:
+            for n in range(32):
+                if pb.bone.layers[n]:
+                    layers[n] = True
+                    break
+        else:
+            layers[0] = True
+        if rig:
+            rig.data.layers = layers
 
 #-------------------------------------------------------------
 #   Update MHX rig for armature properties
@@ -171,6 +191,8 @@ def initMhxProps():
 
 
 classes = [
+    MHX_OT_EnableAllLayers,
+    MHX_OT_DisableAllLayers,
     MHX_OT_ConvertMhxActions,
     MHX_OT_UpdateMhx,
 ]

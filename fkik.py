@@ -36,15 +36,79 @@ from .layers import *
 #------------------------------------------------------------------
 
 class Updater:
-    useAccurate = True
-
     def updatePose(self):
-        if self.useAccurate:
-            bpy.context.view_layer.update()
+        bpy.context.view_layer.update()
 
     def updateScene(self):
         deps = bpy.context.evaluated_depsgraph_get()
         deps.update()
+
+    def setFrame(self, scn, frame):
+        scn.frame_set(frame)
+        self.frame = frame
+        self.updateScene()
+
+#----------------------------------------------------------
+#   Basic utilities
+#----------------------------------------------------------
+
+class Basic:
+
+    def getBone(self, bname):
+        try:
+            return self.rig.pose.bones[bname]
+        except KeyError:
+            pass
+        raise MhxError("What? Bone %s not found" % bname)
+
+
+    def getPoseMatrix(self, gmat, pb):
+        restInv = pb.bone.matrix_local.inverted()
+        if pb.parent:
+            parInv = pb.parent.matrix.inverted()
+            parRest = pb.parent.bone.matrix_local
+            return restInv @ parRest @ parInv @ gmat
+        else:
+            return restInv @ gmat
+
+
+    def insertLocation(self, pb, mat):
+        pb.location = mat.to_translation()
+        if self.auto or isKeyed(self.rig, pb, "location"):
+            pb.keyframe_insert("location", frame=self.frame, group=pb.name)
+
+
+    def insertRotation(self, pb, mat):
+        quat = mat.to_quaternion()
+        if pb.rotation_mode == 'QUATERNION':
+            pb.rotation_quaternion = quat
+            if self.auto or isKeyed(self.rig, pb, "rotation_quaternion"):
+                pb.keyframe_insert("rotation_quaternion", frame=self.frame, group=pb.name)
+        else:
+            pb.rotation_euler = quat.to_euler(pb.rotation_mode)
+            if self.auto or isKeyed(self.rig, pb, "rotation_euler"):
+                pb.keyframe_insert("rotation_euler", frame=self.frame, group=pb.name)
+
+
+    def findBoneFCurve(self, pb, idx, mode='rotation'):
+        if self.rig.animation_data is None:
+            return None
+        act = self.rig.animation_data.action
+        if act is None:
+            return None
+        if mode == 'rotation':
+            if pb.rotation_mode == 'QUATERNION':
+                mode = "rotation_quaternion"
+            else:
+                mode = "rotation_euler"
+        path = 'pose.bones["%s"].%s' % (pb.name, mode)
+        for fcu in act.fcurves:
+            if (fcu.data_path == path and
+                fcu.array_index == idx):
+                return fcu
+        print('F-curve "%s" not found.' % path)
+        halt
+        return None
 
 #------------------------------------------------------------------
 #   Snapper class
@@ -59,7 +123,7 @@ SnapBones = {
     "LegIK" : ["thigh.ik", "shin.ik", "knee.pt.ik", "ankle", "ankle.ik", "foot.ik", "foot.rev", "toe.rev", "ball.marker", "toe.marker", "heel.marker"],
 }
 
-class Snapper(Updater):
+class Snapper(Updater, Basic):
 
     def prequel(self, context):
         HideOperator.prequel(self, context)
@@ -93,33 +157,9 @@ class Snapper(Updater):
         self.updatePose()
 
 
-    def getBone(self, bname):
-        try:
-            return self.rig.pose.bones[bname]
-        except KeyError:
-            pass
-        raise MhxError("What? Bone %s not found" % bname)
-
-
-    def getPoseMatrix(self, gmat, pb):
-        restInv = pb.bone.matrix_local.inverted()
-        if pb.parent:
-            parInv = pb.parent.matrix.inverted()
-            parRest = pb.parent.bone.matrix_local
-            return restInv @ parRest @ parInv @ gmat
-        else:
-            return restInv @ gmat
-
-
     def matchPoseTranslation(self, pb, src):
         pmat = self.getPoseMatrix(src.matrix, pb)
         self.insertLocation(pb, pmat)
-
-
-    def insertLocation(self, pb, mat):
-        pb.location = mat.to_translation()
-        if self.auto or isKeyed(self.rig, pb, "location"):
-            pb.keyframe_insert("location", frame=self.frame, group=pb.name)
 
 
     def matchPoseRotation(self, pb, src):
@@ -138,18 +178,6 @@ class Snapper(Updater):
         self.insertRotation(pb, pmat)
 
 
-    def insertRotation(self, pb, mat):
-        quat = mat.to_quaternion()
-        if pb.rotation_mode == 'QUATERNION':
-            pb.rotation_quaternion = quat
-            if self.auto or isKeyed(self.rig, pb, "rotation_quaternion"):
-                pb.keyframe_insert("rotation_quaternion", frame=self.frame, group=pb.name)
-        else:
-            pb.rotation_euler = quat.to_euler(pb.rotation_mode)
-            if self.auto or isKeyed(self.rig, pb, "rotation_euler"):
-                pb.keyframe_insert("rotation_euler", frame=self.frame, group=pb.name)
-
-
     def matchPoseTwist(self, pb, src):
         pmat0 = src.matrix_basis
         euler = pmat0.to_3x3().to_euler('YZX')
@@ -160,46 +188,19 @@ class Snapper(Updater):
 
 
     def matchIkLeg(self, legIk, toeFk, mBall, mToe, mHeel):
+        # No x and y rotation for Leg IK target
+        head,quat,scale = toeFk.matrix.decompose()
         rmat = toeFk.matrix.to_3x3()
-        tHead = Vector(toeFk.matrix.col[3][:3])
-        ty = rmat.col[1]
-        tail = tHead + ty * toeFk.bone.length
-
-        try:
-            zBall = mBall.matrix.col[3][2]
-        except AttributeError:
-            return
-        zToe = mToe.matrix.col[3][2]
-        zHeel = mHeel.matrix.col[3][2]
-
-        x = Vector(rmat.col[0])
-        y = Vector(rmat.col[1])
-        z = Vector(rmat.col[2])
-
-        if zHeel > zBall and zHeel > zToe:
-            # 1. foot.ik is flat
-            if abs(y[2]) > abs(z[2]):
-                y = -z
-            y[2] = 0
-        else:
-            # 2. foot.ik starts at heel
-            hHead = Vector(mHeel.matrix.col[3][:3])
-            y = tail - hHead
-
-        y.normalize()
-        x -= x.dot(y)*y
-        x.normalize()
-        z = x.cross(y)
+        y = rmat.col[1]
+        tail = head + y * toeFk.bone.length
+        euler = quat.to_euler()
+        euler.x = euler.y = 0
+        gmat = euler.to_matrix()
+        y = gmat.col[1]
         head = tail - y * legIk.bone.length
-
-        # Create matrix
-        gmat = Matrix()
-        gmat.col[0][:3] = x
-        gmat.col[1][:3] = y
-        gmat.col[2][:3] = z
+        gmat = gmat.to_4x4()
         gmat.col[3][:3] = head
         pmat = self.getPoseMatrix(gmat, legIk)
-
         self.insertLocation(legIk, pmat)
         self.insertRotation(legIk, pmat)
 

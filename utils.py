@@ -136,7 +136,7 @@ def setSilentMode(value):
 setSilentMode(False)
 
 
-class MHXError(Exception):
+class MhxError(Exception):
     def __init__(self, value):
         global theErrorLines, theMessage
         theMessage = value
@@ -146,7 +146,7 @@ class MHXError(Exception):
              "For corrective actions see:",
              "http://diffeomorphic.blogspot.com/p/bvh-retargeter.html"]
             )
-        print("*** BVH Retargeter Error ***")
+        print("*** MHX Error ***")
         for line in theErrorLines:
             print(line)
 
@@ -154,7 +154,7 @@ class MHXError(Exception):
         return repr(theMessage)
 
 
-class MHXMessage(Exception):
+class MhxMessage(Exception):
     def __init__(self, value):
         global theErrorLines, theMessage
         theMessage = value
@@ -162,7 +162,7 @@ class MHXMessage(Exception):
         print(theMessage)
 
 
-class MHXPopup(bpy.types.Operator):
+class MhxPopup(bpy.types.Operator):
     def execute(self, context):
         return {'RUNNING_MODAL'}
 
@@ -177,38 +177,14 @@ class MHXPopup(bpy.types.Operator):
             self.layout.label(text=line)
 
 
-class ErrorOperator(MHXPopup):
+class ErrorOperator(MhxPopup):
     bl_idname = "mhx.error"
     bl_label = "MHX Error"
 
 
-class MessageOperator(MHXPopup):
+class MessageOperator(MhxPopup):
     bl_idname = "mhx.message"
     bl_label = "MHX"
-
-#-------------------------------------------------------------
-#   Poll
-#-------------------------------------------------------------
-
-class IsMesh:
-    @classmethod
-    def poll(self, context):
-        ob = context.object
-        return (ob and ob.type == 'MESH')
-
-
-class IsArmature:
-    @classmethod
-    def poll(self, context):
-        ob = context.object
-        return (ob and ob.type == 'ARMATURE')
-
-
-class IsMhx:
-    @classmethod
-    def poll(self, context):
-        ob = context.object
-        return (ob and ob.type == 'ARMATURE' and isMhxRig(ob))
 
 #-------------------------------------------------------------
 #   Execute
@@ -220,12 +196,12 @@ class MhxOperator(bpy.types.Operator):
         self.prequel(context)
         try:
             self.run(context)
-        except MHXError:
+        except MhxError:
             if getSilentMode():
                 print(theMessage)
             else:
                 bpy.ops.mhx.error('INVOKE_DEFAULT')
-        except MHXMessage:
+        except MhxMessage:
             if getSilentMode():
                 print(theMessage)
             else:

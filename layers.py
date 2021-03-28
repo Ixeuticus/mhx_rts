@@ -58,3 +58,31 @@ L_HELP2 =   15
 L_FIN =     30
 L_DEF =     31
 
+
+
+MhxLayers = [
+    ((L_MAIN,       'Root', 'MhxRoot'),
+     (L_SPINE ,     'Spine', 'MhxFKSpine')),
+    ((L_HEAD,       'Head', 'MhxHead'),
+     (L_FACE,       'Face', 'MhxFace')),
+    ((L_TWEAK,      'Tweak', 'MhxTweak'),
+     (L_CUSTOM,     'Custom', 'MhxCustom')),
+    ('Left', 'Right'),
+    ((L_LARMIK,     'IK Arm', 'MhxIKArm'),
+     (L_RARMIK,     'IK Arm', 'MhxIKArm')),
+    ((L_LARMFK,     'FK Arm', 'MhxFKArm'),
+     (L_RARMFK,     'FK Arm', 'MhxFKArm')),
+    ((L_LLEGIK,     'IK Leg', 'MhxIKLeg'),
+     (L_RLEGIK,     'IK Leg', 'MhxIKLeg')),
+    ((L_LLEGFK,     'FK Leg', 'MhxFKLeg'),
+     (L_RLEGFK,     'FK Leg', 'MhxFKLeg')),
+    ((L_LEXTRA,     'Extra', 'MhxExtra'),
+     (L_REXTRA,     'Extra', 'MhxExtra')),
+    ((L_LHAND,      'Hand', 'MhxHand'),
+     (L_RHAND,      'Hand', 'MhxHand')),
+    ((L_LFINGER,    'Fingers', 'MhxFingers'),
+     (L_RFINGER,    'Fingers', 'MhxFingers')),
+    ((L_LTOE,       'Toes', 'MhxToe'),
+     (L_RTOE,       'Toes', 'MhxToe')),
+]
+

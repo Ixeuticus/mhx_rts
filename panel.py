@@ -34,6 +34,20 @@ from .buildnumber import BUILD
 #    Mhx Layers Panel
 #------------------------------------------------------------------------
 
+class MHX_PT_Main(bpy.types.Panel):
+    bl_label = "MHX (version 0.1.0.%04d)" % BUILD
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "UI"
+    bl_category = "MHX"
+    #bl_options = {'DEFAULT_CLOSED'}
+
+    def draw(self, context):
+        rig = context.object
+
+#------------------------------------------------------------------------
+#    Mhx Layers Panel
+#------------------------------------------------------------------------
+
 class MhxPanel(bpy.types.Panel):
     @classmethod
     def poll(cls, context):
@@ -47,33 +61,6 @@ class MhxPanel(bpy.types.Panel):
             self.layout.operator("mhx.update_mhx")
             return True
         return False
-
-
-MhxLayers = [
-    ((L_MAIN,       'Root', 'MhxRoot'),
-     (L_SPINE ,     'Spine', 'MhxFKSpine')),
-    ((L_HEAD,       'Head', 'MhxHead'),
-     (L_FACE,       'Face', 'MhxFace')),
-    ((L_TWEAK,      'Tweak', 'MhxTweak'),
-     (L_CUSTOM,     'Custom', 'MhxCustom')),
-    ('Left', 'Right'),
-    ((L_LARMIK,     'IK Arm', 'MhxIKArm'),
-     (L_RARMIK,     'IK Arm', 'MhxIKArm')),
-    ((L_LARMFK,     'FK Arm', 'MhxFKArm'),
-     (L_RARMFK,     'FK Arm', 'MhxFKArm')),
-    ((L_LLEGIK,     'IK Leg', 'MhxIKLeg'),
-     (L_RLEGIK,     'IK Leg', 'MhxIKLeg')),
-    ((L_LLEGFK,     'FK Leg', 'MhxFKLeg'),
-     (L_RLEGFK,     'FK Leg', 'MhxFKLeg')),
-    ((L_LEXTRA,     'Extra', 'MhxExtra'),
-     (L_REXTRA,     'Extra', 'MhxExtra')),
-    ((L_LHAND,      'Hand', 'MhxHand'),
-     (L_RHAND,      'Hand', 'MhxHand')),
-    ((L_LFINGER,    'Fingers', 'MhxFingers'),
-     (L_RFINGER,    'Fingers', 'MhxFingers')),
-    ((L_LTOE,       'Toes', 'MhxToe'),
-     (L_RTOE,       'Toes', 'MhxToe')),
-]
 
 
 class MHX_PT_Layers(MhxPanel):
@@ -98,6 +85,37 @@ class MHX_PT_Layers(MhxPanel):
             else:
                 for (n, name, prop) in [left,right]:
                     row.prop(rig.data, "layers", index=n, toggle=True, text=name)
+
+#------------------------------------------------------------------------
+#    Mhx Properties Panel
+#------------------------------------------------------------------------
+
+class MHX_PT_Properties(MhxPanel):
+    bl_label = "Properties"
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "UI"
+    bl_category = "MHX"
+    bl_options = {'DEFAULT_CLOSED'}
+
+    def draw(self, context):
+        rig = context.object
+        if self.needsMhxUpdate(rig):
+            return
+
+        amt = rig.data
+        self.layout.separator()
+        self.layout.prop(amt, propRef("MhaGazeFollowsHead"), text="Gaze Follows Head")
+        row = self.layout.row()
+        row.label(text = "Left")
+        row.label(text = "Right")
+        props = [key for key in amt.keys() if key[0:3] == "Mha" and key[-1] in ["L", "R"]]
+        props.sort()
+        while props:
+            left,right = props[0:2]
+            props = props[2:]
+            row = self.layout.row()
+            row.prop(amt, propRef(left), text=left[3:-2])
+            row.prop(amt, propRef(right), text=right[3:-2])
 
 #------------------------------------------------------------------------
 #    Mhx FK/IK switch panel
@@ -188,91 +206,24 @@ class MHX_PT_Animation(MhxPanel):
         rig = context.object
         if self.needsMhxUpdate(rig):
             return
-        self.layout.operator("mhx.offset_toes")
+        self.layout.operator("mhx.enforce_constraints")
+        #self.layout.operator("mhx.offset_toes")
+        self.layout.operator("mhx.limbs_bend_positive")
         self.layout.operator("mhx.transfer_to_ik")
         self.layout.operator("mhx.transfer_to_fk")
         self.layout.operator("mhx.clear_animation")
         self.layout.operator("mhx.floor_foot")
-
-#------------------------------------------------------------------------
-#    Mhx Properties Panel
-#------------------------------------------------------------------------
-
-class MHX_PT_Properties(MhxPanel):
-    bl_label = "Properties"
-    bl_space_type = "VIEW_3D"
-    bl_region_type = "UI"
-    bl_category = "MHX"
-    bl_options = {'DEFAULT_CLOSED'}
-
-    def draw(self, context):
-        rig = context.object
-        if self.needsMhxUpdate(rig):
-            return
-
-        amt = rig.data
-        self.layout.separator()
-        self.layout.prop(amt, propRef("MhaGazeFollowsHead"), text="Gaze Follows Head")
-        row = self.layout.row()
-        row.label(text = "Left")
-        row.label(text = "Right")
-        props = [key for key in amt.keys() if key[0:3] == "Mha" and key[-1] in ["L", "R"]]
-        props.sort()
-        while props:
-            left,right = props[0:2]
-            props = props[2:]
-            row = self.layout.row()
-            row.prop(amt, propRef(left), text=left[3:-2])
-            row.prop(amt, propRef(right), text=right[3:-2])
-
-#-------------------------------------------------------------
-#   Enable and disable layers
-#-------------------------------------------------------------
-
-class MHX_OT_EnableAllLayers(MhxOperator, IsArmature):
-    bl_idname = "mhx.enable_all_layers"
-    bl_label = "Enable all layers"
-    bl_options = {'UNDO'}
-
-    def run(self, context):
-        rig = context.object
-        for (left,right) in MhxLayers:
-            if type(left) != str:
-                for (n, name, prop) in [left,right]:
-                    rig.data.layers[n] = True
-
-
-class MHX_OT_DisableAllLayers(MhxOperator, IsArmature):
-    bl_idname = "mhx.disable_all_layers"
-    bl_label = "Disable all layers"
-    bl_options = {'UNDO'}
-
-    def run(self, context):
-        rig = context.object
-        layers = 32*[False]
-        pb = context.active_pose_bone
-        if pb:
-            for n in range(32):
-                if pb.bone.layers[n]:
-                    layers[n] = True
-                    break
-        else:
-            layers[0] = True
-        if rig:
-            rig.data.layers = layers
 
 #-------------------------------------------------------------
 #   Initialize
 #-------------------------------------------------------------
 
 classes = [
-    MHX_OT_EnableAllLayers,
-    MHX_OT_DisableAllLayers,
-
+    MHX_PT_Main,
     MHX_PT_Layers,
+    MHX_PT_Properties,
     MHX_PT_FKIK,
     MHX_PT_Animation,
-    MHX_PT_Properties,
 ]
 
 
