@@ -27,7 +27,7 @@
 
 import bpy
 import time
-from mathutils import Vector, Matrix
+from mathutils import Vector, Matrix, Euler, Quaternion
 from bpy.props import *
 from .utils import *
 from .layers import *
@@ -37,7 +37,7 @@ from .fkik import Snapper, Basic, Updater
 #   Frame range
 #-------------------------------------------------------------
 
-class FrameRange:
+class FrameRange(Updater):
     startFrame : IntProperty(
         name = "Start Frame",
         description = "Starting frame for the animation",
@@ -147,7 +147,6 @@ class MHX_OT_LimbsBendPositive(HidePropsOperator, Bender, FrameRange):
         self.limbsBendPositive(frames)
         print("Limbs bent positive")
 
-
 #-------------------------------------------------------------
 #
 #-------------------------------------------------------------
@@ -172,6 +171,20 @@ class MHX_OT_EnforceConstraints(HidePropsOperator, Basic, FrameRange):
                         ymin = getattr(cns, "min_%s" % char)
                         ymax = getattr(cns, "max_%s" % char)
                         self.constrainFCurve(pb, idx, ymin, ymax, frames)
+            for idx in range(3):
+                if pb.lock_rotation[idx]:
+                    self.constrainFCurve(pb, idx, 0.0, 0.0, frames)
+
+        extraLocks = {
+            "toe.fk.L" : (1, 2),
+            "toe.fk.R" : (1, 2),
+        }
+        for bname, locks in extraLocks.items():
+            pb = self.getBone(bname)
+            for idx in locks:
+                print("Extra", pb, idx)
+                self.constrainFCurve(pb, idx, 0.0, 0.0, frames)
+
         print("F-curves constrained")
 
 
@@ -198,7 +211,7 @@ class MHX_OT_EnforceConstraints(HidePropsOperator, Basic, FrameRange):
                     kp.co[1] = ymax
 
 #-------------------------------------------------------------
-#
+#   Transfer FK - IK
 #-------------------------------------------------------------
 
 class Transferer(Snapper):
@@ -242,7 +255,7 @@ class Transferer(Snapper):
             self.state[n] = self.rig.data.layers[n] = False
 
 #------------------------------------------------------------------------
-#   Transfer FK - IK
+#   Transfer to FK
 #------------------------------------------------------------------------
 
 class MHX_OT_TransferToFk(Transferer, HidePropsOperator, Bender, FrameRange):
@@ -292,6 +305,9 @@ class MHX_OT_TransferToFk(Transferer, HidePropsOperator, Bender, FrameRange):
                 self.snapFkLeg(rLegSnapFk, rLegSnapIk, rLegIkToAnkle)
         self.setMhxIk(0.0)
 
+#------------------------------------------------------------------------
+#   Transfer to IK
+#------------------------------------------------------------------------
 
 class MHX_OT_TransferToIk(Transferer, HidePropsOperator, FrameRange):
     bl_idname = "mhx.transfer_to_ik"
@@ -419,7 +435,7 @@ class MHX_OT_ClearAnimation(HidePropsOperator):
         return ncurves
 
 #-------------------------------------------------------------
-#   Toe below ball
+#   Feet operations
 #-------------------------------------------------------------
 
 class FeetOperator(HidePropsOperator, Basic):
@@ -476,96 +492,42 @@ class FeetOperator(HidePropsOperator, Basic):
         pmat = self.getPoseMatrix(gmat, pb)
         self.insertLocation(pb, pmat)
 
+#-------------------------------------------------------------
+#   Offset toes
+#-------------------------------------------------------------
 
-class MHX_OT_OffsetToes(FeetOperator, FrameRange, Snapper):
-    bl_idname = "mhx.offset_toes"
-    bl_label = "Offset Toes"
-    bl_description = "Keep toes below the ball of the feet"
+class MHX_OT_SetConstraints(MhxOperator):
+    bl_idname = "mhx.set_constraints"
+    bl_label = "Set Constraints"
+    bl_description = "Add aggressive constraints to the feet"
     bl_options = {'UNDO'}
 
-    def draw(self, context):
-        FrameRange.draw(self, context)
-
     def run(self, context):
-        self.auto = True
-        self.rig, self.plane = self.getRigAndPlane(context)
-        try:
-            useIk = self.rig["MhaLegIk_L"] or self.rig["MhaLegIk_R"]
-        except KeyError:
-            useIk = False
-        if useIk:
-            raise MhxError("Toe Below Ball only for FK feet")
+        locks = {
+            "toe.fk" : [1, 2],
+            "foot.fk" : [1],
+            "foot.rev" : [1, 2],
+        }
+        limits = {
+            "toe.fk" : { "max_x" : 0, "min_y" : 0, "max_y" : 0, "min_z" : 0, "max_z" : 0 }
+        }
 
-        startProgress("Keep toes down")
-        frames = self.getActiveFrames()
-        print("Left toe")
-        self.toeBelowBall(context, frames, ".L")
-        print("Right toe")
-        self.toeBelowBall(context, frames, ".R")
-        raise MhxMessage("Toes kept down")
+        rig = context.object
+        for suffix in [".L", ".R"]:
+            for bname,lock in locks.items():
+                pb = rig.pose.bones[bname+suffix]
+                for idx in lock:
+                    pb.lock_rotation[idx] = True
+            for bname,limit in limits.items():
+                pb = rig.pose.bones[bname+suffix]
+                for cns in pb.constraints:
+                    if cns.type == 'LIMIT_ROTATION':
+                        for attr,val in limit.items():
+                            setattr(cns, attr, val)
 
-
-    def toeBelowBall(self, context, frames, suffix):
-        scn = context.scene
-        foot,toe,mBall,mToe,mHeel = self.getFkFeetBones(suffix)
-        ez,origin,rot = self.getPlaneInfo()
-        nFrames = len(frames)
-        if mBall:
-            for n,frame in enumerate(frames):
-                self.setFrame(scn, frame)
-                showProgress(n, frame, nFrames)
-                zToe = getProjection(mToe.matrix.col[3], ez)
-                zBall = getProjection(mBall.matrix.col[3], ez)
-                if zToe > zBall:
-                    gmat = self.offsetToeRotation(toe, ez)
-                else:
-                    gmat = toe.matrix
-                pmat = self.getPoseMatrix(gmat, toe)
-                pmat = self.keepToeRotationNegative(pmat, toe)
-                self.insertRotation(toe, pmat)
-        else:
-            for n,frame in enumerate(frames):
-                self.setFrame(scn, frame)
-                showProgress(n, frame, nFrames)
-                dzToe = getProjection(toe.matrix.col[1], ez)
-                if dzToe > 0:
-                    gmat = self.offsetToeRotation(toe, ez)
-                else:
-                    gmat = toe.matrix
-                pmat = self.getPoseMatrix(gmat, toe)
-                pmat = self.keepToeRotationNegative(pmat, toe)
-                self.insertRotation(toe, pmat)
-
-
-    def offsetToeRotation(self, toe, ez):
-        mat = toe.matrix.to_3x3()
-        y = mat.col[1]
-        y -= ez.dot(y)*ez
-        y.normalize()
-        x = mat.col[0]
-        x -= x.dot(y)*y
-        x.normalize()
-        z = x.cross(y)
-        mat.col[0] = x
-        mat.col[1] = y
-        mat.col[2] = z
-        gmat = mat.to_4x4()
-        gmat.col[3] = toe.matrix.col[3]
-        return self.getPoseMatrix(gmat, toe)
-
-
-    def keepToeRotationNegative(self, pmat, toe):
-        euler = pmat.to_3x3().to_euler(toe.rotation_mode)
-        if euler.x > 0:
-            pmat0 = pmat
-            euler.x = 0
-            pmat = euler.to_matrix().to_4x4()
-            pmat.col[3] = pmat0.col[3]
-        return pmat
-
-
-def getProjection(vec, ez):
-    return ez.dot(Vector(vec[:3]))
+#-------------------------------------------------------------
+#   Utilities
+#-------------------------------------------------------------
 
 
 def getOffset(point, ez, origin):
@@ -589,7 +551,107 @@ def getTailOffset(pb, ez, origin):
 #   Floor
 #-------------------------------------------------------------
 
-class MHX_OT_FloorFoot(FeetOperator, FrameRange, Updater):
+class MHX_OT_ShiftBoneFCurves(HidePropsOperator, FrameRange, Basic):
+    bl_idname = "mhx.shift_animation"
+    bl_label = "Shift Animation"
+    bl_description = "Shift the animation globally for selected boens"
+    bl_options = {'UNDO'}
+
+    def run(self, context):
+        startProgress("Shift animation")
+        self.auto = True
+        scn = context.scene
+        frames = [scn.frame_current] + self.getActiveFrames()
+        nFrames = len(frames)
+        if not self.rig.animation_data:
+            return
+        act = self.rig.animation_data.action
+        if not act:
+            return
+        basemats, useLoc = self.getBaseMatrices(act, frames, False)
+
+        deltaMat = {}
+        orders = {}
+        locks = {}
+        for bname,bmats in basemats.items():
+            pb = self.rig.pose.bones[bname]
+            bmat = bmats[0]
+            deltaMat[pb.name] = pb.matrix_basis @ bmat.inverted()
+
+        for n,frame in enumerate(frames):
+            self.setFrame(scn, frame)
+            showProgress(n, frame, nFrames)
+            for bname,bmats in basemats.items():
+                pb = self.rig.pose.bones[bname]
+                mat = deltaMat[pb.name] @ bmats[n]
+                if useLoc[bname]:
+                    self.insertLocation(pb, mat)
+                self.insertRotation(pb, mat)
+
+        raise MhxMessage("Animation shifted")
+
+
+    def getBaseMatrices(self, act, frames, useAll):
+        fcurves = { "location" : {}, "rotation_euler" : {}, "rotation_quaternion" : {} }
+        nidxs = { "location" : 3, "rotation_euler" : 3, "rotation_quaternion" : 4 }
+        for fcu in act.fcurves:
+            words = fcu.data_path.split('"')
+            if words[0] != "pose.bones[":
+                continue
+            bname = words[1]
+            channel = words[2].rsplit(".")[-1]
+            if (channel in fcurves.keys() and
+                bname in self.rig.pose.bones.keys()):
+                pb = self.rig.pose.bones[bname]
+            else:
+                continue
+            if pb.bone.select:
+                if bname not in fcurves[channel].keys():
+                    fcurves[channel][bname] = nidxs[channel]*[None]
+                fcurves[channel][bname][fcu.array_index] = fcu
+
+        basemats = {}
+        useLoc = {}
+        for bname,fcus in fcurves["rotation_euler"].items():
+            useLoc[bname] = False
+            order = self.rig.pose.bones[bname].rotation_mode
+            fcu0,fcu1,fcu2 = fcus
+            rmats = basemats[bname] = []
+            for frame in frames:
+                euler = Euler((fcu0.evaluate(frame), fcu1.evaluate(frame), fcu2.evaluate(frame)), order)
+                rmats.append(euler.to_matrix().to_4x4())
+
+        for bname,fcus in fcurves["rotation_quaternion"].items():
+            useLoc[bname] = False
+            fcu0,fcu1,fcu2,fcu3 = fcus
+            rmats = basemats[bname] = []
+            for frame in frames:
+                quat = Quaternion((fcu0.evaluate(frame), fcu1.evaluate(frame), fcu2.evaluate(frame), fcu3.evaluate(frame)))
+                rmats.append(quat.to_matrix().to_4x4())
+
+        for bname,fcus in fcurves["location"].items():
+            useLoc[bname] = True
+            fcu0,fcu1,fcu2 = fcus
+            tmats = []
+            for frame in frames:
+                loc = (fcu0.evaluate(frame), fcu1.evaluate(frame), fcu2.evaluate(frame))
+                tmats.append(Matrix.Translation(loc))
+            if bname in basemats.keys():
+                rmats = basemats[bname]
+                mats = []
+                for tmat,rmat in zip(tmats, rmats):
+                    mats.append( tmat @ rmat )
+                basemats[bname] = mats
+            else:
+                basemats[bname] = tmats
+
+        return basemats, useLoc
+
+#-------------------------------------------------------------
+#   Floor
+#-------------------------------------------------------------
+
+class MHX_OT_FloorFoot(FeetOperator, FrameRange):
     bl_idname = "mhx.floor_foot"
     bl_label = "Keep Feet Above Floor"
     bl_description = "Keep Feet Above Plane"
@@ -754,12 +816,13 @@ class MHX_OT_FloorFoot(FeetOperator, FrameRange, Updater):
 #----------------------------------------------------------
 
 classes = [
+    MHX_OT_SetConstraints,
     MHX_OT_EnforceConstraints,
     MHX_OT_LimbsBendPositive,
+    MHX_OT_ShiftBoneFCurves,
     MHX_OT_TransferToFk,
     MHX_OT_TransferToIk,
     MHX_OT_ClearAnimation,
-    MHX_OT_OffsetToes,
     MHX_OT_FloorFoot,
 ]
 

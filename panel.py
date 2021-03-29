@@ -206,9 +206,11 @@ class MHX_PT_Animation(MhxPanel):
         rig = context.object
         if self.needsMhxUpdate(rig):
             return
+        self.layout.operator("mhx.set_constraints")
         self.layout.operator("mhx.enforce_constraints")
-        #self.layout.operator("mhx.offset_toes")
         self.layout.operator("mhx.limbs_bend_positive")
+        self.layout.operator("mhx.shift_animation")
+        self.layout.separator()
         self.layout.operator("mhx.transfer_to_ik")
         self.layout.operator("mhx.transfer_to_fk")
         self.layout.operator("mhx.clear_animation")

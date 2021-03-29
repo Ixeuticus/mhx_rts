@@ -187,17 +187,21 @@ class Snapper(Updater, Basic):
         self.insertRotation(pb, pmat)
 
 
-    def matchIkLeg(self, legIk, toeFk, mBall, mToe, mHeel):
+    def matchIkLeg(self, legIk, toeFk, ankle):
         # No x and y rotation for Leg IK target
-        head,quat,scale = toeFk.matrix.decompose()
+        tHead = toeFk.matrix.decompose()[0]
         rmat = toeFk.matrix.to_3x3()
-        y = rmat.col[1]
-        tail = head + y * toeFk.bone.length
-        euler = quat.to_euler()
-        euler.x = euler.y = 0
-        gmat = euler.to_matrix()
-        y = gmat.col[1]
-        head = tail - y * legIk.bone.length
+        ty = rmat.col[1]
+        tTail = tHead + ty * toeFk.bone.length
+        aHead = ankle.matrix.decompose()[0]
+        y = tTail - aHead
+        y[2] = 0
+        y.normalize()
+        z = Vector((0,0,1))
+        x = y.cross(z)
+        gmat = Matrix((x,y,z))
+        gmat.transpose()
+        head = tTail - y * legIk.bone.length
         gmat = gmat.to_4x4()
         gmat.col[3][:3] = head
         pmat = self.getPoseMatrix(gmat, legIk)
@@ -302,7 +306,7 @@ class Snapper(Updater, Basic):
 
         self.matchPoseTranslation(ankle, footFk)
         self.updatePose()
-        self.matchIkLeg(legIk, toeFk, mBall, mToe, mHeel)
+        self.matchIkLeg(legIk, toeFk, ankle)
         self.updatePose()
         self.matchPoseReverse(toeRev, toeFk)
         self.updatePose()
