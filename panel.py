@@ -207,6 +207,7 @@ class MHX_PT_Animation(MhxPanel):
         if self.needsMhxUpdate(rig):
             return
         self.layout.operator("mhx.remove_frame_zero")
+        self.layout.operator("mhx.remove_unused_fcurves")
         self.layout.operator("mhx.clear_animation")
         self.layout.operator("mhx.set_constraints")
         self.layout.operator("mhx.enforce_constraints")

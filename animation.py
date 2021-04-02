@@ -182,6 +182,45 @@ class MHX_OT_RemoveFrameZero(MhxOperator):
                 fcu.keyframe_points.remove(kp, fast=True)
 
 #-------------------------------------------------------------
+#   Remove unused F-curves
+#-------------------------------------------------------------
+
+class MHX_OT_RemoveUnusedFcurves(MhxOperator):
+    bl_idname = "mhx.remove_unused_fcurves"
+    bl_label = "Remove Unused F-curves"
+    bl_description = "Remove unused f-curves"
+    bl_options = {'UNDO'}
+
+    def run(self, context):
+        rig = context.object
+        if rig.animation_data is None:
+            return None
+        act = rig.animation_data.action
+        if act is None:
+            return None
+        deletes = []
+        for fcu in act.fcurves:
+            channel = fcu.data_path.rsplit(".")[-1]
+            if channel == "rotation_euler":
+                if self.trivial(fcu, 0.0):
+                    deletes.append(fcu)
+            elif channel == "rotation_quaternion":
+                if fcu.array_index == 0 and self.trivial(fcu, 1.0):
+                    deletes.append(fcu)
+                elif self.trivial(fcu, 0.0):
+                    deletes.append(fcu)
+        for fcu in deletes:
+            act.fcurves.remove(fcu)
+
+
+    def trivial(self, fcu, default):
+        for kp in fcu.keyframe_points:
+            if abs(kp.co[1] - default) > 1e-6:
+                return False
+        print("TRIV", fcu.data_path, fcu.array_index)
+        return True
+
+#-------------------------------------------------------------
 #
 #-------------------------------------------------------------
 
@@ -680,7 +719,7 @@ class MHX_OT_ShiftBoneFCurves(HidePropsOperator, FrameRange, Basic):
             fcu0,fcu1,fcu2 = fcus
             rmats = basemats[bname] = []
             for frame in frames:
-                euler = Euler((fcu0.evaluate(frame), fcu1.evaluate(frame), fcu2.evaluate(frame)), order)
+                euler = Euler((self.getValue(fcu0, frame, 0),self.getValue(fcu1, frame, 0), self.getValue(fcu2, frame, 0)), order)
                 rmats.append(euler.to_matrix().to_4x4())
 
         for bname,fcus in fcurves["rotation_quaternion"].items():
@@ -688,7 +727,7 @@ class MHX_OT_ShiftBoneFCurves(HidePropsOperator, FrameRange, Basic):
             fcu0,fcu1,fcu2,fcu3 = fcus
             rmats = basemats[bname] = []
             for frame in frames:
-                quat = Quaternion((fcu0.evaluate(frame), fcu1.evaluate(frame), fcu2.evaluate(frame), fcu3.evaluate(frame)))
+                quat = Quaternion((self.getValue(fcu0, frame, 1), self.getValue(fcu1, frame, 0), self.getValue(fcu2, frame, 0), self.getValue(fcu3, frame, 0)))
                 rmats.append(quat.to_matrix().to_4x4())
 
         for bname,fcus in fcurves["location"].items():
@@ -696,7 +735,7 @@ class MHX_OT_ShiftBoneFCurves(HidePropsOperator, FrameRange, Basic):
             fcu0,fcu1,fcu2 = fcus
             tmats = []
             for frame in frames:
-                loc = (fcu0.evaluate(frame), fcu1.evaluate(frame), fcu2.evaluate(frame))
+                loc = (self.getValue(fcu0, frame, 0),self.getValue(fcu1, frame, 0), self.getValue(fcu2, frame, 0))
                 tmats.append(Matrix.Translation(loc))
             if bname in basemats.keys():
                 rmats = basemats[bname]
@@ -709,8 +748,12 @@ class MHX_OT_ShiftBoneFCurves(HidePropsOperator, FrameRange, Basic):
 
         return basemats, useLoc
 
+
+    def getValue(self, fcu, frame, default):
+        return (fcu.evaluate(frame) if fcu else default)
+
 #-------------------------------------------------------------
-#   Floor
+#   Floor FK foot
 #-------------------------------------------------------------
 
 class MHX_OT_FloorFkFoot(HidePropsOperator, Footer, FrameRange):
@@ -780,6 +823,9 @@ class MHX_OT_FloorFkFoot(HidePropsOperator, Footer, FrameRange):
         else:
             return 0
 
+#-------------------------------------------------------------
+#   Floor IK foot
+#-------------------------------------------------------------
 
 class MHX_OT_FloorIkFoot(HidePropsOperator, Footer, FrameRange):
     bl_idname = "mhx.floor_ik_feet"
@@ -956,6 +1002,7 @@ class MHX_OT_FloorIkFoot(HidePropsOperator, Footer, FrameRange):
 
 classes = [
     MHX_OT_RemoveFrameZero,
+    MHX_OT_RemoveUnusedFcurves,
     MHX_OT_SetConstraints,
     MHX_OT_EnforceConstraints,
     MHX_OT_LimbsBendPositive,

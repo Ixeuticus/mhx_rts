@@ -109,8 +109,7 @@ class Basic:
         for fcu in self.findBoneFCurves(pb, mode):
             if fcu.array_index == idx:
                 return fcu
-        print('F-curve "%s" not found.' % path)
-        halt
+        print('F-curve %d for "%s" not found.' % (idx, pb.name))
         return None
 
 #------------------------------------------------------------------
