@@ -206,15 +206,18 @@ class MHX_PT_Animation(MhxPanel):
         rig = context.object
         if self.needsMhxUpdate(rig):
             return
+        self.layout.operator("mhx.remove_frame_zero")
+        self.layout.operator("mhx.clear_animation")
         self.layout.operator("mhx.set_constraints")
         self.layout.operator("mhx.enforce_constraints")
+        self.layout.separator()
         self.layout.operator("mhx.limbs_bend_positive")
         self.layout.operator("mhx.shift_animation")
+        self.layout.operator("mhx.floor_fk_feet")
         self.layout.separator()
         self.layout.operator("mhx.transfer_to_ik")
         self.layout.operator("mhx.transfer_to_fk")
-        self.layout.operator("mhx.clear_animation")
-        self.layout.operator("mhx.floor_foot")
+        self.layout.operator("mhx.floor_ik_feet")
 
 #-------------------------------------------------------------
 #   Initialize

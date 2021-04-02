@@ -26,7 +26,7 @@
 # either expressed or implied, of the FreeBSD Project.
 
 import bpy
-from bpy.props import StringProperty
+from bpy.props import StringProperty, BoolProperty
 from mathutils import *
 from .utils import *
 from .layers import *
@@ -90,7 +90,7 @@ class Basic:
                 pb.keyframe_insert("rotation_euler", frame=self.frame, group=pb.name)
 
 
-    def findBoneFCurve(self, pb, idx, mode='rotation'):
+    def findBoneFCurves(self, pb, mode):
         if self.rig.animation_data is None:
             return None
         act = self.rig.animation_data.action
@@ -102,9 +102,12 @@ class Basic:
             else:
                 mode = "rotation_euler"
         path = 'pose.bones["%s"].%s' % (pb.name, mode)
-        for fcu in act.fcurves:
-            if (fcu.data_path == path and
-                fcu.array_index == idx):
+        return [fcu for fcu in act.fcurves if fcu.data_path == path]
+
+
+    def findBoneFCurve(self, pb, idx, mode='rotation'):
+        for fcu in self.findBoneFCurves(pb, mode):
+            if fcu.array_index == idx:
                 return fcu
         print('F-curve "%s" not found.' % path)
         halt
@@ -187,20 +190,22 @@ class Snapper(Updater, Basic):
         self.insertRotation(pb, pmat)
 
 
-    def matchIkLeg(self, legIk, toeFk, ankle):
+    def matchIkLeg(self, legIk, toeFk):
         # No x and y rotation for Leg IK target
         tHead = toeFk.matrix.decompose()[0]
-        rmat = toeFk.matrix.to_3x3()
-        ty = rmat.col[1]
+        tmat = toeFk.matrix.to_3x3()
+        ty = tmat.col[1]
         tTail = tHead + ty * toeFk.bone.length
-        aHead = ankle.matrix.decompose()[0]
-        y = tTail - aHead
-        y[2] = 0
-        y.normalize()
-        z = Vector((0,0,1))
-        x = y.cross(z)
-        gmat = Matrix((x,y,z))
-        gmat.transpose()
+        if self.useRotation:
+            y = tTail - tHead
+            y.normalize()
+            z = tmat.col[2]
+            x = y.cross(z)
+            gmat = Matrix((x,y,z))
+            gmat.transpose()
+        else:
+            gmat = legIk.bone.matrix_local.to_3x3()
+            y = gmat.col[1]
         head = tTail - y * legIk.bone.length
         gmat = gmat.to_4x4()
         gmat.col[3][:3] = head
@@ -306,7 +311,7 @@ class Snapper(Updater, Basic):
 
         self.matchPoseTranslation(ankle, footFk)
         self.updatePose()
-        self.matchIkLeg(legIk, toeFk, ankle)
+        self.matchIkLeg(legIk, toeFk)
         self.updatePose()
         self.matchPoseReverse(toeRev, toeFk)
         self.updatePose()
@@ -315,6 +320,17 @@ class Snapper(Updater, Basic):
         self.matchPoseTranslation(ankleIk, footFk)
         self.updatePose()
         self.matchPoleTarget(kneePt, uplegFk, lolegFk)
+
+
+class FootSnapper(Snapper):
+    useRotation: BoolProperty(
+        name = "Use Rotation",
+        description = "Also match IK effector rotation.\nSuitable for hand animation",
+        default = True)
+
+    def draw(self, context):
+        self.layout.prop(self, "useRotation")
+
 
 
 class MHX_OT_MhxSnapFkLeftArm(Snapper, HideOperator):
@@ -437,7 +453,7 @@ class MHX_OT_MhxSnapIkRightArm(Snapper, HideOperator):
         self.restore(1.0, False, True)
 
 
-class MHX_OT_MhxSnapIkLeftLeg(Snapper, HideOperator):
+class MHX_OT_MhxSnapIkLeftLeg(FootSnapper, HidePropsOperator):
     bl_idname = "mhx.snap_ik_left_leg"
     bl_label = "Snap L IK Leg"
     bl_description = "Snap the left IK leg to the pose of the left FK leg"
@@ -457,7 +473,7 @@ class MHX_OT_MhxSnapIkLeftLeg(Snapper, HideOperator):
         self.restore(1.0, False, True)
 
 
-class MHX_OT_MhxSnapIkRightLeg(Snapper, HideOperator):
+class MHX_OT_MhxSnapIkRightLeg(FootSnapper, HidePropsOperator):
     bl_idname = "mhx.snap_ik_right_leg"
     bl_label = "Snap R IK Leg"
     bl_description = "Snap the right IK leg to the pose of the right FK leg"

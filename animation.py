@@ -31,7 +31,7 @@ from mathutils import Vector, Matrix, Euler, Quaternion
 from bpy.props import *
 from .utils import *
 from .layers import *
-from .fkik import Snapper, Basic, Updater
+from .fkik import Snapper, Basic, Updater, FootSnapper
 
 #-------------------------------------------------------------
 #   Frame range
@@ -76,6 +76,18 @@ class FrameRange(Updater):
             frames = frames[1:]
         frames.reverse()
         return frames
+
+
+    def setInterpolation(self):
+        if not self.rig.animation_data:
+            return
+        act = self.rig.animation_data.action
+        if not act:
+            return
+        for fcu in act.fcurves:
+            for pt in fcu.keyframe_points:
+                pt.interpolation = 'LINEAR'
+            fcu.extrapolation = 'CONSTANT'
 
 #-------------------------------------------------------------
 #   Limbs bend positive
@@ -148,6 +160,28 @@ class MHX_OT_LimbsBendPositive(HidePropsOperator, Bender, FrameRange):
         print("Limbs bent positive")
 
 #-------------------------------------------------------------
+#   Remove keyframes from frame 0
+#-------------------------------------------------------------
+
+class MHX_OT_RemoveFrameZero(MhxOperator):
+    bl_idname = "mhx.remove_frame_zero"
+    bl_label = "Remove Frame Zero"
+    bl_description = "Remove all keys from frame 0"
+    bl_options = {'UNDO'}
+
+    def run(self, context):
+        rig = context.object
+        if rig.animation_data is None:
+            return None
+        act = rig.animation_data.action
+        if act is None:
+            return None
+        for fcu in act.fcurves:
+            kps = [kp for kp in fcu.keyframe_points if kp.co[0] == 0.0]
+            for kp in kps:
+                fcu.keyframe_points.remove(kp, fast=True)
+
+#-------------------------------------------------------------
 #
 #-------------------------------------------------------------
 
@@ -174,7 +208,6 @@ class MHX_OT_EnforceConstraints(HidePropsOperator, Basic, FrameRange):
             for idx in range(3):
                 if pb.lock_rotation[idx]:
                     self.constrainFCurve(pb, idx, 0.0, 0.0, frames)
-
         extraLocks = {
             "toe.fk.L" : (1, 2),
             "toe.fk.R" : (1, 2),
@@ -184,7 +217,7 @@ class MHX_OT_EnforceConstraints(HidePropsOperator, Basic, FrameRange):
             for idx in locks:
                 print("Extra", pb, idx)
                 self.constrainFCurve(pb, idx, 0.0, 0.0, frames)
-
+        self.setInterpolation()
         print("F-curves constrained")
 
 
@@ -214,7 +247,7 @@ class MHX_OT_EnforceConstraints(HidePropsOperator, Basic, FrameRange):
 #   Transfer FK - IK
 #-------------------------------------------------------------
 
-class Transferer(Snapper):
+class Transferer(FootSnapper):
     useArms : BoolProperty(
         name="Include Arms",
         description="Include arms in FK/IK snapping",
@@ -228,6 +261,7 @@ class Transferer(Snapper):
     def draw(self, context):
         self.layout.prop(self, "useArms")
         self.layout.prop(self, "useLegs")
+        FootSnapper.draw(self, context)
 
 
     def setMhxIk(self, value):
@@ -272,6 +306,7 @@ class MHX_OT_TransferToFk(Transferer, HidePropsOperator, Bender, FrameRange):
         startProgress("Transfer to FK")
         time1 = time.perf_counter()
         self.transferMhxToFk(context)
+        self.setInterpolation()
         time2 = time.perf_counter()
         raise MhxMessage("Transfer to FK completed\nin %1f seconds" % (time2-time1))
 
@@ -323,6 +358,7 @@ class MHX_OT_TransferToIk(Transferer, HidePropsOperator, FrameRange):
         startProgress("Transfer to IK")
         time1 = time.perf_counter()
         self.transferMhxToIk(context)
+        self.setInterpolation()
         time2 = time.perf_counter()
         raise MhxMessage("Transfer to IK completed\nin %1f seconds" % (time2-time1))
 
@@ -438,18 +474,44 @@ class MHX_OT_ClearAnimation(HidePropsOperator):
 #   Feet operations
 #-------------------------------------------------------------
 
-class FeetOperator(HidePropsOperator, Basic):
+class Footer(Basic):
 
-    def getFkFeetBones(self, suffix):
-        foot = self.getBone("foot.fk" + suffix)
-        toe = self.getBone("toe.fk" + suffix)
+    useLeft : BoolProperty(
+        name="Left",
+        description="Keep left foot above floor",
+        default=True)
+
+    useRight : BoolProperty(
+        name="Right",
+        description="Keep right foot above floor",
+        default=True)
+
+    useHips : BoolProperty(
+        name="Hips",
+        description="Also adjust character COM when keeping feet above floor",
+        default=True)
+
+    useMarkers : BoolProperty(
+        name = "Markers",
+        description = "Use markers to determine foot location",
+        default = True)
+
+    def draw(self, context):
+        self.layout.prop(self, "useLeft")
+        self.layout.prop(self, "useRight")
+        self.layout.prop(self, "useHips")
+        self.layout.prop(self, "useMarkers")
+        FrameRange.draw(self, context)
+
+
+    def getMarkers(self, suffix):
         try:
             mBall = self.getBone("ball.marker" + suffix)
             mToe = self.getBone("toe.marker" + suffix)
             mHeel = self.getBone("heel.marker" + suffix)
+            return mBall,mToe,mHeel
         except KeyError:
-            mBall = mToe = mHeel = None
-        return foot,toe,mBall,mToe,mHeel
+            return None
 
 
     def getRigAndPlane(self, context):
@@ -651,56 +713,32 @@ class MHX_OT_ShiftBoneFCurves(HidePropsOperator, FrameRange, Basic):
 #   Floor
 #-------------------------------------------------------------
 
-class MHX_OT_FloorFoot(FeetOperator, FrameRange):
-    bl_idname = "mhx.floor_foot"
-    bl_label = "Keep Feet Above Floor"
-    bl_description = "Keep Feet Above Plane"
+class MHX_OT_FloorFkFoot(HidePropsOperator, Footer, FrameRange):
+    bl_idname = "mhx.floor_fk_feet"
+    bl_label = "Keep FK Feet Above Floor"
+    bl_description = "Keep FK Feet Above Zero Plane"
     bl_options = {'UNDO'}
-
-    useLeft : BoolProperty(
-        name="Left",
-        description="Keep left foot above floor",
-        default=True)
-
-    useRight : BoolProperty(
-        name="Right",
-        description="Keep right foot above floor",
-        default=True)
-
-    useHips : BoolProperty(
-        name="Hips",
-        description="Also adjust character COM when keeping feet above floor",
-        default=True)
-
-    def draw(self, context):
-        self.layout.prop(self, "useLeft")
-        self.layout.prop(self, "useRight")
-        self.layout.prop(self, "useHips")
-        FrameRange.draw(self, context)
-
 
     def run(self, context):
         startProgress("Keep feet above floor")
         self.auto = True
         scn = context.scene
         self.rig, self.plane = self.getRigAndPlane(context)
-        try:
-            useIk = (self.amt["MhaLegIk_L"] or self.amt["MhaLegIk_R"])
-        except KeyError:
-            useIk = False
         frames = self.getActiveFrames()
-        print("UIK", useIk)
-        if useIk:
-            self.floorIkFoot(scn, frames)
-        else:
-            self.floorFkFoot(scn, frames)
-        raise MhxMessage("Feet kept above floor")
+        self.floorFkFoot(scn, frames)
+        self.setInterpolation()
+        raise MhxMessage("FK Feet kept above floor")
 
 
     def floorFkFoot(self, scn, frames):
         hip = self.getBone("hip")
-        lFoot,lToe,lmBall,lmToe,lmHeel = self.getFkFeetBones(".L")
-        rFoot,rToe,rmBall,rmToe,rmHeel = self.getFkFeetBones(".R")
+        lFoot,lToe = self.getFkFeetBones(".L")
+        rFoot,rToe = self.getFkFeetBones(".R")
+        if self.useMarkers:
+            lMarkers = self.getMarkers(".L")
+            rMarkers = self.getMarkers(".R")
+        else:
+            lMarkers = rMarkers = None
         ez,origin,rot = self.getPlaneInfo()
 
         nFrames = len(frames)
@@ -708,9 +746,9 @@ class MHX_OT_FloorFoot(FeetOperator, FrameRange):
             self.setFrame(scn, frame)
             offset = 0
             if self.useLeft:
-                offset = self.getFkOffset(ez, origin, lFoot, lToe, lmBall, lmToe, lmHeel)
+                offset = self.getFkOffset(ez, origin, lFoot, lToe, lMarkers)
             if self.useRight:
-                rOffset = self.getFkOffset(ez, origin, rFoot, rToe, rmBall, rmToe, rmHeel)
+                rOffset = self.getFkOffset(ez, origin, rFoot, rToe, rMarkers)
                 if rOffset > offset:
                     offset = rOffset
             showProgress(n, frame, nFrames)
@@ -718,30 +756,63 @@ class MHX_OT_FloorFoot(FeetOperator, FrameRange):
                 self.addOffset(hip, offset, ez)
 
 
-    def getFkOffset(self, ez, origin, foot, toe, mBall, mToe, mHeel):
-        if mBall:
-            offset = toeOffset = getHeadOffset(mToe, ez, origin)
+    def getFkFeetBones(self, suffix):
+        foot = self.getBone("foot.fk" + suffix)
+        toe = self.getBone("toe.fk" + suffix)
+        return foot,toe
+
+
+    def getFkOffset(self, ez, origin, foot, toe, markers):
+        if markers:
+            mToe,mBall,mHeel = markers
+            toeOffset = getHeadOffset(mToe, ez, origin)
             ballOffset = getHeadOffset(mBall, ez, origin)
-            if ballOffset > offset:
-                offset = ballOffset
             heelOffset = getHeadOffset(mHeel, ez, origin)
-            if heelOffset > offset:
-                offset = heelOffset
+            return max([toeOffset, ballOffset, heelOffset])
         elif toe:
-            offset = getTailOffset(toe, ez, origin)
+            toeOffset = getTailOffset(toe, ez, origin)
             ballOffset = getHeadOffset(toe, ez, origin)
-            if ballOffset > offset:
-                offset = ballOffset
             ball = toe.matrix.col[3]
             y = toe.matrix.col[1]
             heel = ball - y*foot.length
             heelOffset = getOffset(heel, ez, origin)
-            if heelOffset > offset:
-                offset = heelOffset
+            return max([toeOffset, ballOffset, heelOffset])
         else:
-            offset = 0
+            return 0
 
-        return offset
+
+class MHX_OT_FloorIkFoot(HidePropsOperator, Footer, FrameRange):
+    bl_idname = "mhx.floor_ik_feet"
+    bl_label = "Keep IK Feet Above Floor"
+    bl_description = "Keep IK Feet Above Zero Plane"
+    bl_options = {'UNDO'}
+
+    useGlue : BoolProperty(
+        name = "Glue Feet",
+        description = "Remove movement of IK effector on shifted frames",
+        default = True)
+
+    easeInOut : IntProperty(
+        name = "Ease In/Out",
+        description = "",
+        min = 0, max = 5,
+        default = 3)
+
+    def draw(self, context):
+        Footer.draw(self, context)
+        self.layout.prop(self, "useGlue")
+        self.layout.prop(self, "easeInOut")
+
+
+    def run(self, context):
+        startProgress("Keep feet above floor")
+        self.auto = True
+        scn = context.scene
+        self.rig, self.plane = self.getRigAndPlane(context)
+        frames = self.getActiveFrames()
+        self.floorIkFoot(scn, frames)
+        self.setInterpolation()
+        raise MhxMessage("FK Feet kept above floor")
 
 
     def floorIkFoot(self, scn, frames):
@@ -749,6 +820,11 @@ class MHX_OT_FloorFoot(FeetOperator, FrameRange):
         lleg = self.rig.pose.bones["foot.ik.L"]
         rleg = self.rig.pose.bones["foot.ik.R"]
         ez,origin,rot = self.getPlaneInfo()
+        if self.useMarkers:
+            lMarkers = self.getMarkers(".L")
+            rMarkers = self.getMarkers(".R")
+        else:
+            lMarkers = rMarkers = None
 
         self.fillKeyFrames(lleg, frames, 3, mode='location')
         self.fillKeyFrames(rleg, frames, 3, mode='location')
@@ -756,26 +832,33 @@ class MHX_OT_FloorFoot(FeetOperator, FrameRange):
             self.fillKeyFrames(hip, frames, 3, mode='location')
 
         nFrames = len(frames)
+        left = []
+        right = []
         for n,frame in enumerate(frames):
             self.setFrame(scn, frame)
             showProgress(n, frame, nFrames)
-
             if self.useLeft:
-                lOffset = self.getIkOffset(ez, origin, lleg)
+                lOffset = self.getIkOffset(ez, origin, lleg, lMarkers)
                 if lOffset > 0:
                     self.addOffset(lleg, lOffset, ez)
+                    left.append(frame)
             else:
                 lOffset = 0
             if self.useRight:
-                rOffset = self.getIkOffset(ez, origin, rleg)
+                rOffset = self.getIkOffset(ez, origin, rleg, rMarkers)
                 if rOffset > 0:
                     self.addOffset(rleg, rOffset, ez)
+                    right.append(frame)
             else:
                 rOffset = 0
-
             hOffset = min(lOffset,rOffset)
             if hOffset > 0 and self.useHips:
                 self.addOffset(hip, hOffset, ez)
+
+        if self.useGlue and left:
+            self.glueFoot(lleg, left)
+        if self.useGlue and right:
+            self.glueFoot(rleg, right)
 
 
     def fillKeyFrames(self, pb, frames, nIndices, mode='rotation'):
@@ -788,34 +871,91 @@ class MHX_OT_FloorFoot(FeetOperator, FrameRange):
                 fcu.keyframe_points.insert(frame, y, options={'FAST'})
 
 
-    def getIkOffset(self, ez, origin, leg):
-        offset = getHeadOffset(leg, ez, origin)
-        tailOffset = getTailOffset(leg, ez, origin)
-        if tailOffset > offset:
-            offset = tailOffset
-        return offset
+    def getIkOffset(self, ez, origin, leg, markers):
+        if markers:
+            mToe,mBall,mHeel = markers
+            toeOffset = getHeadOffset(mToe, ez, origin)
+            ballOffset = getHeadOffset(mBall, ez, origin)
+            heelOffset = getHeadOffset(mHeel, ez, origin)
+            return max([toeOffset, ballOffset, heelOffset])
+        elif True:
+            headOffset = getHeadOffset(leg, ez, origin)
+            tailOffset = getTailOffset(leg, ez, origin)
+            return max([headOffset, tailOffset])
+        else:
+            foot = self.rig.pose.bones["foot.rev" + suffix]
+            toe = self.rig.pose.bones["toe.rev" + suffix]
+            toeOffset = getHeadOffset(toe, ez, origin)
+            ballOffset = getTailOffset(toe, ez, origin)
+            ball = foot.matrix.col[3]
+            heel = ball + y*foot.length
+            heelOffset = getOffset(heel, ez, origin)
+            return max([toeOffset, ballOffset, heelOffset])
 
-        foot = self.rig.pose.bones["foot.rev" + suffix]
-        toe = self.rig.pose.bones["toe.rev" + suffix]
 
-        ballOffset = getTailOffset(toe, ez, origin)
-        if ballOffset > offset:
-            offset = ballOffset
+    def glueFoot(self, leg, frames):
+        if len(frames) == 0:
+            return
+        fcus = self.findBoneFCurves(leg, "rotation")
+        fcus += self.findBoneFCurves(leg, "location")
+        print("LL", leg.name, frames)
+        groups = self.getGroups(frames)
+        for group in groups:
+            print("  R", group)
+        for frame0,frame1 in groups:
+            for fcu in fcus:
+                self.average(fcu, frame0, frame1)
 
-        ball = foot.matrix.col[3]
-        y = toe.matrix.col[1]
-        heel = ball + y*foot.length
-        heelOffset = getOffset(heel, ez, origin)
-        if heelOffset > offset:
-            offset = heelOffset
 
-        return offset
+    def getGroups(self, frames):
+        groups = []
+        frame0 = frame1 = frames[0]
+        while frames:
+            frame0 = frame1 = frames[0]
+            print("SS", frame0)
+            for n,frame in enumerate(frames[1:]):
+                n1 = n+1
+                if frame == frame1+1:
+                    frame1 = frame
+                else:
+                    break
+            if frame1 != frame0:
+                groups.append((frame0, frame1))
+            frames = frames[n1:]
+        return groups
+
+
+    def average(self, fcu, frame0, frame1):
+        kps = [kp for kp in fcu.keyframe_points
+               if kp.co[0] >= frame0 and kp.co[0] <= frame1]
+        yvals = [kp.co[1] for kp in kps]
+        if len(yvals) == 0:
+            return
+        n = self.easeInOut
+        if len(kps) < 2*n:
+            y0 = kps[0].co[1]
+            y1 = kps[-1].co[1]
+            for j in range(n):
+                w = j/n
+                kp = kps[j]
+                kp.co[1] = w*y1 + (1-w)*y0
+        else:
+            y = sum(yvals)/len(yvals)
+            for j in range(n):
+                w = j/n
+                kp = kps[j]
+                kp.co[1] = w*y + (1-w)*kp.co[1]
+                kp = kps[-1-j]
+                kp.co[1] = w*y + (1-w)*kp.co[1]
+            for kp in kps[n:-1-n]:
+                kp.co[1] = y
 
 #----------------------------------------------------------
 #   Initialize
 #----------------------------------------------------------
 
 classes = [
+    MHX_OT_RemoveFrameZero,
     MHX_OT_SetConstraints,
     MHX_OT_EnforceConstraints,
     MHX_OT_LimbsBendPositive,
@@ -823,7 +963,8 @@ classes = [
     MHX_OT_TransferToFk,
     MHX_OT_TransferToIk,
     MHX_OT_ClearAnimation,
-    MHX_OT_FloorFoot,
+    MHX_OT_FloorFkFoot,
+    MHX_OT_FloorIkFoot,
 ]
 
 def register():
