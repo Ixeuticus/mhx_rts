@@ -260,8 +260,9 @@ class Snapper(Updater, Basic):
             bname = "%s.%s" % (name, suffix)
             if bname in self.rig.pose.bones.keys():
                 pb = self.rig.pose.bones[bname]
-            elif bname[-1] == "A":
-                pb = None
+            elif bname[-3] == "A":
+                pbones.append(None)
+                continue
             else:
                 raise MhxError("Bone %s was not found" % bname)
             pbones.append(pb)
