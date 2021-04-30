@@ -119,10 +119,10 @@ class Basic:
 SnapBones = {
     "Arm"   : ["upper_arm", "forearm", "hand"],
     "ArmFK" : ["upper_arm.fk", "forearm.fk", "hand.fk"],
-    "ArmIK" : ["upper_arm.ik", "forearm.ik", "elbow.pt.ik", "hand.ik"],
+    "ArmIK" : ["upper_arm.ik", "forearm.ik", "elbow.pt.ik", "elbowPoleA", "hand.ik"],
     "Leg"   : ["thigh", "shin", "foot", "toe"],
     "LegFK" : ["thigh.fk", "shin.fk", "foot.fk", "toe.fk"],
-    "LegIK" : ["thigh.ik", "shin.ik", "knee.pt.ik", "ankle", "ankle.ik", "foot.ik", "foot.rev", "toe.rev", "ball.marker", "toe.marker", "heel.marker"],
+    "LegIK" : ["thigh.ik", "shin.ik", "knee.pt.ik", "kneePoleA", "ankle", "ankle.ik", "foot.ik", "foot.rev", "toe.rev", "ball.marker", "toe.marker", "heel.marker"],
 }
 
 class Snapper(Updater, Basic):
@@ -162,11 +162,6 @@ class Snapper(Updater, Basic):
     def matchPoseTranslation(self, pb, src):
         pmat = self.getPoseMatrix(src.matrix, pb)
         self.insertLocation(pb, pmat)
-
-
-    def matchPoseRotation(self, pb, src):
-        pmat = self.getPoseMatrix(src.matrix, pb)
-        self.insertRotation(pb, pmat)
 
 
     def matchPoseLocRot(self, pb, src):
@@ -213,6 +208,12 @@ class Snapper(Updater, Basic):
         self.insertRotation(legIk, pmat)
 
 
+    def zeroPoleA(self, poleA):
+        if poleA:
+            self.insertRotation(poleA, Matrix())
+            self.updatePose()
+
+
     def matchPoleTarget(self, pb, above, below):
         ay = Vector(above.matrix.col[1][:3])
         by = Vector(below.matrix.col[1][:3])
@@ -257,11 +258,11 @@ class Snapper(Updater, Basic):
         constraints = []
         for name in SnapBones[key]:
             bname = "%s.%s" % (name, suffix)
-            try:
+            if bname in self.rig.pose.bones.keys():
                 pb = self.rig.pose.bones[bname]
-            except KeyError:
+            elif bname[-1] == "A":
                 pb = None
-            if pb is None:
+            else:
                 raise MhxError("Bone %s was not found" % bname)
             pbones.append(pb)
             for cns in pb.constraints:
@@ -272,7 +273,7 @@ class Snapper(Updater, Basic):
 
     def snapFkArm(self, snapFk, snapIk):
         (uparmFk, loarmFk, handFk) = snapFk
-        (uparmIk, loarmIk, elbowPt, handIk) = snapIk
+        (uparmIk, loarmIk, elbowPt, elbowPoleA, handIk) = snapIk
 
         self.matchPoseTransform(uparmFk, uparmIk)
         self.updatePose()
@@ -283,8 +284,9 @@ class Snapper(Updater, Basic):
 
     def snapIkArm(self, snapFk, snapIk):
         (uparmFk, loarmFk, handFk) = snapFk
-        (uparmIk, loarmIk, elbowPt, handIk) = snapIk
+        (uparmIk, loarmIk, elbowPt, elbowPoleA, handIk) = snapIk
 
+        self.zeroPoleA(elbowPoleA)
         self.matchPoseLocRot(handIk, handFk)
         self.updatePose()
         self.matchPoleTarget(elbowPt, uparmFk, loarmFk)
@@ -292,7 +294,7 @@ class Snapper(Updater, Basic):
 
     def snapFkLeg(self, snapFk, snapIk, legIkToAnkle):
         (uplegFk, lolegFk, footFk, toeFk) = snapFk
-        (uplegIk, lolegIk, kneePt, ankle, ankleIk, legIk, footRev, toeRev, mBall, mToe, mHeel) = snapIk
+        (uplegIk, lolegIk, kneePt, kneePoleA, ankle, ankleIk, legIk, footRev, toeRev, mBall, mToe, mHeel) = snapIk
 
         self.matchPoseTransform(uplegFk, uplegIk)
         self.updatePose()
@@ -306,8 +308,9 @@ class Snapper(Updater, Basic):
 
     def snapIkLeg(self, snapFk, snapIk, legIkToAnkle):
         (uplegFk, lolegFk, footFk, toeFk) = snapFk
-        (uplegIk, lolegIk, kneePt, ankle, ankleIk, legIk, footRev, toeRev, mBall, mToe, mHeel) = snapIk
+        (uplegIk, lolegIk, kneePt, kneePoleA, ankle, ankleIk, legIk, footRev, toeRev, mBall, mToe, mHeel) = snapIk
 
+        self.zeroPoleA(kneePoleA)
         self.matchPoseTranslation(ankle, footFk)
         self.updatePose()
         self.matchIkLeg(legIk, toeFk)
@@ -323,7 +326,7 @@ class Snapper(Updater, Basic):
 
 class FootSnapper(Snapper):
     useRotation: BoolProperty(
-        name = "Use Rotation",
+        name = "Rotate IK Foot",
         description = "Also match IK effector rotation.\nSuitable for hand animation",
         default = True)
 
@@ -452,7 +455,7 @@ class MHX_OT_MhxSnapIkRightArm(Snapper, HideOperator):
         self.restore(1.0, False, True)
 
 
-class MHX_OT_MhxSnapIkLeftLeg(FootSnapper, HidePropsOperator):
+class MHX_OT_MhxSnapIkLeftLeg(FootSnapper, HideOperator):
     bl_idname = "mhx.snap_ik_left_leg"
     bl_label = "Snap L IK Leg"
     bl_description = "Snap the left IK leg to the pose of the left FK leg"
@@ -465,6 +468,7 @@ class MHX_OT_MhxSnapIkLeftLeg(FootSnapper, HidePropsOperator):
 
     def run(self, context):
         print("Snap Left IK Leg")
+        self.useRotation = context.scene.MhxUseSnapRotation
         self.setup(context, 0.0)
         snapFk,_cnsFk = self.getSnapBones("LegFK", "L")
         snapIk,_cnsIk = self.getSnapBones("LegIK", "L")
@@ -472,7 +476,7 @@ class MHX_OT_MhxSnapIkLeftLeg(FootSnapper, HidePropsOperator):
         self.restore(1.0, False, True)
 
 
-class MHX_OT_MhxSnapIkRightLeg(FootSnapper, HidePropsOperator):
+class MHX_OT_MhxSnapIkRightLeg(FootSnapper, HideOperator):
     bl_idname = "mhx.snap_ik_right_leg"
     bl_label = "Snap R IK Leg"
     bl_description = "Snap the right IK leg to the pose of the right FK leg"
@@ -485,6 +489,7 @@ class MHX_OT_MhxSnapIkRightLeg(FootSnapper, HidePropsOperator):
 
     def run(self, context):
         print("Snap Right IK Leg")
+        self.useRotation = context.scene.MhxUseSnapRotation
         self.setup(context, 0.0)
         snapFk,_cnsFk = self.getSnapBones("LegFK", "R")
         snapIk,_cnsIk = self.getSnapBones("LegIK", "R")
@@ -571,8 +576,28 @@ class MHX_OT_MhxToggleHints(MhxOperator):
             for cns in pb.constraints:
                 if cns.type == 'LIMIT_ROTATION' and cns.name == "Hint":
                     cns.mute = not cns.mute
-        rig.data["MhaHintsOn"] = not rig.data["MhaHintsOn"]
-        self.updatePose()
+        rig.data.MhaHintsOn = not rig.data.MhaHintsOn
+
+#----------------------------------------------------------
+#   Toggle limits
+#----------------------------------------------------------
+
+class MHX_OT_MhxToggleLimits(MhxOperator):
+    bl_idname = "mhx.toggle_limits"
+    bl_label = "Rotation Limits"
+    bl_description = "Toggle FK and IK rotation limits.\nIt may be necessary to turn these off for correct FK->IK snapping."
+
+    def run(self, context):
+        rig = context.object
+        on = rig.data.MhaLimitsOn = not rig.data.MhaLimitsOn
+        for pb in rig.pose.bones:
+            for cns in pb.constraints:
+                if cns.type == 'LIMIT_ROTATION' and cns.name != "Hint":
+                    cns.mute = (not on)
+        for suffix in [".L", ".R"]:
+            for bname in ["upper_arm", "forearm", "thigh", "shin"]:
+                pb = rig.pose.bones["%s.ik%s" % (bname, suffix)]
+                pb.use_ik_limit_x = pb.use_ik_limit_y = pb.use_ik_limit_z = on
 
 #----------------------------------------------------------
 #   Initialize
@@ -592,9 +617,15 @@ classes = [
     MHX_OT_MhxToggleLeftLeg,
     MHX_OT_MhxToggleRightLeg,
     MHX_OT_MhxToggleHints,
+    MHX_OT_MhxToggleLimits,
 ]
 
 def register():
+    bpy.types.Scene.MhxUseSnapRotation = BoolProperty(
+        name = "Rotate IK Foot",
+        description = "Also match IK effector rotation.\nSuitable for hand animation",
+        default = True)
+
     for cls in classes:
         bpy.utils.register_class(cls)
 

@@ -172,6 +172,7 @@ def initMhxProps():
     # MHX Control properties
     bpy.types.Armature.MhaGazeFollowsHead = FloatPropOVR(0.0, min=0.0, max=1.0)
     bpy.types.Armature.MhaHintsOn = BoolPropOVR(True)
+    bpy.types.Armature.MhaLimitsOn = BoolPropOVR(True)
 
     bpy.types.Armature.MhaArmHinge_L = BoolPropOVR(False)
     bpy.types.Armature.MhaArmIk_L = FloatPropOVR(0.0, precision=3, min=0.0, max=1.0)

@@ -130,6 +130,7 @@ class MHX_PT_FKIK(MhxPanel):
 
     def draw(self, context):
         rig = context.object
+        scn = context.scene
         if self.needsMhxUpdate(rig):
             return
 
@@ -179,9 +180,12 @@ class MHX_PT_FKIK(MhxPanel):
         row.label(text = "IK Leg")
         row.operator("mhx.snap_ik_left_leg")
         row.operator("mhx.snap_ik_right_leg")
+        self.layout.prop(scn, "MhxUseSnapRotation")
 
         self.layout.separator()
-        icon = 'CHECKBOX_HLT' if amt["MhaHintsOn"] else 'CHECKBOX_DEHLT'
+        icon = 'CHECKBOX_HLT' if amt.MhaLimitsOn else 'CHECKBOX_DEHLT'
+        self.layout.operator("mhx.toggle_limits", icon=icon, emboss=False)
+        icon = 'CHECKBOX_HLT' if amt.MhaHintsOn else 'CHECKBOX_DEHLT'
         self.layout.operator("mhx.toggle_hints", icon=icon, emboss=False)
 
 
