@@ -35,7 +35,7 @@ bl_info = {
     "description": "MHX runtime system",
     "warning": "",
     "wiki_url": "https://diffeomorphic.blogspot.com/p/mhx-runtime-system.html",
-    "tracker_url": "https://bitbucket.org/Diffeomorphic/mhx_rts/issues?status=new&status=open",
+    "tracker_url": "https://bitbucket.org/Diffeomorphic/import_daz/issues?status=new&status=open",
     "category": "Runtime"}
 
 # To support reload properly, try to access a package var, if it's there, reload everything
