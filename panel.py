@@ -180,7 +180,10 @@ class MHX_PT_FKIK(MhxPanel):
         row.label(text = "IK Leg")
         row.operator("mhx.snap_ik_left_leg")
         row.operator("mhx.snap_ik_right_leg")
-        self.layout.prop(scn, "MhxUseSnapRotation")
+
+        row = self.layout.row()
+        row.prop(scn, "MhxUseSwitch")
+        row.prop(scn, "MhxUseSnapRotation")
 
         self.layout.separator()
         icon = 'CHECKBOX_HLT' if amt.MhaLimitsOn else 'CHECKBOX_DEHLT'
@@ -208,6 +211,7 @@ class MHX_PT_Animation(MhxPanel):
 
     def draw(self, context):
         rig = context.object
+        scn = context.scene
         if self.needsMhxUpdate(rig):
             return
         self.layout.operator("mhx.remove_frame_zero")

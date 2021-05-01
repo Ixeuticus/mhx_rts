@@ -147,15 +147,19 @@ class Snapper(Updater, Basic):
 
     def setup(self, context, value):
         bpy.ops.object.mode_set(mode='POSE')
+        self.oldvalue = value
         self.amt[self.prop] = value
         self.auto = context.scene.tool_settings.use_keyframe_insert_auto
         self.updatePose()
 
 
-    def restore(self, value, fk, ik):
-        self.amt[self.prop] = value
-        self.state[self.fk] = fk
-        self.state[self.ik] = ik
+    def restore(self, context, value, fk, ik):
+        if context.scene.MhxUseSwitch:
+            self.amt[self.prop] = value
+            self.state[self.fk] = fk
+            self.state[self.ik] = ik
+        else:
+            self.amt[self.prop] = self.oldvalue
         self.updatePose()
 
 
@@ -353,7 +357,7 @@ class MHX_OT_MhxSnapFkLeftArm(Snapper, HideOperator):
         snapFk,_cnsFk = self.getSnapBones("ArmFK", "L")
         snapIk,_cnsIk = self.getSnapBones("ArmIK", "L")
         self.snapFkArm(snapFk, snapIk)
-        self.restore(0.0, True, False)
+        self.restore(context, 0.0, True, False)
 
 
 class MHX_OT_MhxSnapFkRightArm(Snapper, HideOperator):
@@ -373,7 +377,7 @@ class MHX_OT_MhxSnapFkRightArm(Snapper, HideOperator):
         snapFk,_cnsFk = self.getSnapBones("ArmFK", "R")
         snapIk,_cnsIk = self.getSnapBones("ArmIK", "R")
         self.snapFkArm(snapFk, snapIk)
-        self.restore(0.0, True, False)
+        self.restore(context, 0.0, True, False)
 
 
 class MHX_OT_MhxSnapFkLeftLeg(Snapper, HideOperator):
@@ -393,7 +397,7 @@ class MHX_OT_MhxSnapFkLeftLeg(Snapper, HideOperator):
         snapFk,_cnsFk = self.getSnapBones("LegFK", "L")
         snapIk,_cnsIk = self.getSnapBones("LegIK", "L")
         self.snapFkLeg(snapFk, snapIk, self.amt["MhaLegIkToAnkle_L"])
-        self.restore(0.0, True, False)
+        self.restore(context, 0.0, True, False)
 
 
 class MHX_OT_MhxSnapFkRightLeg(Snapper, HideOperator):
@@ -413,7 +417,7 @@ class MHX_OT_MhxSnapFkRightLeg(Snapper, HideOperator):
         snapFk,_cnsFk = self.getSnapBones("LegFK", "R")
         snapIk,_cnsIk = self.getSnapBones("LegIK", "R")
         self.snapFkLeg(snapFk, snapIk, self.amt["MhaLegIkToAnkle_R"])
-        self.restore(0.0, True, False)
+        self.restore(context, 0.0, True, False)
 
 
 class MHX_OT_MhxSnapIkLeftArm(Snapper, HideOperator):
@@ -433,7 +437,7 @@ class MHX_OT_MhxSnapIkLeftArm(Snapper, HideOperator):
         snapFk,_cnsFk = self.getSnapBones("ArmFK", "L")
         snapIk,_cnsIk = self.getSnapBones("ArmIK", "L")
         self.snapIkArm(snapFk, snapIk)
-        self.restore(1.0, False, True)
+        self.restore(context, 1.0, False, True)
 
 
 class MHX_OT_MhxSnapIkRightArm(Snapper, HideOperator):
@@ -453,7 +457,7 @@ class MHX_OT_MhxSnapIkRightArm(Snapper, HideOperator):
         snapFk,_cnsFk = self.getSnapBones("ArmFK", "R")
         snapIk,_cnsIk = self.getSnapBones("ArmIK", "R")
         self.snapIkArm(snapFk, snapIk)
-        self.restore(1.0, False, True)
+        self.restore(context, 1.0, False, True)
 
 
 class MHX_OT_MhxSnapIkLeftLeg(FootSnapper, HideOperator):
@@ -474,7 +478,7 @@ class MHX_OT_MhxSnapIkLeftLeg(FootSnapper, HideOperator):
         snapFk,_cnsFk = self.getSnapBones("LegFK", "L")
         snapIk,_cnsIk = self.getSnapBones("LegIK", "L")
         self.snapIkLeg(snapFk, snapIk, self.amt["MhaLegIkToAnkle_L"])
-        self.restore(1.0, False, True)
+        self.restore(context, 1.0, False, True)
 
 
 class MHX_OT_MhxSnapIkRightLeg(FootSnapper, HideOperator):
@@ -495,7 +499,7 @@ class MHX_OT_MhxSnapIkRightLeg(FootSnapper, HideOperator):
         snapFk,_cnsFk = self.getSnapBones("LegFK", "R")
         snapIk,_cnsIk = self.getSnapBones("LegIK", "R")
         self.snapIkLeg(snapFk, snapIk, self.amt["MhaLegIkToAnkle_R"])
-        self.restore(1.0, False, True)
+        self.restore(context, 1.0, False, True)
 
 #----------------------------------------------------------
 #   Toggle FK - IK
@@ -622,10 +626,16 @@ classes = [
 ]
 
 def register():
+    bpy.types.Scene.MhxUseSwitch = BoolProperty(
+        name = "Switch Mode And Layers",
+        description = "Also switch the FK/IK mode and bone layers",
+        default = True)
+
     bpy.types.Scene.MhxUseSnapRotation = BoolProperty(
         name = "Rotate IK Foot",
         description = "Also match IK effector rotation.\nSuitable for hand animation",
         default = True)
+
 
     for cls in classes:
         bpy.utils.register_class(cls)
