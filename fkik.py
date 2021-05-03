@@ -122,7 +122,7 @@ SnapBones = {
     "ArmIK" : ["upper_arm.ik", "forearm.ik", "elbow.pt.ik", "elbowPoleA", "hand.ik"],
     "Leg"   : ["thigh", "shin", "foot", "toe"],
     "LegFK" : ["thigh.fk", "shin.fk", "foot.fk", "toe.fk"],
-    "LegIK" : ["thigh.ik", "shin.ik", "knee.pt.ik", "kneePoleA", "ankle", "ankle.ik", "foot.ik", "foot.rev", "toe.rev", "ball.marker", "toe.marker", "heel.marker"],
+    "LegIK" : ["thigh.ik", "shin.ik", "knee.pt.ik", "kneePoleA", "ankle", "ankle.ik", "foot.ik", "foot.rev", "toe.rev", "foot.inv.ik", "toe.inv.ik"],
 }
 
 class Snapper(Updater, Basic):
@@ -240,7 +240,7 @@ class Snapper(Updater, Basic):
         self.insertLocation(pb, pmat)
 
 
-    def matchPoseReverse(self, pb, src):
+    def matchPoseReverse(self, pb, inv, src):
         gmat = src.matrix
         tail = gmat.col[3] + src.length * gmat.col[1]
         rmat = Matrix((gmat.col[0], -gmat.col[1], -gmat.col[2], tail))
@@ -299,30 +299,30 @@ class Snapper(Updater, Basic):
 
     def snapFkLeg(self, snapFk, snapIk, legIkToAnkle):
         (uplegFk, lolegFk, footFk, toeFk) = snapFk
-        (uplegIk, lolegIk, kneePt, kneePoleA, ankle, ankleIk, legIk, footRev, toeRev, mBall, mToe, mHeel) = snapIk
+        (uplegIk, lolegIk, kneePt, kneePoleA, ankle, ankleIk, legIk, footRev, toeRev, footInv, toeInv) = snapIk
 
         self.matchPoseTransform(uplegFk, uplegIk)
         self.updatePose()
         self.matchPoseTransform(lolegFk, lolegIk)
         if not legIkToAnkle:
             self.updatePose()
-            self.matchPoseReverse(footFk, footRev)
+            self.matchPoseTransform(footFk, footInv)
             self.updatePose()
-            self.matchPoseReverse(toeFk, toeRev)
+            self.matchPoseTransform(toeFk, toeInv)
 
 
     def snapIkLeg(self, snapFk, snapIk, legIkToAnkle):
         (uplegFk, lolegFk, footFk, toeFk) = snapFk
-        (uplegIk, lolegIk, kneePt, kneePoleA, ankle, ankleIk, legIk, footRev, toeRev, mBall, mToe, mHeel) = snapIk
+        (uplegIk, lolegIk, kneePt, kneePoleA, ankle, ankleIk, legIk, footRev, toeRev, footInv, toeInv) = snapIk
 
         self.zeroPoleA(kneePoleA)
         self.matchPoseTranslation(ankle, footFk)
         self.updatePose()
         self.matchIkLeg(legIk, toeFk)
         self.updatePose()
-        self.matchPoseReverse(toeRev, toeFk)
+        self.matchPoseReverse(toeRev, toeInv, toeFk)
         self.updatePose()
-        self.matchPoseReverse(footRev, footFk)
+        self.matchPoseReverse(footRev, footInv, footFk)
         self.updatePose()
         self.matchPoseTranslation(ankleIk, footFk)
         self.updatePose()
