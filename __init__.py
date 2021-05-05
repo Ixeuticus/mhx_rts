@@ -36,7 +36,7 @@ bl_info = {
     "warning": "",
     "wiki_url": "https://diffeomorphic.blogspot.com/p/mhx-runtime-system.html",
     "tracker_url": "https://bitbucket.org/Diffeomorphic/import_daz/issues?status=new&status=open",
-    "category": "Runtime"}
+    "category": "Rigging"}
 
 # To support reload properly, try to access a package var, if it's there, reload everything
 if "bpy" in locals():

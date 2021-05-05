@@ -244,6 +244,7 @@ class HideOperator(MhxOperator):
         self.frame = scn.frame_current
         self.state = list(self.rig.data.layers)
         self.rig.data.layers = 32*[True]
+        self.hideStatus = [(ob, ob.hide_get(), ob.hide_viewport, ob.hide_render) for ob in bpy.data.objects]
         self.layerColls = []
         self.hideLayerColls(context.view_layer.layer_collection)
 
@@ -252,6 +253,10 @@ class HideOperator(MhxOperator):
         self.rig.data.layers = self.state
         for layer in self.layerColls:
             layer.exclude = False
+        for ob,hide,viewport,render in self.hideStatus:
+            ob.hide_set(hide)
+            ob.hide_viewport = viewport
+            ob.hide_render = render
 
 
     def hideLayerColls(self, layer):
