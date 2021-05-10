@@ -119,10 +119,10 @@ class Basic:
 SnapBones = {
     "Arm"   : ["upper_arm", "forearm", "hand"],
     "ArmFK" : ["upper_arm.fk", "forearm.fk", "hand.fk"],
-    "ArmIK" : ["upper_arm.ik", "forearm.ik", "elbow.pt.ik", "elbowPoleA", "hand.ik"],
+    "ArmIK" : ["upper_arm.ik", "forearm.ik", "upper_arm.ik.twist", "forearm.ik.twist", "elbow.pt.ik", "elbowPoleA", "hand.ik"],
     "Leg"   : ["thigh", "shin", "foot", "toe"],
     "LegFK" : ["thigh.fk", "shin.fk", "foot.fk", "toe.fk"],
-    "LegIK" : ["thigh.ik", "shin.ik", "knee.pt.ik", "kneePoleA", "ankle", "ankle.ik", "foot.ik", "foot.rev", "toe.rev", "foot.inv.fk", "toe.inv.fk", "foot.inv.ik", "toe.inv.ik"],
+    "LegIK" : ["thigh.ik", "shin.ik", "thigh.ik.twist", "shin.ik.twist", "knee.pt.ik", "kneePoleA", "ankle", "ankle.ik", "foot.ik", "foot.rev", "toe.rev", "foot.inv.fk", "toe.inv.fk", "foot.inv.ik", "toe.inv.ik"],
 }
 
 class Snapper(Updater, Basic):
@@ -264,7 +264,9 @@ class Snapper(Updater, Basic):
             bname = "%s.%s" % (name, suffix)
             if bname in self.rig.pose.bones.keys():
                 pb = self.rig.pose.bones[bname]
-            elif "PoleA" in bname or "inv.fk" in bname:
+            elif ("PoleA" in bname or
+                  "inv.fk" in bname or
+                  "ik.twist" in bname):
                 pbones.append(None)
                 continue
             else:
@@ -278,32 +280,46 @@ class Snapper(Updater, Basic):
 
     def snapFkArm(self, snapFk, snapIk):
         (uparmFk, loarmFk, handFk) = snapFk
-        (uparmIk, loarmIk, elbowPt, elbowPoleA, handIk) = snapIk
+        (uparmIk, loarmIk, uparmIkTwist, loarmIkTwist, elbowPt, elbowPoleA, handIk) = snapIk
 
-        self.matchPoseTransform(uparmFk, uparmIk)
-        self.updatePose()
-        self.matchPoseTransform(loarmFk, loarmIk)
+        if uparmIkTwist:
+            self.matchPoseTransform(uparmFk, uparmIkTwist)
+            self.updatePose()
+            self.matchPoseTransform(loarmFk, loarmIkTwist)
+        else:
+            self.matchPoseTransform(uparmFk, uparmIk)
+            self.updatePose()
+            self.matchPoseTransform(loarmFk, loarmIk)
         self.updatePose()
         self.matchPoseTransform(handFk, handIk)
 
 
     def snapIkArm(self, snapFk, snapIk):
         (uparmFk, loarmFk, handFk) = snapFk
-        (uparmIk, loarmIk, elbowPt, elbowPoleA, handIk) = snapIk
+        (uparmIk, loarmIk, uparmIkTwist, loarmIkTwist, elbowPt, elbowPoleA, handIk) = snapIk
 
         self.zeroPoleA(elbowPoleA)
         self.matchPoseLocRot(handIk, handFk)
         self.updatePose()
         self.matchPoleTarget(elbowPt, uparmFk, loarmFk)
+        if uparmIkTwist:
+            self.updatePose()
+            self.matchPoseTransform(uparmIkTwist, uparmFk)
+            self.matchPoseTransform(loarmIkTwist, loarmFk)
 
 
     def snapFkLeg(self, snapFk, snapIk, legIkToAnkle):
-        (uplegFk, lolegFk, footFk, toeFk) = snapFk
-        (uplegIk, lolegIk, kneePt, kneePoleA, ankle, ankleIk, legIk, footRev, toeRev, footInvFk, toeInvFk, footInvIk, toeInvIk) = snapIk
+        (thighFk, shinFk, footFk, toeFk) = snapFk
+        (thighIk, shinIk, thighIkTwist, shinIkTwist, kneePt, kneePoleA, ankle, ankleIk, legIk, footRev, toeRev, footInvFk, toeInvFk, footInvIk, toeInvIk) = snapIk
 
-        self.matchPoseTransform(uplegFk, uplegIk)
-        self.updatePose()
-        self.matchPoseTransform(lolegFk, lolegIk)
+        if shinIkTwist:
+            self.matchPoseTransform(thighFk, thighIkTwist)
+            self.updatePose()
+            self.matchPoseTransform(shinFk, shinIkTwist)
+        else:
+            self.matchPoseTransform(thighFk, thighIk)
+            self.updatePose()
+            self.matchPoseTransform(shinFk, shinIk)
         if not legIkToAnkle:
             self.updatePose()
             self.matchPoseTransform(footFk, footInvIk)
@@ -312,8 +328,8 @@ class Snapper(Updater, Basic):
 
 
     def snapIkLeg(self, snapFk, snapIk, legIkToAnkle):
-        (uplegFk, lolegFk, footFk, toeFk) = snapFk
-        (uplegIk, lolegIk, kneePt, kneePoleA, ankle, ankleIk, legIk, footRev, toeRev, footInvFk, toeInvFk, footInvIk, toeInvIk) = snapIk
+        (thighFk, shinFk, footFk, toeFk) = snapFk
+        (thighIk, shinIk, thighIkTwist, shinIkTwist, kneePt, kneePoleA, ankle, ankleIk, legIk, footRev, toeRev, footInvFk, toeInvFk, footInvIk, toeInvIk) = snapIk
 
         self.zeroPoleA(kneePoleA)
         if legIkToAnkle:
@@ -332,7 +348,11 @@ class Snapper(Updater, Basic):
             self.updatePose()
             self.matchPoseTranslation(ankleIk, footFk)
         self.updatePose()
-        self.matchPoleTarget(kneePt, uplegFk, lolegFk)
+        self.matchPoleTarget(kneePt, thighFk, shinFk)
+        if shinIkTwist:
+            self.updatePose()
+            self.matchPoseTransform(thighIkTwist, thighFk)
+            self.matchPoseTransform(shinIkTwist, shinFk)
 
 
 class FootSnapper(Snapper):
