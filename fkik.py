@@ -292,6 +292,12 @@ class Snapper(Updater, Basic):
             self.matchPoseTransform(loarmFk, loarmIk)
         self.updatePose()
         self.matchPoseTransform(handFk, handIk)
+        return
+        self.updatePose()
+        print("FK", handFk.name)
+        print(handFk.matrix)
+        print("IK", handIk.name)
+        print(handIk.matrix)
 
 
     def snapIkArm(self, snapFk, snapIk):
@@ -593,21 +599,22 @@ class MHX_OT_MhxToggleRightLeg(MhxOperator, Toggler):
         self.toggle(context, "MhaLegIk_R", L_RLEGFK, L_RLEGIK)
 
 #----------------------------------------------------------
-#   Toggle hints
+#   Toggle forearms follow
 #----------------------------------------------------------
 
-class MHX_OT_MhxToggleHints(MhxOperator):
-    bl_idname = "mhx.toggle_hints"
-    bl_label = "Elbow And Knee Hints"
-    bl_description = "Toggle hints for elbow and knee bending.\nIt may be necessary to turn these off for correct FK->IK snapping."
+class MHX_OT_MhxToggleForearmsFollow(MhxOperator):
+    bl_idname = "mhx.toggle_forearms_follow"
+    bl_label = "Forearms Follow Hands"
+    bl_description = "Control forearm twist with hand twist.\nIt may be necessary to turn this off for correct FK->IK snapping."
 
     def run(self, context):
         rig = context.object
-        for pb in rig.pose.bones:
+        for bname in ["forearm.L", "forearm.R"]:
+            pb = rig.pose.bones[bname]
             for cns in pb.constraints:
-                if cns.type == 'LIMIT_ROTATION' and cns.name == "Hint":
-                    cns.mute = not cns.mute
-        rig.data.MhaHintsOn = not rig.data.MhaHintsOn
+                if cns.type == 'COPY_ROTATION':
+                    cns.mute = rig.data.MhaForearmsFollow
+        rig.data.MhaForearmsFollow = not rig.data.MhaForearmsFollow
 
 #----------------------------------------------------------
 #   Toggle limits
@@ -647,7 +654,7 @@ classes = [
     MHX_OT_MhxToggleRightArm,
     MHX_OT_MhxToggleLeftLeg,
     MHX_OT_MhxToggleRightLeg,
-    MHX_OT_MhxToggleHints,
+    MHX_OT_MhxToggleForearmsFollow,
     MHX_OT_MhxToggleLimits,
 ]
 

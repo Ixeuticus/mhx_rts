@@ -124,7 +124,7 @@ class MHX_OT_DisableAllLayers(MhxOperator):
 
 def getMhxProps(amt):
     floats = ["MhaGazeFollowsHead"]
-    bools = ["MhaHintsOn"]
+    bools = []
     for prop in ["MhaArmIk", "MhaGaze", "MhaLegIk"]:
         floats.append(prop+"_L")
         floats.append(prop+"_R")
@@ -171,7 +171,7 @@ class MHX_OT_UpdateMhx(MhxOperator):
 def initMhxProps():
     # MHX Control properties
     bpy.types.Armature.MhaGazeFollowsHead = FloatPropOVR(0.0, min=0.0, max=1.0)
-    bpy.types.Armature.MhaHintsOn = BoolPropOVR(True)
+    bpy.types.Armature.MhaForearmsFollow = BoolPropOVR(True)
     bpy.types.Armature.MhaLimitsOn = BoolPropOVR(True)
 
     bpy.types.Armature.MhaArmHinge_L = BoolPropOVR(False)

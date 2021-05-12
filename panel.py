@@ -105,6 +105,10 @@ class MHX_PT_Properties(MhxPanel):
         amt = rig.data
         self.layout.separator()
         self.layout.prop(amt, propRef("MhaGazeFollowsHead"), text="Gaze Follows Head")
+        icon = 'CHECKBOX_HLT' if amt.MhaLimitsOn else 'CHECKBOX_DEHLT'
+        self.layout.operator("mhx.toggle_limits", icon=icon, emboss=False)
+        icon = 'CHECKBOX_HLT' if amt.MhaForearmsFollow else 'CHECKBOX_DEHLT'
+        self.layout.operator("mhx.toggle_forearms_follow", icon=icon, emboss=False)
         row = self.layout.row()
         row.label(text = "Left")
         row.label(text = "Right")
@@ -181,15 +185,8 @@ class MHX_PT_FKIK(MhxPanel):
         row.operator("mhx.snap_ik_left_leg")
         row.operator("mhx.snap_ik_right_leg")
 
-        row = self.layout.row()
-        row.prop(scn, "MhxUseSwitch")
-        row.prop(scn, "MhxUseSnapRotation")
-
-        self.layout.separator()
-        icon = 'CHECKBOX_HLT' if amt.MhaLimitsOn else 'CHECKBOX_DEHLT'
-        self.layout.operator("mhx.toggle_limits", icon=icon, emboss=False)
-        icon = 'CHECKBOX_HLT' if amt.MhaHintsOn else 'CHECKBOX_DEHLT'
-        self.layout.operator("mhx.toggle_hints", icon=icon, emboss=False)
+        self.layout.prop(scn, "MhxUseSwitch")
+        self.layout.prop(scn, "MhxUseSnapRotation")
 
 
     def toggleFKIK(self, row, value, op):
