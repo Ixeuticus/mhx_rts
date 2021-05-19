@@ -106,9 +106,9 @@ class MHX_PT_Properties(MhxPanel):
         self.layout.separator()
         self.layout.prop(amt, propRef("MhaGazeFollowsHead"), text="Gaze Follows Head")
         icon = 'CHECKBOX_HLT' if amt.MhaLimitsOn else 'CHECKBOX_DEHLT'
-        self.layout.operator("mhx.toggle_limits", icon=icon, emboss=False)
+        self.layout.operator("mhx.toggle_fkik_limits", icon=icon, emboss=False)
         icon = 'CHECKBOX_HLT' if amt.MhaForearmsFollow else 'CHECKBOX_DEHLT'
-        self.layout.operator("mhx.toggle_forearms_follow", icon=icon, emboss=False)
+        self.layout.operator("mhx.toggle_fkik_forearms_follow", icon=icon, emboss=False)
         row = self.layout.row()
         row.label(text = "Left")
         row.label(text = "Right")
@@ -147,12 +147,12 @@ class MHX_PT_FKIK(MhxPanel):
         self.layout.label(text = "FK/IK switch")
         row = self.layout.row()
         row.label(text = "Arm")
-        self.toggleFKIK(row, amt["MhaArmIk_L"], "mhx.toggle_left_arm")
-        self.toggleFKIK(row, amt["MhaArmIk_R"], "mhx.toggle_right_arm")
+        self.toggleFKIK(row, amt["MhaArmIk_L"], "mhx.toggle_fkik_left_arm")
+        self.toggleFKIK(row, amt["MhaArmIk_R"], "mhx.toggle_fkik_right_arm")
         row = self.layout.row()
         row.label(text = "Leg")
-        self.toggleFKIK(row, amt["MhaLegIk_L"], "mhx.toggle_left_leg")
-        self.toggleFKIK(row, amt["MhaLegIk_R"], "mhx.toggle_right_leg")
+        self.toggleFKIK(row, amt["MhaLegIk_L"], "mhx.toggle_fkik_left_leg")
+        self.toggleFKIK(row, amt["MhaLegIk_R"], "mhx.toggle_fkik_right_leg")
 
         self.layout.label(text = "IK Influence")
         row = self.layout.row()
@@ -187,6 +187,18 @@ class MHX_PT_FKIK(MhxPanel):
 
         self.layout.prop(scn, "MhxUseSwitch")
         self.layout.prop(scn, "MhxUseSnapRotation")
+
+        self.layout.label(text = "Stretchiness")
+        row = self.layout.row()
+        icon = 'CHECKBOX_HLT' if amt.MhaArmStretch_L else 'CHECKBOX_DEHLT'
+        row.operator("mhx.toggle_stretch_left_arm", icon=icon, emboss=False)
+        icon = 'CHECKBOX_HLT' if amt.MhaArmStretch_R else 'CHECKBOX_DEHLT'
+        row.operator("mhx.toggle_stretch_right_arm", icon=icon, emboss=False)
+        row = self.layout.row()
+        icon = 'CHECKBOX_HLT' if amt.MhaLegStretch_L else 'CHECKBOX_DEHLT'
+        row.operator("mhx.toggle_stretch_left_leg", icon=icon, emboss=False)
+        icon = 'CHECKBOX_HLT' if amt.MhaLegStretch_R else 'CHECKBOX_DEHLT'
+        row.operator("mhx.toggle_stretch_right_leg", icon=icon, emboss=False)
 
 
     def toggleFKIK(self, row, value, op):

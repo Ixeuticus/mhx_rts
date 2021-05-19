@@ -346,7 +346,7 @@ class FootSnapper(Snapper):
 
 class MHX_OT_MhxSnapFkLeftArm(Snapper, HideOperator):
     bl_idname = "mhx.snap_fk_left_arm"
-    bl_label = "Snap L FK Arm"
+    bl_label = "Snap Left"
     bl_description = "Snap the left FK arm to the pose of the left IK arm"
     bl_options = {'UNDO'}
 
@@ -366,7 +366,7 @@ class MHX_OT_MhxSnapFkLeftArm(Snapper, HideOperator):
 
 class MHX_OT_MhxSnapFkRightArm(Snapper, HideOperator):
     bl_idname = "mhx.snap_fk_right_arm"
-    bl_label = "Snap R FK Arm"
+    bl_label = "Snap Right"
     bl_description = "Snap the right FK arm to the pose of the right IK arm"
     bl_options = {'UNDO'}
 
@@ -386,7 +386,7 @@ class MHX_OT_MhxSnapFkRightArm(Snapper, HideOperator):
 
 class MHX_OT_MhxSnapFkLeftLeg(Snapper, HideOperator):
     bl_idname = "mhx.snap_fk_left_leg"
-    bl_label = "Snap L FK Leg"
+    bl_label = "Snap Left"
     bl_description = "Snap the left FK leg to the pose of the left IK leg"
     bl_options = {'UNDO'}
 
@@ -406,7 +406,7 @@ class MHX_OT_MhxSnapFkLeftLeg(Snapper, HideOperator):
 
 class MHX_OT_MhxSnapFkRightLeg(Snapper, HideOperator):
     bl_idname = "mhx.snap_fk_right_leg"
-    bl_label = "Snap R FK Leg"
+    bl_label = "Snap Right"
     bl_description = "Snap the right FK leg to the pose of the right IK leg"
     bl_options = {'UNDO'}
 
@@ -426,7 +426,7 @@ class MHX_OT_MhxSnapFkRightLeg(Snapper, HideOperator):
 
 class MHX_OT_MhxSnapIkLeftArm(Snapper, HideOperator):
     bl_idname = "mhx.snap_ik_left_arm"
-    bl_label = "Snap L IK Arm"
+    bl_label = "Snap Left"
     bl_description = "Snap the left IK arm to the pose of the left FK arm"
     bl_options = {'UNDO'}
 
@@ -446,7 +446,7 @@ class MHX_OT_MhxSnapIkLeftArm(Snapper, HideOperator):
 
 class MHX_OT_MhxSnapIkRightArm(Snapper, HideOperator):
     bl_idname = "mhx.snap_ik_right_arm"
-    bl_label = "Snap R IK Arm"
+    bl_label = "Snap Right"
     bl_description = "Snap the right IK arm to the pose of the right FK arm"
     bl_options = {'UNDO'}
 
@@ -466,7 +466,7 @@ class MHX_OT_MhxSnapIkRightArm(Snapper, HideOperator):
 
 class MHX_OT_MhxSnapIkLeftLeg(FootSnapper, HideOperator):
     bl_idname = "mhx.snap_ik_left_leg"
-    bl_label = "Snap L IK Leg"
+    bl_label = "Snap Left"
     bl_description = "Snap the left IK leg to the pose of the left FK leg"
     bl_options = {'UNDO'}
 
@@ -487,7 +487,7 @@ class MHX_OT_MhxSnapIkLeftLeg(FootSnapper, HideOperator):
 
 class MHX_OT_MhxSnapIkRightLeg(FootSnapper, HideOperator):
     bl_idname = "mhx.snap_ik_right_leg"
-    bl_label = "Snap R IK Leg"
+    bl_label = "Snap Right"
     bl_description = "Snap the right IK leg to the pose of the right FK leg"
     bl_options = {'UNDO'}
 
@@ -509,7 +509,7 @@ class MHX_OT_MhxSnapIkRightLeg(FootSnapper, HideOperator):
 #   Toggle FK - IK
 #----------------------------------------------------------
 
-class Toggler(Updater):
+class ToggleFkIk(Updater):
     def toggle(self, context, prop, fklayer, iklayer):
         rig = context.object
         scn = context.scene
@@ -531,8 +531,8 @@ class Toggler(Updater):
         self.updatePose()
 
 
-class MHX_OT_MhxToggleLeftArm(MhxOperator, Toggler):
-    bl_idname = "mhx.toggle_left_arm"
+class MHX_OT_MhxToggleFkIkLeftArm(MhxOperator, ToggleFkIk):
+    bl_idname = "mhx.toggle_fkik_left_arm"
     bl_label = ""
     bl_description = "Toggle left arm FK - IK"
     bl_options = {'UNDO'}
@@ -541,8 +541,8 @@ class MHX_OT_MhxToggleLeftArm(MhxOperator, Toggler):
         self.toggle(context, "MhaArmIk_L", L_LARMFK, L_LARMIK)
 
 
-class MHX_OT_MhxToggleRightArm(MhxOperator, Toggler):
-    bl_idname = "mhx.toggle_right_arm"
+class MHX_OT_MhxToggleFkIkRightArm(MhxOperator, ToggleFkIk):
+    bl_idname = "mhx.toggle_fkik_right_arm"
     bl_label = ""
     bl_description = "Toggle right arm FK - IK"
     bl_options = {'UNDO'}
@@ -551,8 +551,8 @@ class MHX_OT_MhxToggleRightArm(MhxOperator, Toggler):
         self.toggle(context, "MhaArmIk_R", L_RARMFK, L_RARMIK)
 
 
-class MHX_OT_MhxToggleLeftLeg(MhxOperator, Toggler):
-    bl_idname = "mhx.toggle_left_leg"
+class MHX_OT_MhxToggleFkIkLeftLeg(MhxOperator, ToggleFkIk):
+    bl_idname = "mhx.toggle_fkik_left_leg"
     bl_label = ""
     bl_description = "Toggle left leg FK - IK"
     bl_options = {'UNDO'}
@@ -561,8 +561,8 @@ class MHX_OT_MhxToggleLeftLeg(MhxOperator, Toggler):
         self.toggle(context, "MhaLegIk_L", L_LLEGFK, L_LLEGIK)
 
 
-class MHX_OT_MhxToggleRightLeg(MhxOperator, Toggler):
-    bl_idname = "mhx.toggle_right_leg"
+class MHX_OT_MhxToggleFkIkRightLeg(MhxOperator, ToggleFkIk):
+    bl_idname = "mhx.toggle_fkik_right_leg"
     bl_label = ""
     bl_description = "Toggle right leg FK - IK"
     bl_options = {'UNDO'}
@@ -571,11 +571,87 @@ class MHX_OT_MhxToggleRightLeg(MhxOperator, Toggler):
         self.toggle(context, "MhaLegIk_R", L_RLEGFK, L_RLEGIK)
 
 #----------------------------------------------------------
+#   Toggle Stretch
+#----------------------------------------------------------
+
+class ToggleStretch(Updater):
+    def toggle(self, context, prop, arm, hand, suffix):
+        rig = context.object
+        if prop in rig.data.keys():
+            value = rig.data[prop]
+        else:
+            value = True
+        self.setConstraint(rig, "%s.bend.%s" % (arm, suffix), value)
+        self.setConstraint(rig, "%s.twist.%s" % (arm, suffix), value)
+        bpy.ops.object.mode_set(mode='EDIT')
+        self.setConnected(rig, "%s.%s" % (hand, suffix), value)
+        self.setConnected(rig, "%s.fk.%s" % (hand, suffix), value)
+        bpy.ops.object.mode_set(mode='POSE')
+        rig.data[prop] = (not value)
+        self.updatePose()
+
+
+    def setConstraint(self, rig, bname, value):
+        if bname not in rig.pose.bones:
+            return
+        pb = rig.pose.bones[bname]
+        for cns in pb.constraints:
+            if cns.type == 'STRETCH_TO':
+                cns.mute = value
+
+
+    def setConnected(self, rig, bname, value):
+        if bname not in rig.data.edit_bones:
+            return
+        eb = rig.data.edit_bones[bname]
+        eb.use_connect = value
+
+
+class MHX_OT_MhxToggleStretchLeftArm(MhxOperator, ToggleStretch):
+    bl_idname = "mhx.toggle_stretch_left_arm"
+    bl_label = "Left Arm"
+    bl_description = "Toggle left arm stretch"
+    bl_options = {'UNDO'}
+
+    def run(self, context):
+        self.toggle(context, "MhaArmStretch_L", "forearm", "hand", "L")
+
+
+class MHX_OT_MhxToggleStretchRightArm(MhxOperator, ToggleStretch):
+    bl_idname = "mhx.toggle_stretch_right_arm"
+    bl_label = "Right Arm"
+    bl_description = "Toggle right arm stretch"
+    bl_options = {'UNDO'}
+
+    def run(self, context):
+        self.toggle(context, "MhaArmStretch_R", "forearm", "hand", "R")
+
+
+class MHX_OT_MhxToggleStretchLeftLeg(MhxOperator, ToggleStretch):
+    bl_idname = "mhx.toggle_stretch_left_leg"
+    bl_label = "Left Leg"
+    bl_description = "Toggle left leg stretch"
+    bl_options = {'UNDO'}
+
+    def run(self, context):
+        self.toggle(context, "MhaLegStretch_L", "shin", "foot", "L")
+
+
+class MHX_OT_MhxToggleStretchRightLeg(MhxOperator, ToggleStretch):
+    bl_idname = "mhx.toggle_stretch_right_leg"
+    bl_label = "Right Leg"
+    bl_description = "Toggle right leg stretch"
+    bl_options = {'UNDO'}
+
+    def run(self, context):
+        self.toggle(context, "MhaLegStretch_R", "shin", "foot", "R")
+
+#----------------------------------------------------------
 #   Toggle forearms follow
 #----------------------------------------------------------
 
-class MHX_OT_MhxToggleForearmsFollow(MhxOperator):
-    bl_idname = "mhx.toggle_forearms_follow"
+class MHX_OT_MhxToggleFkIkForearmsFollow(MhxOperator):
+    bl_idname = "mhx.toggle_fkik_forearms_follow"
     bl_label = "Forearms Follow Hands"
     bl_description = "Control forearm twist with hand twist.\nIt may be necessary to turn this off for correct FK->IK snapping."
 
@@ -592,8 +668,8 @@ class MHX_OT_MhxToggleForearmsFollow(MhxOperator):
 #   Toggle limits
 #----------------------------------------------------------
 
-class MHX_OT_MhxToggleLimits(MhxOperator):
-    bl_idname = "mhx.toggle_limits"
+class MHX_OT_MhxToggleFkIkLimits(MhxOperator):
+    bl_idname = "mhx.toggle_fkik_limits"
     bl_label = "Rotation Limits"
     bl_description = "Toggle FK and IK rotation limits.\nIt may be necessary to turn these off for correct FK->IK snapping."
 
@@ -622,12 +698,16 @@ classes = [
     MHX_OT_MhxSnapIkRightArm,
     MHX_OT_MhxSnapIkLeftLeg,
     MHX_OT_MhxSnapIkRightLeg,
-    MHX_OT_MhxToggleLeftArm,
-    MHX_OT_MhxToggleRightArm,
-    MHX_OT_MhxToggleLeftLeg,
-    MHX_OT_MhxToggleRightLeg,
-    MHX_OT_MhxToggleForearmsFollow,
-    MHX_OT_MhxToggleLimits,
+    MHX_OT_MhxToggleFkIkLeftArm,
+    MHX_OT_MhxToggleFkIkRightArm,
+    MHX_OT_MhxToggleFkIkLeftLeg,
+    MHX_OT_MhxToggleFkIkRightLeg,
+    MHX_OT_MhxToggleStretchLeftArm,
+    MHX_OT_MhxToggleStretchRightArm,
+    MHX_OT_MhxToggleStretchLeftLeg,
+    MHX_OT_MhxToggleStretchRightLeg,
+    MHX_OT_MhxToggleFkIkForearmsFollow,
+    MHX_OT_MhxToggleFkIkLimits,
 ]
 
 def register():
