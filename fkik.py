@@ -72,20 +72,24 @@ class Basic:
             return restInv @ gmat
 
 
-    def insertLocation(self, pb, mat):
-        pb.location = mat.to_translation()
+    def insertLocation(self, pb, mat=None):
+        if mat:
+            pb.location = mat.to_translation()
         if self.auto or isKeyed(self.rig, pb, "location"):
             pb.keyframe_insert("location", frame=self.frame, group=pb.name)
 
 
-    def insertRotation(self, pb, mat):
-        quat = mat.to_quaternion()
+    def insertRotation(self, pb, mat=None):
+        if mat:
+            quat = mat.to_quaternion()
+            if pb.rotation_mode == 'QUATERNION':
+                pb.rotation_quaternion = quat
+            else:
+                pb.rotation_euler = quat.to_euler(pb.rotation_mode)
         if pb.rotation_mode == 'QUATERNION':
-            pb.rotation_quaternion = quat
             if self.auto or isKeyed(self.rig, pb, "rotation_quaternion"):
                 pb.keyframe_insert("rotation_quaternion", frame=self.frame, group=pb.name)
         else:
-            pb.rotation_euler = quat.to_euler(pb.rotation_mode)
             if self.auto or isKeyed(self.rig, pb, "rotation_euler"):
                 pb.keyframe_insert("rotation_euler", frame=self.frame, group=pb.name)
 
@@ -164,28 +168,22 @@ class Snapper(Updater, Basic):
 
 
     def matchPoseTranslation(self, pb, src):
-        pmat = self.getPoseMatrix(src.matrix, pb)
-        self.insertLocation(pb, pmat)
+        pb.matrix = src.matrix
+        self.updatePose()
+        self.insertLocation(pb)
 
 
     def matchPoseLocRot(self, pb, src):
-        pmat = self.getPoseMatrix(src.matrix, pb)
-        self.insertLocation(pb, pmat)
-        self.insertRotation(pb, pmat)
+        pb.matrix = src.matrix
+        self.updatePose()
+        self.insertLocation(pb)
+        self.insertRotation(pb)
 
 
     def matchPoseTransform(self, pb, src):
-        pmat = self.getPoseMatrix(src.matrix, pb)
-        self.insertRotation(pb, pmat)
-
-
-    def matchPoseTwist(self, pb, src):
-        pmat0 = src.matrix_basis
-        euler = pmat0.to_3x3().to_euler('YZX')
-        euler.z = 0
-        pmat = euler.to_matrix().to_4x4()
-        pmat.col[3] = pmat0.col[3]
-        self.insertRotation(pb, pmat)
+        pb.matrix = src.matrix
+        self.updatePose()
+        self.insertRotation(pb)
 
 
     def matchIkLeg(self, legIk, toeFk):
@@ -207,9 +205,11 @@ class Snapper(Updater, Basic):
         head = tTail - y * legIk.bone.length
         gmat = gmat.to_4x4()
         gmat.col[3][:3] = head
-        pmat = self.getPoseMatrix(gmat, legIk)
-        self.insertLocation(legIk, pmat)
-        self.insertRotation(legIk, pmat)
+        #pmat = self.getPoseMatrix(gmat, legIk)
+        legIk.matrix = gmat
+        self.updatePose()
+        self.insertLocation(legIk)
+        self.insertRotation(legIk)
 
 
     def zeroPoleA(self, poleA):
@@ -235,9 +235,9 @@ class Snapper(Updater, Basic):
             p = p0 + 1*pb.bone.length*d
         else:
             p = p0
-        gmat = Matrix.Translation(p)
-        pmat = self.getPoseMatrix(gmat, pb)
-        self.insertLocation(pb, pmat)
+        pb.matrix = Matrix.Translation(p)
+        self.updatePose()
+        self.insertLocation(pb)
 
 
     def matchPoseReverse(self, pb, src):
@@ -245,16 +245,9 @@ class Snapper(Updater, Basic):
         tail = gmat.col[3] + src.length * gmat.col[1]
         rmat = Matrix((gmat.col[0], -gmat.col[1], -gmat.col[2], tail))
         rmat.transpose()
-        pmat = self.getPoseMatrix(rmat, pb)
-        pb.matrix_basis = pmat
-        self.insertRotation(pb, pmat)
-
-
-    def matchPoseScale(self, pb, src):
-        pmat = self.getPoseMatrix(src.matrix, pb)
-        pb.scale = pmat.to_scale()
-        if self.auto or isKeyed(self.rig, pb, "scale"):
-            pb.keyframe_insert("scale", frame=self.frame, group=pb.name)
+        pb.matrix = rmat
+        self.updatePose()
+        self.insertRotation(pb)
 
 
     def getSnapBones(self, key, suffix):
@@ -284,20 +277,11 @@ class Snapper(Updater, Basic):
 
         if uparmIkTwist:
             self.matchPoseTransform(uparmFk, uparmIkTwist)
-            self.updatePose()
             self.matchPoseTransform(loarmFk, loarmIkTwist)
         else:
             self.matchPoseTransform(uparmFk, uparmIk)
-            self.updatePose()
             self.matchPoseTransform(loarmFk, loarmIk)
-        self.updatePose()
         self.matchPoseTransform(handFk, handIk)
-        return
-        self.updatePose()
-        print("FK", handFk.name)
-        print(handFk.matrix)
-        print("IK", handIk.name)
-        print(handIk.matrix)
 
 
     def snapIkArm(self, snapFk, snapIk):
@@ -306,10 +290,8 @@ class Snapper(Updater, Basic):
 
         self.zeroPoleA(elbowPoleA)
         self.matchPoseLocRot(handIk, handFk)
-        self.updatePose()
         self.matchPoleTarget(elbowPt, uparmFk, loarmFk)
         if uparmIkTwist:
-            self.updatePose()
             self.matchPoseTransform(uparmIkTwist, uparmFk)
             self.matchPoseTransform(loarmIkTwist, loarmFk)
 
@@ -320,16 +302,12 @@ class Snapper(Updater, Basic):
 
         if shinIkTwist:
             self.matchPoseTransform(thighFk, thighIkTwist)
-            self.updatePose()
             self.matchPoseTransform(shinFk, shinIkTwist)
         else:
             self.matchPoseTransform(thighFk, thighIk)
-            self.updatePose()
             self.matchPoseTransform(shinFk, shinIk)
         if not legIkToAnkle:
-            self.updatePose()
             self.matchPoseTransform(footFk, footInvIk)
-            self.updatePose()
             self.matchPoseTransform(toeFk, toeInvIk)
 
 
@@ -342,21 +320,15 @@ class Snapper(Updater, Basic):
             self.matchPoseTranslation(ankle, footFk)
         else:
             self.matchIkLeg(legIk, toeFk)
-            self.updatePose()
             if toeInvFk:
                 self.matchPoseTransform(toeRev, toeInvFk)
-                self.updatePose()
                 self.matchPoseTransform(footRev, footInvFk)
             else:
                 self.matchPoseReverse(toeRev, toeFk)
-                self.updatePose()
                 self.matchPoseReverse(footRev, footFk)
-            self.updatePose()
             self.matchPoseTranslation(ankleIk, footFk)
-        self.updatePose()
         self.matchPoleTarget(kneePt, thighFk, shinFk)
         if shinIkTwist:
-            self.updatePose()
             self.matchPoseTransform(thighIkTwist, thighFk)
             self.matchPoseTransform(shinIkTwist, shinFk)
 
