@@ -288,6 +288,7 @@ class Snapper(Updater, Basic):
         (uparmFk, loarmFk, handFk) = snapFk
         (uparmIk, loarmIk, uparmIkTwist, loarmIkTwist, elbowPt, elbowPoleA, handIk) = snapIk
 
+        handFk.location = (0,0,0)
         self.zeroPoleA(elbowPoleA)
         self.matchPoseLocRot(handIk, handFk)
         self.matchPoleTarget(elbowPt, uparmFk, loarmFk)
@@ -315,6 +316,7 @@ class Snapper(Updater, Basic):
         (thighFk, shinFk, footFk, toeFk) = snapFk
         (thighIk, shinIk, thighIkTwist, shinIkTwist, kneePt, kneePoleA, ankle, ankleIk, legIk, footRev, toeRev, footInvFk, toeInvFk, footInvIk, toeInvIk) = snapIk
 
+        footFk.location = (0,0,0)
         self.zeroPoleA(kneePoleA)
         if legIkToAnkle:
             self.matchPoseTranslation(ankle, footFk)
@@ -575,20 +577,23 @@ class MHX_OT_MhxToggleFkIkRightLeg(MhxOperator, ToggleFkIk):
 #----------------------------------------------------------
 
 class ToggleStretch(Updater):
-    def toggle(self, context, prop, arm, hand, suffix):
+    def toggle(self, context, prop, armname, handname, suffix):
         rig = context.object
         if prop in rig.data.keys():
-            value = rig.data[prop]
+            wason = rig.data[prop]
         else:
-            value = True
-        self.setConstraint(rig, "%s.bend.%s" % (arm, suffix), value)
-        self.setConstraint(rig, "%s.twist.%s" % (arm, suffix), value)
+            wason = True
+        self.setConstraint(rig, "%s.bend.%s" % (armname, suffix), wason)
+        self.setConstraint(rig, "%s.twist.%s" % (armname, suffix), wason)
         bpy.ops.object.mode_set(mode='EDIT')
-        self.setConnected(rig, "%s.%s" % (hand, suffix), value)
-        self.setConnected(rig, "%s.fk.%s" % (hand, suffix), value)
+        self.setConnected(rig, "%s.%s" % (handname, suffix), wason)
+        self.setConnected(rig, "%s.fk.%s" % (handname, suffix), wason)
         bpy.ops.object.mode_set(mode='POSE')
-        rig.data[prop] = (not value)
+        rig.data[prop] = (not wason)
         self.updatePose()
+        if wason:
+            handFk = rig.pose.bones["%s.fk.%s" % (handname, suffix)]
+            handFk.location = (0,0,0)
 
 
     def setConstraint(self, rig, bname, value):
