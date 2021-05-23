@@ -134,6 +134,14 @@ def getMhxProps(amt):
     return floats, bools
 
 
+def setPropMinMax(rna, prop, min, max):
+    rna_ui = rna.get('_RNA_UI')
+    if rna_ui is None:
+        rna_ui = rna['_RNA_UI'] = {}
+    struct = { "min": min, "max": max, "soft_min": min, "soft_max": max}
+    rna_ui[prop] = struct
+
+
 class MHX_OT_UpdateMhx(MhxOperator):
     bl_idname = "mhx.update_mhx"
     bl_label = "Update MHX"
@@ -148,9 +156,10 @@ class MHX_OT_UpdateMhx(MhxOperator):
             if prop in rig.keys():
                 del rig[prop]
         for prop in bools:
-            setMhxProp(rig.data, prop, False)
+            rig.data[prop] = False
         for prop in floats:
-            setMhxProp(rig.data, prop, 1.0)
+            rig.data[prop] = 1.0
+            setPropMinMax(rig, prop, 0.0, 1.0)
         self.updateDrivers(rig)
 
     def updateDrivers(self, rig):
@@ -165,7 +174,6 @@ class MHX_OT_UpdateMhx(MhxOperator):
                             trg.id_type = 'ARMATURE'
                             trg.id = rig.data
                             trg.data_path = propRef("MhaGazeFollowsHead")
-
 
 
 def initMhxProps():
