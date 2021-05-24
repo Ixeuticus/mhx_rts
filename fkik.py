@@ -620,13 +620,13 @@ class ToggleStretch(Updater):
             handFk.location = (0,0,0)
 
 
-    def setConstraint(self, rig, bname, value):
+    def setConstraint(self, rig, bname, mute):
         if bname not in rig.pose.bones:
             return
         pb = rig.pose.bones[bname]
         for cns in pb.constraints:
             if cns.type == 'STRETCH_TO':
-                cns.mute = value
+                cns.mute = mute
 
 
     def setConnected(self, rig, bname, value):
@@ -674,6 +674,76 @@ class MHX_OT_MhxToggleStretchRightLeg(MhxOperator, ToggleStretch):
 
     def run(self, context):
         self.toggle(context, "MhaLegStretch_R", "shin", "foot", "R")
+
+#----------------------------------------------------------
+#   Toggle Toe Tarsal parenting
+#----------------------------------------------------------
+
+class ToggleToeTarsal(Updater):
+    def toggle(self, context, prop, suffix):
+        rig = context.object
+        toename = "toe.%s" % suffix
+        tarsalname = "tarsal.%s" % suffix
+        if (toename not in rig.data.bones.keys() or
+            tarsalname not in rig.data.bones.keys()):
+            msg = ("Missing bones: %s or %s" % (toename, tarsalname))
+            raise MhxError(msg)
+        if prop in rig.data.keys():
+            wason = rig.data[prop]
+        else:
+            wason = False
+        for smallname in ["big_toe", "small_toe_1", "small_toe_2", "small_toe_3", "small_toe_4"]:
+            self.setConstraint(rig, "%s.01.%s" % (smallname, suffix), toename, wason)
+        bpy.ops.object.mode_set(mode='EDIT')
+        toe = rig.data.edit_bones[toename]
+        tarsal = rig.data.edit_bones[tarsalname]
+        for smallname in ["big_toe", "small_toe_1", "small_toe_2", "small_toe_3", "small_toe_4"]:
+            self.setParent(rig, "%s.01.%s" % (smallname, suffix), toe, tarsal, wason)
+        bpy.ops.object.mode_set(mode='POSE')
+        rig.data[prop] = (not wason)
+        self.updatePose()
+
+
+    def setConstraint(self, rig, bname, toename, mute):
+        if bname not in rig.pose.bones.keys():
+            return
+        pb = rig.pose.bones[bname]
+        for cns in pb.constraints:
+            if (cns.type == 'COPY_ROTATION' and
+                cns.subtarget == toename):
+                cns.mute = mute
+                return
+        raise MhxError("Cannot set toe tarsal parents for this rig")
+
+
+    def setParent(self, rig, bname, toe, tarsal, wason):
+        if bname not in rig.data.edit_bones:
+            return
+        eb = rig.data.edit_bones[bname]
+        if wason:
+            eb.parent = toe
+        else:
+            eb.parent = tarsal
+
+
+class MHX_OT_MhxToggleToeTarsalLeft(MhxOperator, ToggleToeTarsal):
+    bl_idname = "mhx.toggle_toe_tarsal_left"
+    bl_label = "Left Toes"
+    bl_description = "Toggle left toes tarsal parent"
+    bl_options = {'UNDO'}
+
+    def run(self, context):
+        self.toggle(context, "MhaToeTarsal_L", "L")
+
+
+class MHX_OT_MhxToggleToeTarsalRight(MhxOperator, ToggleToeTarsal):
+    bl_idname = "mhx.toggle_toe_tarsal_right"
+    bl_label = "Right Toes"
+    bl_description = "Toggle right toes tarsal parent"
+    bl_options = {'UNDO'}
+
+    def run(self, context):
+        self.toggle(context, "MhaToeTarsal_R", "R")
 
 #----------------------------------------------------------
 #   Toggle forearms follow
@@ -735,6 +805,8 @@ classes = [
     MHX_OT_MhxToggleStretchRightArm,
     MHX_OT_MhxToggleStretchLeftLeg,
     MHX_OT_MhxToggleStretchRightLeg,
+    MHX_OT_MhxToggleToeTarsalLeft,
+    MHX_OT_MhxToggleToeTarsalRight,
     MHX_OT_MhxToggleFkIkForearmsFollow,
     MHX_OT_MhxToggleFkIkLimits,
 ]

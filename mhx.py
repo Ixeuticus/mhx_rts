@@ -191,6 +191,7 @@ def initMhxProps():
     bpy.types.Armature.MhaLegIk_L = FloatPropOVR(0.0, precision=3, min=0.0, max=1.0)
     bpy.types.Armature.MhaArmStretch_L = BoolPropOVR(True)
     bpy.types.Armature.MhaLegStretch_L = BoolPropOVR(True)
+    bpy.types.Armature.MhaToeTarsal_L = BoolPropOVR(False)
 
     bpy.types.Armature.MhaArmHinge_R = BoolPropOVR(False)
     bpy.types.Armature.MhaArmIk_R = FloatPropOVR(0.0, precision=3, min=0.0, max=1.0)
@@ -201,6 +202,7 @@ def initMhxProps():
     bpy.types.Armature.MhaLegIk_R = FloatPropOVR(0.0, precision=3, min=0.0, max=1.0)
     bpy.types.Armature.MhaArmStretch_R = BoolPropOVR(True)
     bpy.types.Armature.MhaLegStretch_R = BoolPropOVR(True)
+    bpy.types.Armature.MhaToeTarsal_R = BoolPropOVR(False)
 
 
 classes = [

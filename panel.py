@@ -200,6 +200,13 @@ class MHX_PT_FKIK(MhxPanel):
         icon = 'CHECKBOX_HLT' if amt.MhaLegStretch_R else 'CHECKBOX_DEHLT'
         row.operator("mhx.toggle_stretch_right_leg", icon=icon, emboss=False)
 
+        self.layout.label(text = "Toes Tarsal Parents")
+        row = self.layout.row()
+        icon = 'CHECKBOX_HLT' if amt.MhaToeTarsal_L else 'CHECKBOX_DEHLT'
+        row.operator("mhx.toggle_toe_tarsal_left", icon=icon, emboss=False)
+        icon = 'CHECKBOX_HLT' if amt.MhaToeTarsal_R else 'CHECKBOX_DEHLT'
+        row.operator("mhx.toggle_toe_tarsal_right", icon=icon, emboss=False)
+
 
     def toggleFKIK(self, row, value, op):
         if value > 0.5:

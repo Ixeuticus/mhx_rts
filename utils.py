@@ -141,10 +141,7 @@ class MhxError(Exception):
         global theErrorLines, theMessage
         theMessage = value
         theErrorLines = (
-            theMessage.split("\n") +
-            ["" +
-             "For corrective actions see:",
-             "http://diffeomorphic.blogspot.com/p/bvh-retargeter.html"]
+            theMessage.split("\n")
             )
         print("*** MHX Error ***")
         for line in theErrorLines:
