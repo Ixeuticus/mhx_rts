@@ -609,7 +609,13 @@ class ToggleStretch(Updater):
             wason = True
         self.setConstraint(rig, "%s.bend.%s" % (armname, suffix), wason)
         self.setConstraint(rig, "%s.twist.%s" % (armname, suffix), wason)
-        bpy.ops.object.mode_set(mode='EDIT')
+        try:
+            bpy.ops.object.mode_set(mode='EDIT')
+            ok = True
+        except RuntimeError:
+            ok = False
+        if not ok:
+            raise MhxError("Cannot toggle stretch for this armature")
         self.setConnected(rig, "%s.%s" % (handname, suffix), wason)
         self.setConnected(rig, "%s.fk.%s" % (handname, suffix), wason)
         bpy.ops.object.mode_set(mode='POSE')
@@ -694,7 +700,13 @@ class ToggleToeTarsal(Updater):
             wason = False
         for smallname in ["big_toe", "small_toe_1", "small_toe_2", "small_toe_3", "small_toe_4"]:
             self.setConstraint(rig, "%s.01.%s" % (smallname, suffix), toename, wason)
-        bpy.ops.object.mode_set(mode='EDIT')
+        try:
+            bpy.ops.object.mode_set(mode='EDIT')
+            ok = True
+        except RuntimeError:
+            ok = False
+        if not ok:
+            raise MhxError("Cannot toggle toe tarsal parents for this armature")
         toe = rig.data.edit_bones[toename]
         tarsal = rig.data.edit_bones[tarsalname]
         for smallname in ["big_toe", "small_toe_1", "small_toe_2", "small_toe_3", "small_toe_4"]:

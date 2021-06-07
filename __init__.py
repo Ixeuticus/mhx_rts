@@ -29,7 +29,7 @@
 bl_info = {
     "name": "MHX Runtime System",
     "author": "Thomas Larsson",
-    "version": (0,1,0),
+    "version": (1,6,0),
     "blender": (2,92,0),
     "location": "UI > MHX",
     "description": "MHX runtime system",
