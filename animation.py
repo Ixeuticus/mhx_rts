@@ -996,6 +996,23 @@ class MHX_OT_FloorIkFoot(HidePropsOperator, Footer, FrameRange):
             for kp in kps[n:-1-n]:
                 kp.co[1] = y
 
+#------------------------------------------------------------------------
+#   Clear feet
+#------------------------------------------------------------------------
+
+class MHX_OT_ClearFeet(HideOperator):
+    bl_idname = "mhx.clear_feet"
+    bl_label = "Clear Feet"
+    bl_description = "Clear pose for FK feet and toes"
+    bl_options = {'UNDO'}
+
+    def run(self, context):
+        rig = context.object
+        for bname in ["foot.fk.L", "foot.fk.R", "toe.fk.L", "toe.fk.R"]:
+            if bname in rig.pose.bones.keys():
+                pb = rig.pose.bones[bname]
+                pb.rotation_euler = (0,0,0)
+
 #----------------------------------------------------------
 #   Initialize
 #----------------------------------------------------------
@@ -1012,6 +1029,7 @@ classes = [
     MHX_OT_ClearAnimation,
     MHX_OT_FloorFkFoot,
     MHX_OT_FloorIkFoot,
+    MHX_OT_ClearFeet,
 ]
 
 def register():
