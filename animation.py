@@ -286,7 +286,7 @@ class MHX_OT_EnforceConstraints(HidePropsOperator, Basic, FrameRange):
 #   Transfer FK - IK
 #-------------------------------------------------------------
 
-class Transferer(FootSnapper):
+class Transferer:
     useArms : BoolProperty(
         name="Include Arms",
         description="Include arms in FK/IK snapping",
@@ -300,7 +300,6 @@ class Transferer(FootSnapper):
     def draw(self, context):
         self.layout.prop(self, "useArms")
         self.layout.prop(self, "useLegs")
-        FootSnapper.draw(self, context)
 
 
     def setMhxIk(self, value):
@@ -331,7 +330,7 @@ class Transferer(FootSnapper):
 #   Transfer to FK
 #------------------------------------------------------------------------
 
-class MHX_OT_TransferToFk(Transferer, HidePropsOperator, Bender, FrameRange):
+class MHX_OT_TransferToFk(Transferer, FootSnapper, HidePropsOperator, Bender, FrameRange):
     bl_idname = "mhx.transfer_to_fk"
     bl_label = "Transfer IK => FK"
     bl_description = "Transfer IK animation to FK bones"
@@ -383,7 +382,7 @@ class MHX_OT_TransferToFk(Transferer, HidePropsOperator, Bender, FrameRange):
 #   Transfer to IK
 #------------------------------------------------------------------------
 
-class MHX_OT_TransferToIk(Transferer, HidePropsOperator, FrameRange):
+class MHX_OT_TransferToIk(Transferer, FootSnapper, HidePropsOperator, FrameRange):
     bl_idname = "mhx.transfer_to_ik"
     bl_label = "Transfer FK => IK"
     bl_description = "Transfer FK animation to IK bones"
@@ -391,6 +390,7 @@ class MHX_OT_TransferToIk(Transferer, HidePropsOperator, FrameRange):
 
     def draw(self, context):
         Transferer.draw(self, context)
+        FootSnapper.draw(self, context)
         FrameRange.draw(self, context)
 
     def run(self, context):
