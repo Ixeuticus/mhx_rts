@@ -230,7 +230,6 @@ class MHX_PT_Animation(MhxPanel):
         scn = context.scene
         if self.needsMhxUpdate(rig):
             return
-        self.layout.operator("mhx.clear_feet")
         self.layout.operator("mhx.remove_frame_zero")
         self.layout.operator("mhx.remove_unused_fcurves")
         self.layout.operator("mhx.clear_animation")
