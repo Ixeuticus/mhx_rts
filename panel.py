@@ -99,27 +99,61 @@ class MHX_PT_Properties(MhxPanel):
 
     def draw(self, context):
         rig = context.object
+        amt = rig.data
         if self.needsMhxUpdate(rig):
             return
 
-        amt = rig.data
-        self.layout.separator()
+        self.layout.label(text = "Gaze")
         self.layout.prop(amt, propRef("MhaGazeFollowsHead"), text="Gaze Follows Head")
-        icon = 'CHECKBOX_HLT' if amt.MhaLimitsOn else 'CHECKBOX_DEHLT'
-        self.layout.operator("mhx.toggle_fkik_limits", icon=icon, emboss=False)
+        row = self.layout.row()
+        row.prop(amt, "MhaGaze_L")
+        row.prop(amt, "MhaGaze_R")
+
+        self.layout.separator()
+        self.layout.label(text = "Hinge")
+        row = self.layout.row()
+        row.prop(amt, "MhaArmHinge_L")
+        row.prop(amt, "MhaArmHinge_R")
+        row = self.layout.row()
+        row.prop(amt, "MhaLegHinge_L")
+        row.prop(amt, "MhaLegHinge_R")
+
+        self.layout.separator()
+        self.layout.label(text = "Hands And Fingers")
         icon = 'CHECKBOX_HLT' if amt.MhaForearmsFollow else 'CHECKBOX_DEHLT'
         self.layout.operator("mhx.toggle_fkik_forearms_follow", icon=icon, emboss=False)
         row = self.layout.row()
-        row.label(text = "Left")
-        row.label(text = "Right")
-        props = [key for key in amt.keys() if key[0:3] == "Mha" and key[-1] in ["L", "R"]]
-        props.sort()
-        while props:
-            left,right = props[0:2]
-            props = props[2:]
-            row = self.layout.row()
-            row.prop(amt, propRef(left), text=left[3:-2])
-            row.prop(amt, propRef(right), text=right[3:-2])
+        row.prop(amt, "MhaFingerControl_L")
+        row.prop(amt, "MhaFingerControl_R")
+
+        self.layout.separator()
+        self.layout.label(text = "IK And Limits")
+        icon = 'CHECKBOX_HLT' if amt.MhaLimitsOn else 'CHECKBOX_DEHLT'
+        self.layout.operator("mhx.toggle_fkik_limits", icon=icon, emboss=False)
+        row = self.layout.row()
+        row.prop(amt, "MhaLegIkToAnkle_L")
+        row.prop(amt, "MhaLegIkToAnkle_R")
+
+        self.layout.separator()
+        self.layout.label(text = "Stretchiness")
+        row = self.layout.row()
+        icon = 'CHECKBOX_HLT' if amt.MhaArmStretch_L else 'CHECKBOX_DEHLT'
+        row.operator("mhx.toggle_stretch_left_arm", icon=icon, emboss=False)
+        icon = 'CHECKBOX_HLT' if amt.MhaArmStretch_R else 'CHECKBOX_DEHLT'
+        row.operator("mhx.toggle_stretch_right_arm", icon=icon, emboss=False)
+        row = self.layout.row()
+        icon = 'CHECKBOX_HLT' if amt.MhaLegStretch_L else 'CHECKBOX_DEHLT'
+        row.operator("mhx.toggle_stretch_left_leg", icon=icon, emboss=False)
+        icon = 'CHECKBOX_HLT' if amt.MhaLegStretch_R else 'CHECKBOX_DEHLT'
+        row.operator("mhx.toggle_stretch_right_leg", icon=icon, emboss=False)
+
+        self.layout.separator()
+        self.layout.label(text = "Toes Tarsal Parents")
+        row = self.layout.row()
+        icon = 'CHECKBOX_HLT' if amt.MhaToeTarsal_L else 'CHECKBOX_DEHLT'
+        row.operator("mhx.toggle_toe_tarsal_left", icon=icon, emboss=False)
+        icon = 'CHECKBOX_HLT' if amt.MhaToeTarsal_R else 'CHECKBOX_DEHLT'
+        row.operator("mhx.toggle_toe_tarsal_right", icon=icon, emboss=False)
 
 #------------------------------------------------------------------------
 #    Mhx FK/IK switch panel
@@ -187,25 +221,6 @@ class MHX_PT_FKIK(MhxPanel):
 
         self.layout.prop(scn, "MhxUseSwitch")
         self.layout.prop(scn, "MhxUseSnapRotation")
-
-        self.layout.label(text = "Stretchiness")
-        row = self.layout.row()
-        icon = 'CHECKBOX_HLT' if amt.MhaArmStretch_L else 'CHECKBOX_DEHLT'
-        row.operator("mhx.toggle_stretch_left_arm", icon=icon, emboss=False)
-        icon = 'CHECKBOX_HLT' if amt.MhaArmStretch_R else 'CHECKBOX_DEHLT'
-        row.operator("mhx.toggle_stretch_right_arm", icon=icon, emboss=False)
-        row = self.layout.row()
-        icon = 'CHECKBOX_HLT' if amt.MhaLegStretch_L else 'CHECKBOX_DEHLT'
-        row.operator("mhx.toggle_stretch_left_leg", icon=icon, emboss=False)
-        icon = 'CHECKBOX_HLT' if amt.MhaLegStretch_R else 'CHECKBOX_DEHLT'
-        row.operator("mhx.toggle_stretch_right_leg", icon=icon, emboss=False)
-
-        self.layout.label(text = "Toes Tarsal Parents")
-        row = self.layout.row()
-        icon = 'CHECKBOX_HLT' if amt.MhaToeTarsal_L else 'CHECKBOX_DEHLT'
-        row.operator("mhx.toggle_toe_tarsal_left", icon=icon, emboss=False)
-        icon = 'CHECKBOX_HLT' if amt.MhaToeTarsal_R else 'CHECKBOX_DEHLT'
-        row.operator("mhx.toggle_toe_tarsal_right", icon=icon, emboss=False)
 
 
     def toggleFKIK(self, row, value, op):

@@ -644,8 +644,8 @@ class ToggleStretch(Updater):
 
 class MHX_OT_MhxToggleStretchLeftArm(MhxOperator, ToggleStretch):
     bl_idname = "mhx.toggle_stretch_left_arm"
-    bl_label = "Left Arm"
-    bl_description = "Toggle left arm stretch"
+    bl_label = "Left Arm Stretch"
+    bl_description = "Toggle left arm stretchiness"
     bl_options = {'UNDO'}
 
     def run(self, context):
@@ -654,8 +654,8 @@ class MHX_OT_MhxToggleStretchLeftArm(MhxOperator, ToggleStretch):
 
 class MHX_OT_MhxToggleStretchRightArm(MhxOperator, ToggleStretch):
     bl_idname = "mhx.toggle_stretch_right_arm"
-    bl_label = "Right Arm"
-    bl_description = "Toggle right arm stretch"
+    bl_label = "Right Arm Stretch"
+    bl_description = "Toggle right arm stretchiness"
     bl_options = {'UNDO'}
 
     def run(self, context):
@@ -664,8 +664,8 @@ class MHX_OT_MhxToggleStretchRightArm(MhxOperator, ToggleStretch):
 
 class MHX_OT_MhxToggleStretchLeftLeg(MhxOperator, ToggleStretch):
     bl_idname = "mhx.toggle_stretch_left_leg"
-    bl_label = "Left Leg"
-    bl_description = "Toggle left leg stretch"
+    bl_label = "Left Leg Stretch"
+    bl_description = "Toggle left leg stretchiness"
     bl_options = {'UNDO'}
 
     def run(self, context):
@@ -674,8 +674,8 @@ class MHX_OT_MhxToggleStretchLeftLeg(MhxOperator, ToggleStretch):
 
 class MHX_OT_MhxToggleStretchRightLeg(MhxOperator, ToggleStretch):
     bl_idname = "mhx.toggle_stretch_right_leg"
-    bl_label = "Right Leg"
-    bl_description = "Toggle right leg stretch"
+    bl_label = "Right Leg Stretch"
+    bl_description = "Toggle right leg stretchiness"
     bl_options = {'UNDO'}
 
     def run(self, context):
@@ -740,7 +740,7 @@ class ToggleToeTarsal(Updater):
 
 class MHX_OT_MhxToggleToeTarsalLeft(MhxOperator, ToggleToeTarsal):
     bl_idname = "mhx.toggle_toe_tarsal_left"
-    bl_label = "Left Toes"
+    bl_label = "Left Toes Tarsal Parent"
     bl_description = "Toggle left toes tarsal parent"
     bl_options = {'UNDO'}
 
@@ -750,7 +750,7 @@ class MHX_OT_MhxToggleToeTarsalLeft(MhxOperator, ToggleToeTarsal):
 
 class MHX_OT_MhxToggleToeTarsalRight(MhxOperator, ToggleToeTarsal):
     bl_idname = "mhx.toggle_toe_tarsal_right"
-    bl_label = "Right Toes"
+    bl_label = "Right Toes Tarsal Parent"
     bl_description = "Toggle right toes tarsal parent"
     bl_options = {'UNDO'}
 
