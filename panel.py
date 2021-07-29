@@ -121,9 +121,9 @@ class MHX_PT_Properties(MhxPanel):
         self.layout.separator()
         self.layout.label(text = "Hands And Fingers")
         row = self.layout.row()
-        icon = 'CHECKBOX_HLT' if amt.MhaForearmsFollow_L else 'CHECKBOX_DEHLT'
+        icon = 'CHECKBOX_HLT' if amt.MhaForearmFollow_L else 'CHECKBOX_DEHLT'
         row.operator("mhx.toggle_left_forearm_follow", icon=icon, emboss=False)
-        icon = 'CHECKBOX_HLT' if amt.MhaForearmsFollow_R else 'CHECKBOX_DEHLT'
+        icon = 'CHECKBOX_HLT' if amt.MhaForearmFollow_R else 'CHECKBOX_DEHLT'
         row.operator("mhx.toggle_right_forearm_follow", icon=icon, emboss=False)
         row = self.layout.row()
         row.prop(amt, "MhaFingerControl_L")

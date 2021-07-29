@@ -792,7 +792,7 @@ class MHX_OT_MhxToggleLeftForearmFollow(MhxOperator, ForearmFollower):
     bl_options = {'UNDO'}
 
     suffix = ".L"
-    prop = "MhaForearmsFollow_L"
+    prop = "MhaForearmFollow_L"
 
     def run(self, context):
         self.toggle(context.object)
@@ -805,7 +805,7 @@ class MHX_OT_MhxToggleRightForearmFollow(MhxOperator, ForearmFollower):
     bl_options = {'UNDO'}
 
     suffix = ".R"
-    prop = "MhaForearmsFollow_R"
+    prop = "MhaForearmFollow_R"
 
     def run(self, context):
         self.toggle(context.object)
