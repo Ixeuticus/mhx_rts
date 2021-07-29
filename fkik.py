@@ -761,19 +761,54 @@ class MHX_OT_MhxToggleToeTarsalRight(MhxOperator, ToggleToeTarsal):
 #   Toggle forearms follow
 #----------------------------------------------------------
 
-class MHX_OT_MhxToggleFkIkForearmsFollow(MhxOperator):
-    bl_idname = "mhx.toggle_fkik_forearms_follow"
-    bl_label = "Forearms Follow Hands"
-    bl_description = "Control forearm twist with hand twist.\nIt may be necessary to turn this off for correct FK->IK snapping."
+class ForearmFollower:
+    def toggle(self, rig):
+        follows = getattr(rig.data, self.prop)
+        pb = rig.pose.bones["forearm"+self.suffix]
+        for cns in pb.constraints:
+            if (cns.type == 'COPY_ROTATION' and
+                cns.subtarget == "hand.fk"+self.suffix):
+                cns.mute = follows
+                break
+        hand = rig.pose.bones["hand.fk"+self.suffix]
+        for cns in hand.constraints:
+            if cns.type == 'LIMIT_ROTATION':
+                cns.use_limit_y = follows
+                break
+        forearm = rig.pose.bones["forearm.fk"+self.suffix]
+        if follows:
+            forearm.rotation_euler[1] = hand.rotation_euler[1]
+            hand.rotation_euler[1] = 0
+        else:
+            hand.rotation_euler[1] = forearm.rotation_euler[1]
+            forearm.rotation_euler[1] = 0
+        setattr(rig.data, self.prop, (not follows))
+
+
+class MHX_OT_MhxToggleLeftForearmFollow(MhxOperator, ForearmFollower):
+    bl_idname = "mhx.toggle_left_forearm_follow"
+    bl_label = "Left Forearm Follows Hands"
+    bl_description = "Control left forearm twist with left hand twist.\nIt may be necessary to turn this off for correct FK->IK snapping."
+    bl_options = {'UNDO'}
+
+    suffix = ".L"
+    prop = "MhaForearmsFollow_L"
 
     def run(self, context):
-        rig = context.object
-        for bname in ["forearm.L", "forearm.R"]:
-            pb = rig.pose.bones[bname]
-            for cns in pb.constraints:
-                if cns.type == 'COPY_ROTATION':
-                    cns.mute = rig.data.MhaForearmsFollow
-        rig.data.MhaForearmsFollow = not rig.data.MhaForearmsFollow
+        self.toggle(context.object)
+
+
+class MHX_OT_MhxToggleRightForearmFollow(MhxOperator, ForearmFollower):
+    bl_idname = "mhx.toggle_right_forearm_follow"
+    bl_label = "Right Forearm Follows Hands"
+    bl_description = "Control right forearm twist with right hand twist.\nIt may be necessary to turn this off for correct FK->IK snapping."
+    bl_options = {'UNDO'}
+
+    suffix = ".R"
+    prop = "MhaForearmsFollow_R"
+
+    def run(self, context):
+        self.toggle(context.object)
 
 #----------------------------------------------------------
 #   Toggle limits
@@ -819,7 +854,8 @@ classes = [
     MHX_OT_MhxToggleStretchRightLeg,
     MHX_OT_MhxToggleToeTarsalLeft,
     MHX_OT_MhxToggleToeTarsalRight,
-    MHX_OT_MhxToggleFkIkForearmsFollow,
+    MHX_OT_MhxToggleLeftForearmFollow,
+    MHX_OT_MhxToggleRightForearmFollow,
     MHX_OT_MhxToggleFkIkLimits,
 ]
 

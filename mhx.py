@@ -203,7 +203,8 @@ def initMhxProps():
         description = "Right leg decoupled from the pelvis rotation")
 
     # Hands and fingers
-    bpy.types.Armature.MhaForearmsFollow = BoolPropOVR(True)
+    bpy.types.Armature.MhaForearmsFollow_L = BoolPropOVR(True)
+    bpy.types.Armature.MhaForearmsFollow_R = BoolPropOVR(True)
     bpy.types.Armature.MhaFingerControl_L = BoolPropOVR(False,
         name = "Left Fingers",
         description = "Left finger links controlled by the long finger bones")
