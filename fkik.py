@@ -787,7 +787,7 @@ class ForearmFollower:
 
 class MHX_OT_MhxToggleLeftForearmFollow(MhxOperator, ForearmFollower):
     bl_idname = "mhx.toggle_left_forearm_follow"
-    bl_label = "Left Forearm Follows Hands"
+    bl_label = "Left Forearm Follows Hand"
     bl_description = "Control left forearm twist with left hand twist.\nIt may be necessary to turn this off for correct FK->IK snapping."
     bl_options = {'UNDO'}
 
@@ -800,7 +800,7 @@ class MHX_OT_MhxToggleLeftForearmFollow(MhxOperator, ForearmFollower):
 
 class MHX_OT_MhxToggleRightForearmFollow(MhxOperator, ForearmFollower):
     bl_idname = "mhx.toggle_right_forearm_follow"
-    bl_label = "Right Forearm Follows Hands"
+    bl_label = "Right Forearm Follows Hand"
     bl_description = "Control right forearm twist with right hand twist.\nIt may be necessary to turn this off for correct FK->IK snapping."
     bl_options = {'UNDO'}
 

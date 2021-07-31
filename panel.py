@@ -128,6 +128,9 @@ class MHX_PT_Properties(MhxPanel):
         row = self.layout.row()
         row.prop(amt, "MhaFingerControl_L")
         row.prop(amt, "MhaFingerControl_R")
+        row = self.layout.row()
+        row.prop(amt, "MhaFingerIk_L")
+        row.prop(amt, "MhaFingerIk_R")
 
         self.layout.separator()
         self.layout.label(text = "IK And Limits")

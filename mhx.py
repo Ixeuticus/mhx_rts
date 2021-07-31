@@ -206,11 +206,17 @@ def initMhxProps():
     bpy.types.Armature.MhaForearmFollow_L = BoolPropOVR(True)
     bpy.types.Armature.MhaForearmFollow_R = BoolPropOVR(True)
     bpy.types.Armature.MhaFingerControl_L = BoolPropOVR(False,
-        name = "Left Fingers",
+        name = "Left Long Fingers",
         description = "Left finger links controlled by the long finger bones")
     bpy.types.Armature.MhaFingerControl_R = BoolPropOVR(False,
-        name = "Right Fingers",
+        name = "Right Long Fingers",
         description = "Right finger links controlled by the long finger bones")
+    bpy.types.Armature.MhaFingerIk_L = BoolPropOVR(False,
+        name = "Left Finger IK",
+        description = "Left finger links controlled by IK")
+    bpy.types.Armature.MhaFingerIk_R = BoolPropOVR(False,
+        name = "Right Finger IK",
+        description = "Right finger links controlled by IK")
 
     # IK
     bpy.types.Armature.MhaLimitsOn = BoolPropOVR(True)
