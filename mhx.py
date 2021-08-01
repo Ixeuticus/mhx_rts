@@ -128,7 +128,7 @@ def getMhxProps(amt):
     for prop in ["MhaArmIk", "MhaGaze", "MhaLegIk"]:
         floats.append(prop+"_L")
         floats.append(prop+"_R")
-    for prop in ["MhaArmHinge", "MhaFingerControl", "MhaLegHinge", "MhaLegIkToAnkle"]:
+    for prop in ["MhaArmHinge", "MhaFingerControl", "MhaLegHinge", "MhaLegIkToAnkle", "MhaDazShin"]:
         bools.append(prop+"_L")
         bools.append(prop+"_R")
     return floats, bools
@@ -232,6 +232,14 @@ def initMhxProps():
     bpy.types.Armature.MhaLegIk_L = FloatPropOVR(0.0, precision=3, min=0.0, max=1.0)
     bpy.types.Armature.MhaArmIk_R = FloatPropOVR(0.0, precision=3, min=0.0, max=1.0)
     bpy.types.Armature.MhaLegIk_R = FloatPropOVR(0.0, precision=3, min=0.0, max=1.0)
+
+    # Deform
+    bpy.types.Armature.MhaDazShin_L = BoolPropOVR(False,
+        name = "Left DAZ Shin",
+        description = "Deform the left shin as in DAZ Studio")
+    bpy.types.Armature.MhaDazShin_R = BoolPropOVR(False,
+        name = "Right DAZ Shin",
+        description = "Deform the right shin as in DAZ Studio")
 
     # Stretchiness
     bpy.types.Armature.MhaArmStretch_L = BoolPropOVR(True)

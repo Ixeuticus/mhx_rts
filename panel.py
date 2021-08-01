@@ -141,6 +141,12 @@ class MHX_PT_Properties(MhxPanel):
         row.prop(amt, "MhaLegIkToAnkle_R")
 
         self.layout.separator()
+        self.layout.label(text = "Deform")
+        row = self.layout.row()
+        row.prop(amt, "MhaDazShin_L")
+        row.prop(amt, "MhaDazShin_R")
+
+        self.layout.separator()
         self.layout.label(text = "Stretchiness")
         row = self.layout.row()
         icon = 'CHECKBOX_HLT' if amt.MhaArmStretch_L else 'CHECKBOX_DEHLT'
