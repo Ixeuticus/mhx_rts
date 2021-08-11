@@ -151,7 +151,7 @@ class Snapper(Updater, Basic):
 
     def setup(self, context, value):
         checkVisible(context.object)
-        bpy.ops.object.mode_set(mode='POSE')
+        setMode('POSE')
         self.oldvalue = value
         self.amt[self.prop] = value
         self.auto = context.scene.tool_settings.use_keyframe_insert_auto
@@ -613,7 +613,7 @@ class ToggleStretch(Updater):
         self.setConstraint(rig, "%s.bend.%s" % (armname, suffix), wason)
         self.setConstraint(rig, "%s.twist.%s" % (armname, suffix), wason)
         try:
-            bpy.ops.object.mode_set(mode='EDIT')
+            setMode('EDIT')
             ok = True
         except RuntimeError:
             ok = False
@@ -621,7 +621,7 @@ class ToggleStretch(Updater):
             raise MhxError("Cannot toggle stretch for this armature")
         self.setConnected(rig, "%s.%s" % (handname, suffix), wason)
         self.setConnected(rig, "%s.fk.%s" % (handname, suffix), wason)
-        bpy.ops.object.mode_set(mode='POSE')
+        setMode('POSE')
         rig.data[prop] = (not wason)
         self.updatePose()
         if wason:
@@ -705,7 +705,7 @@ class ToggleToeTarsal(Updater):
         for smallname in ["big_toe", "small_toe_1", "small_toe_2", "small_toe_3", "small_toe_4"]:
             self.setConstraint(rig, "%s.01.%s" % (smallname, suffix), toename, wason)
         try:
-            bpy.ops.object.mode_set(mode='EDIT')
+            setMode('EDIT')
             ok = True
         except RuntimeError:
             ok = False
@@ -715,7 +715,7 @@ class ToggleToeTarsal(Updater):
         tarsal = rig.data.edit_bones[tarsalname]
         for smallname in ["big_toe", "small_toe_1", "small_toe_2", "small_toe_3", "small_toe_4"]:
             self.setParent(rig, "%s.01.%s" % (smallname, suffix), toe, tarsal, wason)
-        bpy.ops.object.mode_set(mode='POSE')
+        setMode('POSE')
         rig.data[prop] = (not wason)
         self.updatePose()
 

@@ -188,6 +188,13 @@ def checkVisible(rig):
     if not (rig and rig.visible_get()):
         raise MhxError("%s is not visible in viewport" % rig.name)
 
+
+def setMode(mode):
+    try:
+        bpy.ops.object.mode_set(mode=mode)
+    except RuntimeError as err:
+        raise MhxError(str(err))
+
 #-------------------------------------------------------------
 #   Execute
 #-------------------------------------------------------------
