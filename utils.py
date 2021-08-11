@@ -183,6 +183,11 @@ class MessageOperator(MhxPopup):
     bl_idname = "mhx.message"
     bl_label = "MHX"
 
+
+def checkVisible(rig):
+    if not (rig and rig.visible_get()):
+        raise MhxError("%s is not visible in viewport" % rig.name)
+
 #-------------------------------------------------------------
 #   Execute
 #-------------------------------------------------------------

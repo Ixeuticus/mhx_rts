@@ -155,6 +155,7 @@ class MHX_OT_LimbsBendPositive(HidePropsOperator, Bender, FrameRange):
         FrameRange.draw(self, context)
 
     def run(self, context):
+        checkVisible(context.object)
         frames = self.getActiveFrames()
         self.limbsBendPositive(frames)
         print("Limbs bent positive")
@@ -171,6 +172,7 @@ class MHX_OT_RemoveFrameZero(MhxOperator):
 
     def run(self, context):
         rig = context.object
+        checkVisible(rig)
         if rig.animation_data is None:
             return None
         act = rig.animation_data.action
@@ -193,6 +195,7 @@ class MHX_OT_RemoveUnusedFcurves(MhxOperator):
 
     def run(self, context):
         rig = context.object
+        checkVisible(rig)
         if rig.animation_data is None:
             return None
         act = rig.animation_data.action
@@ -234,6 +237,7 @@ class MHX_OT_EnforceConstraints(HidePropsOperator, Basic, FrameRange):
         FrameRange.draw(self, context)
 
     def run(self, context):
+        checkVisible(self.rig)
         frames = self.getActiveFrames()
         for pb in self.rig.pose.bones:
             cns = self.getLimitRotConstraint(pb)
@@ -341,6 +345,7 @@ class MHX_OT_TransferToFk(Transferer, FootSnapper, HidePropsOperator, Bender, Fr
         FrameRange.draw(self, context)
 
     def run(self, context):
+        checkVisible(context.object)
         startProgress("Transfer to FK")
         time1 = time.perf_counter()
         self.transferMhxToFk(context)
@@ -394,6 +399,7 @@ class MHX_OT_TransferToIk(Transferer, FootSnapper, HidePropsOperator, FrameRange
         FrameRange.draw(self, context)
 
     def run(self, context):
+        checkVisible(context.object)
         startProgress("Transfer to IK")
         time1 = time.perf_counter()
         self.transferMhxToIk(context)
@@ -468,8 +474,9 @@ class MHX_OT_ClearAnimation(HidePropsOperator):
 
     def run(self, context):
         from .fkik import SnapBones
-        startProgress("Clear animation")
         rig = context.object
+        checkVisible(rig)
+        startProgress("Clear animation")
         act = self.getCurrentAction(rig)
         bnames = []
         if self.clearArmFK:
@@ -614,6 +621,7 @@ class MHX_OT_SetConstraints(MhxOperator):
         }
 
         rig = context.object
+        checkVisible(rig)
         for suffix in [".L", ".R"]:
             for bname,lock in locks.items():
                 pb = rig.pose.bones[bname+suffix]
@@ -659,6 +667,7 @@ class MHX_OT_ShiftBoneFCurves(HidePropsOperator, FrameRange, Basic):
     bl_options = {'UNDO'}
 
     def run(self, context):
+        checkVisible(self.rig)
         startProgress("Shift animation")
         self.auto = True
         scn = context.scene
@@ -767,6 +776,7 @@ class MHX_OT_FloorFkFoot(HidePropsOperator, Footer, FrameRange):
         self.auto = True
         scn = context.scene
         self.rig, self.plane = self.getRigAndPlane(context)
+        checkVisible(self.rig)
         frames = self.getActiveFrames()
         self.floorFkFoot(scn, frames)
         self.setInterpolation()
@@ -855,6 +865,7 @@ class MHX_OT_FloorIkFoot(HidePropsOperator, Footer, FrameRange):
         self.auto = True
         scn = context.scene
         self.rig, self.plane = self.getRigAndPlane(context)
+        checkVisible(self.rig)
         frames = self.getActiveFrames()
         self.floorIkFoot(scn, frames)
         self.setInterpolation()

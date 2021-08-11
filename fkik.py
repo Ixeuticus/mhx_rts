@@ -150,6 +150,7 @@ class Snapper(Updater, Basic):
 
 
     def setup(self, context, value):
+        checkVisible(context.object)
         bpy.ops.object.mode_set(mode='POSE')
         self.oldvalue = value
         self.amt[self.prop] = value
@@ -538,6 +539,7 @@ class MHX_OT_MhxSnapIkRightLeg(FootSnapper, HideOperator):
 class ToggleFkIk(Updater):
     def toggle(self, context, prop, fklayer, iklayer):
         rig = context.object
+        checkVisible(rig)
         scn = context.scene
         value = rig.data[prop]
         if value > 0.5:
@@ -603,6 +605,7 @@ class MHX_OT_MhxToggleFkIkRightLeg(MhxOperator, ToggleFkIk):
 class ToggleStretch(Updater):
     def toggle(self, context, prop, armname, handname, suffix):
         rig = context.object
+        checkVisible(rig)
         if prop in rig.data.keys():
             wason = rig.data[prop]
         else:
@@ -688,6 +691,7 @@ class MHX_OT_MhxToggleStretchRightLeg(MhxOperator, ToggleStretch):
 class ToggleToeTarsal(Updater):
     def toggle(self, context, prop, suffix):
         rig = context.object
+        checkVisible(rig)
         toename = "toe.%s" % suffix
         tarsalname = "tarsal.%s" % suffix
         if (toename not in rig.data.bones.keys() or
@@ -763,6 +767,7 @@ class MHX_OT_MhxToggleToeTarsalRight(MhxOperator, ToggleToeTarsal):
 
 class ForearmFollower:
     def toggle(self, rig):
+        checkVisible(rig)
         follows = getattr(rig.data, self.prop)
         pb = rig.pose.bones["forearm"+self.suffix]
         for cns in pb.constraints:
@@ -821,6 +826,7 @@ class MHX_OT_MhxToggleFkIkLimits(MhxOperator):
 
     def run(self, context):
         rig = context.object
+        checkVisible(rig)
         on = rig.data.MhaLimitsOn = not rig.data.MhaLimitsOn
         for pb in rig.pose.bones:
             for cns in pb.constraints:
