@@ -260,7 +260,9 @@ classes = [
 def register():
     bpy.types.Object.MhxLegacy = bpy.props.BoolProperty(default = True)
     bpy.types.Object.MhxRig = bpy.props.BoolProperty(default = False)
-    bpy.types.Object.DazRig = bpy.props.StringProperty(default = "")
+    bpy.types.Object.DazRig = bpy.props.StringProperty(
+        name = "Rig Type",
+        default = "")
     initMhxProps()
     for cls in classes:
         bpy.utils.register_class(cls)
