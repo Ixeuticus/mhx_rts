@@ -30,6 +30,7 @@ import bpy
 from bpy.props import EnumProperty
 from .utils import *
 from .layers import *
+from . import fkik
 
 # ---------------------------------------------------------------------
 #   Convert MHX actions from legacy to modern
@@ -192,25 +193,36 @@ def initMhxProps():
     bpy.types.Armature.MhaArmHinge_L = BoolPropOVR(False,
         name = "Left Arm Hinge",
         description = "Left arm decoupled from the spine rotation")
+
     bpy.types.Armature.MhaArmHinge_R = BoolPropOVR(False,
         name = "Right Arm Hinge",
         description = "Right arm decoupled from the spine rotation")
+
     bpy.types.Armature.MhaLegHinge_L = BoolPropOVR(False,
         name = "Left Leg Hinge",
         description = "Left leg decoupled from the pelvis rotation")
+
     bpy.types.Armature.MhaLegHinge_R = BoolPropOVR(False,
         name = "Right Leg Hinge",
         description = "Right leg decoupled from the pelvis rotation")
 
     # Hands and fingers
-    bpy.types.Armature.MhaForearmFollow_L = BoolPropOVR(True)
-    bpy.types.Armature.MhaForearmFollow_R = BoolPropOVR(True)
+    bpy.types.Armature.MhaForearmFollow_L = BoolPropOVR(True,
+        name = "Left Forearm Follows Hand",
+        description = "Control left forearm twist with left hand twist.\nIt may be necessary to turn this off for correct FK->IK snapping.",
+        update = fkik.setForearmFollowLeft)
+    bpy.types.Armature.MhaForearmFollow_R = BoolPropOVR(True,
+        name = "Right Forearm Follows Hand",
+        description = "Control right forearm twist with right hand twist.\nIt may be necessary to turn this off for correct FK->IK snapping.",
+        update = fkik.setForearmFollowRight)
+
     bpy.types.Armature.MhaFingerControl_L = BoolPropOVR(False,
         name = "Left Long Fingers",
         description = "Left finger links controlled by the long finger bones")
     bpy.types.Armature.MhaFingerControl_R = BoolPropOVR(False,
         name = "Right Long Fingers",
         description = "Right finger links controlled by the long finger bones")
+
     bpy.types.Armature.MhaFingerIk_L = BoolPropOVR(False,
         name = "Left Finger IK",
         description = "Left finger links controlled by IK")
@@ -242,11 +254,28 @@ def initMhxProps():
         description = "Deform the right shin as in DAZ Studio")
 
     # Stretchiness
-    bpy.types.Armature.MhaArmStretch_L = BoolPropOVR(True)
-    bpy.types.Armature.MhaLegStretch_L = BoolPropOVR(True)
+    bpy.types.Armature.MhaArmStretch_L = BoolPropOVR(True,
+        name = "Left Arm Stretch",
+        description = "Toggle left arm stretchiness",
+        update = fkik.toggleArmStretch_L)
+
+    bpy.types.Armature.MhaLegStretch_L = BoolPropOVR(True,
+        name = "Left Leg Stretch",
+        description = "Toggle left leg stretchiness",
+        update = fkik.toggleLegStretch_L)
+
+    bpy.types.Armature.MhaArmStretch_R = BoolPropOVR(True,
+        name = "Right Arm Stretch",
+        description = "Toggle right arm stretchiness",
+        update = fkik.toggleArmStretch_R)
+
+    bpy.types.Armature.MhaLegStretch_R = BoolPropOVR(True,
+        name = "Right Leg Stretch",
+        description = "Toggle right leg stretchiness",
+        update = fkik.toggleLegStretch_R)
+
     bpy.types.Armature.MhaToeTarsal_L = BoolPropOVR(False)
-    bpy.types.Armature.MhaArmStretch_R = BoolPropOVR(True)
-    bpy.types.Armature.MhaLegStretch_R = BoolPropOVR(True)
+
     bpy.types.Armature.MhaToeTarsal_R = BoolPropOVR(False)
 
 

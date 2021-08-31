@@ -31,6 +31,8 @@ from mathutils import *
 from .utils import *
 from .layers import *
 
+theMhxRig = None
+
 #------------------------------------------------------------------
 #   Updater
 #------------------------------------------------------------------
@@ -602,34 +604,8 @@ class MHX_OT_MhxToggleFkIkRightLeg(MhxOperator, ToggleFkIk):
 #   Toggle Stretch
 #----------------------------------------------------------
 
-class ToggleStretch(Updater):
-    def toggle(self, context, prop, armname, handname, suffix):
-        rig = context.object
-        checkVisible(rig)
-        if prop in rig.data.keys():
-            wason = rig.data[prop]
-        else:
-            wason = True
-        self.setConstraint(rig, "%s.bend.%s" % (armname, suffix), wason)
-        self.setConstraint(rig, "%s.twist.%s" % (armname, suffix), wason)
-        try:
-            setMode('EDIT')
-            ok = True
-        except RuntimeError:
-            ok = False
-        if not ok:
-            raise MhxError("Cannot toggle stretch for this armature")
-        self.setConnected(rig, "%s.%s" % (handname, suffix), wason)
-        self.setConnected(rig, "%s.fk.%s" % (handname, suffix), wason)
-        setMode('POSE')
-        rig.data[prop] = (not wason)
-        self.updatePose()
-        if wason:
-            handFk = rig.pose.bones["%s.fk.%s" % (handname, suffix)]
-            handFk.location = (0,0,0)
-
-
-    def setConstraint(self, rig, bname, mute):
+def toggleStretch(amt, rig, prop, armname, handname, suffix):
+    def setConstraint(rig, bname, mute):
         if bname not in rig.pose.bones:
             return
         pb = rig.pose.bones[bname]
@@ -637,52 +613,52 @@ class ToggleStretch(Updater):
             if cns.type == 'STRETCH_TO':
                 cns.mute = mute
 
-
-    def setConnected(self, rig, bname, value):
+    def setConnected(rig, bname, value):
         if bname not in rig.data.edit_bones:
             return
         eb = rig.data.edit_bones[bname]
         eb.use_connect = value
 
-
-class MHX_OT_MhxToggleStretchLeftArm(MhxOperator, ToggleStretch):
-    bl_idname = "mhx.toggle_stretch_left_arm"
-    bl_label = "Left Arm Stretch"
-    bl_description = "Toggle left arm stretchiness"
-    bl_options = {'UNDO'}
-
-    def run(self, context):
-        self.toggle(context, "MhaArmStretch_L", "forearm", "hand", "L")
-
-
-class MHX_OT_MhxToggleStretchRightArm(MhxOperator, ToggleStretch):
-    bl_idname = "mhx.toggle_stretch_right_arm"
-    bl_label = "Right Arm Stretch"
-    bl_description = "Toggle right arm stretchiness"
-    bl_options = {'UNDO'}
-
-    def run(self, context):
-        self.toggle(context, "MhaArmStretch_R", "forearm", "hand", "R")
-
-
-class MHX_OT_MhxToggleStretchLeftLeg(MhxOperator, ToggleStretch):
-    bl_idname = "mhx.toggle_stretch_left_leg"
-    bl_label = "Left Leg Stretch"
-    bl_description = "Toggle left leg stretchiness"
-    bl_options = {'UNDO'}
-
-    def run(self, context):
-        self.toggle(context, "MhaLegStretch_L", "shin", "foot", "L")
+    if not rig or rig.data != amt:
+        print("toggleStretch", rig, amt)
+        return
+    if prop in amt.keys():
+        wason = not amt[prop]
+    else:
+        wason = True
+    setConstraint(rig, "%s.bend.%s" % (armname, suffix), wason)
+    setConstraint(rig, "%s.twist.%s" % (armname, suffix), wason)
+    try:
+        setMode('EDIT')
+        ok = True
+    except RuntimeError:
+        ok = False
+    if not ok:
+        raise MhxError("Cannot toggle stretch for this armature")
+    setConnected(rig, "%s.%s" % (handname, suffix), wason)
+    setConnected(rig, "%s.fk.%s" % (handname, suffix), wason)
+    setMode('POSE')
+    bpy.context.view_layer.update()
+    if wason:
+        handFk = rig.pose.bones["%s.fk.%s" % (handname, suffix)]
+        handFk.location = (0,0,0)
 
 
-class MHX_OT_MhxToggleStretchRightLeg(MhxOperator, ToggleStretch):
-    bl_idname = "mhx.toggle_stretch_right_leg"
-    bl_label = "Right Leg Stretch"
-    bl_description = "Toggle right leg stretchiness"
-    bl_options = {'UNDO'}
+def toggleArmStretch_L(amt, context):
+    global theMhxRig
+    toggleStretch(amt, theMhxRig, "MhaArmStretch_L", "forearm", "hand", "L")
 
-    def run(self, context):
-        self.toggle(context, "MhaLegStretch_R", "shin", "foot", "R")
+def toggleArmStretch_R(amt, context):
+    global theMhxRig
+    toggleStretch(amt, theMhxRig, "MhaArmStretch_R", "forearm", "hand", "R")
+
+def toggleLegStretch_L(amt, context):
+    global theMhxRig
+    toggleStretch(amt, theMhxRig, "MhaLegStretch_L", "shin", "foot", "L")
+
+def toggleLegStretch_R(amt, context):
+    global theMhxRig
+    toggleStretch(amt, theMhxRig, "MhaLegStretch_R", "shin", "foot", "R")
 
 #----------------------------------------------------------
 #   Toggle Toe Tarsal parenting
@@ -765,55 +741,38 @@ class MHX_OT_MhxToggleToeTarsalRight(MhxOperator, ToggleToeTarsal):
 #   Toggle forearms follow
 #----------------------------------------------------------
 
-class ForearmFollower:
-    def toggle(self, rig):
-        checkVisible(rig)
-        follows = getattr(rig.data, self.prop)
-        pb = rig.pose.bones["forearm"+self.suffix]
-        for cns in pb.constraints:
-            if (cns.type == 'COPY_ROTATION' and
-                cns.subtarget == "hand.fk"+self.suffix):
-                cns.mute = follows
-                break
-        hand = rig.pose.bones["hand.fk"+self.suffix]
-        for cns in hand.constraints:
-            if cns.type == 'LIMIT_ROTATION':
-                cns.use_limit_y = follows
-                break
-        forearm = rig.pose.bones["forearm.fk"+self.suffix]
-        if follows:
-            forearm.rotation_euler[1] = hand.rotation_euler[1]
-            hand.rotation_euler[1] = 0
-        else:
-            hand.rotation_euler[1] = forearm.rotation_euler[1]
-            forearm.rotation_euler[1] = 0
-        setattr(rig.data, self.prop, (not follows))
+def setForearmFollow(amt, rig, prop, suffix):
+    if not rig or rig.data != amt:
+        print("ForearmFollow", rig, amt)
+        return
+    follows = getattr(amt, prop)
+    pb = rig.pose.bones["forearm"+suffix]
+    for cns in pb.constraints:
+        if (cns.type == 'COPY_ROTATION' and
+            cns.subtarget == "hand.fk"+suffix):
+            cns.mute = not follows
+            break
+    hand = rig.pose.bones["hand.fk"+suffix]
+    for cns in hand.constraints:
+        if cns.type == 'LIMIT_ROTATION':
+            cns.use_limit_y = not follows
+            break
+    forearm = rig.pose.bones["forearm.fk"+suffix]
+    if follows:
+        hand.rotation_euler[1] = forearm.rotation_euler[1]
+        forearm.rotation_euler[1] = 0
+    else:
+        forearm.rotation_euler[1] = hand.rotation_euler[1]
+        hand.rotation_euler[1] = 0
 
 
-class MHX_OT_MhxToggleLeftForearmFollow(MhxOperator, ForearmFollower):
-    bl_idname = "mhx.toggle_left_forearm_follow"
-    bl_label = "Left Forearm Follows Hand"
-    bl_description = "Control left forearm twist with left hand twist.\nIt may be necessary to turn this off for correct FK->IK snapping."
-    bl_options = {'UNDO'}
+def setForearmFollowLeft(amt, context):
+    global theMhxRig
+    setForearmFollow(amt, theMhxRig, "MhaForearmFollow_L", ".L")
 
-    suffix = ".L"
-    prop = "MhaForearmFollow_L"
-
-    def run(self, context):
-        self.toggle(context.object)
-
-
-class MHX_OT_MhxToggleRightForearmFollow(MhxOperator, ForearmFollower):
-    bl_idname = "mhx.toggle_right_forearm_follow"
-    bl_label = "Right Forearm Follows Hand"
-    bl_description = "Control right forearm twist with right hand twist.\nIt may be necessary to turn this off for correct FK->IK snapping."
-    bl_options = {'UNDO'}
-
-    suffix = ".R"
-    prop = "MhaForearmFollow_R"
-
-    def run(self, context):
-        self.toggle(context.object)
+def setForearmFollowRight(amt, context):
+    global theMhxRig
+    setForearmFollow(amt, theMhxRig, "MhaForearmFollow_R", ".R")
 
 #----------------------------------------------------------
 #   Toggle limits
@@ -854,14 +813,8 @@ classes = [
     MHX_OT_MhxToggleFkIkRightArm,
     MHX_OT_MhxToggleFkIkLeftLeg,
     MHX_OT_MhxToggleFkIkRightLeg,
-    MHX_OT_MhxToggleStretchLeftArm,
-    MHX_OT_MhxToggleStretchRightArm,
-    MHX_OT_MhxToggleStretchLeftLeg,
-    MHX_OT_MhxToggleStretchRightLeg,
     MHX_OT_MhxToggleToeTarsalLeft,
     MHX_OT_MhxToggleToeTarsalRight,
-    MHX_OT_MhxToggleLeftForearmFollow,
-    MHX_OT_MhxToggleRightForearmFollow,
     MHX_OT_MhxToggleFkIkLimits,
 ]
 
@@ -875,7 +828,6 @@ def register():
         name = "Rotate IK Foot",
         description = "Also match IK effector rotation.\nSuitable for hand animation",
         default = True)
-
 
     for cls in classes:
         bpy.utils.register_class(cls)

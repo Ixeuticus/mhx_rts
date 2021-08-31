@@ -29,6 +29,7 @@ import bpy
 from .utils import *
 from .layers import *
 from .buildnumber import BUILD
+from . import fkik
 
 #------------------------------------------------------------------------
 #    Mhx Layers Panel
@@ -98,7 +99,7 @@ class MHX_PT_Properties(MhxPanel):
     bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
-        rig = context.object
+        rig = fkik.theMhxRig = context.object
         amt = rig.data
         if self.needsMhxUpdate(rig):
             return
@@ -121,10 +122,8 @@ class MHX_PT_Properties(MhxPanel):
         self.layout.separator()
         self.layout.label(text = "Hands And Fingers")
         row = self.layout.row()
-        icon = 'CHECKBOX_HLT' if amt.MhaForearmFollow_L else 'CHECKBOX_DEHLT'
-        row.operator("mhx.toggle_left_forearm_follow", icon=icon, emboss=False)
-        icon = 'CHECKBOX_HLT' if amt.MhaForearmFollow_R else 'CHECKBOX_DEHLT'
-        row.operator("mhx.toggle_right_forearm_follow", icon=icon, emboss=False)
+        row.prop(amt, "MhaForearmFollow_L")
+        row.prop(amt, "MhaForearmFollow_R")
         row = self.layout.row()
         row.prop(amt, "MhaFingerControl_L")
         row.prop(amt, "MhaFingerControl_R")
@@ -149,15 +148,11 @@ class MHX_PT_Properties(MhxPanel):
         self.layout.separator()
         self.layout.label(text = "Stretchiness")
         row = self.layout.row()
-        icon = 'CHECKBOX_HLT' if amt.MhaArmStretch_L else 'CHECKBOX_DEHLT'
-        row.operator("mhx.toggle_stretch_left_arm", icon=icon, emboss=False)
-        icon = 'CHECKBOX_HLT' if amt.MhaArmStretch_R else 'CHECKBOX_DEHLT'
-        row.operator("mhx.toggle_stretch_right_arm", icon=icon, emboss=False)
+        row.prop(amt, "MhaArmStretch_L")
+        row.prop(amt, "MhaArmStretch_R")
         row = self.layout.row()
-        icon = 'CHECKBOX_HLT' if amt.MhaLegStretch_L else 'CHECKBOX_DEHLT'
-        row.operator("mhx.toggle_stretch_left_leg", icon=icon, emboss=False)
-        icon = 'CHECKBOX_HLT' if amt.MhaLegStretch_R else 'CHECKBOX_DEHLT'
-        row.operator("mhx.toggle_stretch_right_leg", icon=icon, emboss=False)
+        row.prop(amt, "MhaLegStretch_L")
+        row.prop(amt, "MhaLegStretch_R")
 
         self.layout.separator()
         self.layout.label(text = "Toes Tarsal Parents")
