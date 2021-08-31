@@ -274,9 +274,15 @@ def initMhxProps():
         description = "Toggle right leg stretchiness",
         update = fkik.toggleLegStretch_R)
 
-    bpy.types.Armature.MhaToeTarsal_L = BoolPropOVR(False)
+    bpy.types.Armature.MhaToeTarsal_L = BoolPropOVR(False,
+        name = "Left Toes Tarsal Parent",
+        description = "Toggle left toes tarsal parent",
+        update = fkik.toggleToeTarsal_L)
 
-    bpy.types.Armature.MhaToeTarsal_R = BoolPropOVR(False)
+    bpy.types.Armature.MhaToeTarsal_R = BoolPropOVR(False,
+        name = "Right Toes Tarsal Parent",
+        description = "Toggle right toes tarsal parent",
+        update = fkik.toggleToeTarsal_R)
 
 
 classes = [

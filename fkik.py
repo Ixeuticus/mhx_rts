@@ -31,8 +31,6 @@ from mathutils import *
 from .utils import *
 from .layers import *
 
-theMhxRig = None
-
 #------------------------------------------------------------------
 #   Updater
 #------------------------------------------------------------------
@@ -604,7 +602,20 @@ class MHX_OT_MhxToggleFkIkRightLeg(MhxOperator, ToggleFkIk):
 #   Toggle Stretch
 #----------------------------------------------------------
 
-def toggleStretch(amt, rig, prop, armname, handname, suffix):
+theMhxRig = None
+
+def getMhxRig(amt, context):
+    global theMhxRig
+    if theMhxRig and theMhxRig.data == amt:
+        return theMhxRig
+    for ob in context.objects:
+        if ob.type == 'ARMATURE' and ob.data == amt:
+            theMhxRig = ob
+            return ob
+    raise MhxError("No MHX rig found")
+
+
+def toggleStretch(amt, context, prop, armname, handname, suffix):
     def setConstraint(rig, bname, mute):
         if bname not in rig.pose.bones:
             return
@@ -619,9 +630,7 @@ def toggleStretch(amt, rig, prop, armname, handname, suffix):
         eb = rig.data.edit_bones[bname]
         eb.use_connect = value
 
-    if not rig or rig.data != amt:
-        print("toggleStretch", rig, amt)
-        return
+    rig = getMhxRig(amt, context)
     if prop in amt.keys():
         wason = not amt[prop]
     else:
@@ -645,58 +654,23 @@ def toggleStretch(amt, rig, prop, armname, handname, suffix):
 
 
 def toggleArmStretch_L(amt, context):
-    global theMhxRig
-    toggleStretch(amt, theMhxRig, "MhaArmStretch_L", "forearm", "hand", "L")
+    toggleStretch(amt, context, "MhaArmStretch_L", "forearm", "hand", "L")
 
 def toggleArmStretch_R(amt, context):
-    global theMhxRig
-    toggleStretch(amt, theMhxRig, "MhaArmStretch_R", "forearm", "hand", "R")
+    toggleStretch(amt, context, "MhaArmStretch_R", "forearm", "hand", "R")
 
 def toggleLegStretch_L(amt, context):
-    global theMhxRig
-    toggleStretch(amt, theMhxRig, "MhaLegStretch_L", "shin", "foot", "L")
+    toggleStretch(amt, context, "MhaLegStretch_L", "shin", "foot", "L")
 
 def toggleLegStretch_R(amt, context):
-    global theMhxRig
-    toggleStretch(amt, theMhxRig, "MhaLegStretch_R", "shin", "foot", "R")
+    toggleStretch(amt, context, "MhaLegStretch_R", "shin", "foot", "R")
 
 #----------------------------------------------------------
 #   Toggle Toe Tarsal parenting
 #----------------------------------------------------------
 
-class ToggleToeTarsal(Updater):
-    def toggle(self, context, prop, suffix):
-        rig = context.object
-        checkVisible(rig)
-        toename = "toe.%s" % suffix
-        tarsalname = "tarsal.%s" % suffix
-        if (toename not in rig.data.bones.keys() or
-            tarsalname not in rig.data.bones.keys()):
-            msg = ("Missing bones: %s or %s" % (toename, tarsalname))
-            raise MhxError(msg)
-        if prop in rig.data.keys():
-            wason = rig.data[prop]
-        else:
-            wason = False
-        for smallname in ["big_toe", "small_toe_1", "small_toe_2", "small_toe_3", "small_toe_4"]:
-            self.setConstraint(rig, "%s.01.%s" % (smallname, suffix), toename, wason)
-        try:
-            setMode('EDIT')
-            ok = True
-        except RuntimeError:
-            ok = False
-        if not ok:
-            raise MhxError("Cannot toggle toe tarsal parents for this armature")
-        toe = rig.data.edit_bones[toename]
-        tarsal = rig.data.edit_bones[tarsalname]
-        for smallname in ["big_toe", "small_toe_1", "small_toe_2", "small_toe_3", "small_toe_4"]:
-            self.setParent(rig, "%s.01.%s" % (smallname, suffix), toe, tarsal, wason)
-        setMode('POSE')
-        rig.data[prop] = (not wason)
-        self.updatePose()
-
-
-    def setConstraint(self, rig, bname, toename, mute):
+def toggleToeTarsal(amt, context, prop, suffix):
+    def setConstraint(rig, bname, toename, mute):
         if bname not in rig.pose.bones.keys():
             return
         pb = rig.pose.bones[bname]
@@ -707,8 +681,7 @@ class ToggleToeTarsal(Updater):
                 return
         raise MhxError("Cannot set toe tarsal parents for this rig")
 
-
-    def setParent(self, rig, bname, toe, tarsal, wason):
+    def setParent(rig, bname, toe, tarsal, wason):
         if bname not in rig.data.edit_bones:
             return
         eb = rig.data.edit_bones[bname]
@@ -717,34 +690,45 @@ class ToggleToeTarsal(Updater):
         else:
             eb.parent = tarsal
 
+    rig = getMhxRig(amt, context)
+    toename = "toe.%s" % suffix
+    tarsalname = "tarsal.%s" % suffix
+    if (toename not in amt.bones.keys() or
+        tarsalname not in amt.bones.keys()):
+        msg = ("Missing bones: %s or %s" % (toename, tarsalname))
+        raise MhxError(msg)
+    if prop in amt.keys():
+        wason = not amt[prop]
+    else:
+        wason = True
+    for smallname in ["big_toe", "small_toe_1", "small_toe_2", "small_toe_3", "small_toe_4"]:
+        setConstraint(rig, "%s.01.%s" % (smallname, suffix), toename, wason)
+    try:
+        setMode('EDIT')
+        ok = True
+    except RuntimeError:
+        ok = False
+    if not ok:
+        raise MhxError("Cannot toggle toe tarsal parents for this armature")
+    toe = amt.edit_bones[toename]
+    tarsal = amt.edit_bones[tarsalname]
+    for smallname in ["big_toe", "small_toe_1", "small_toe_2", "small_toe_3", "small_toe_4"]:
+        setParent(rig, "%s.01.%s" % (smallname, suffix), toe, tarsal, wason)
+    setMode('POSE')
 
-class MHX_OT_MhxToggleToeTarsalLeft(MhxOperator, ToggleToeTarsal):
-    bl_idname = "mhx.toggle_toe_tarsal_left"
-    bl_label = "Left Toes Tarsal Parent"
-    bl_description = "Toggle left toes tarsal parent"
-    bl_options = {'UNDO'}
 
-    def run(self, context):
-        self.toggle(context, "MhaToeTarsal_L", "L")
+def toggleToeTarsal_L(amt, context):
+    toggleToeTarsal(amt, context, "MhaToeTarsal_L", "L")
 
-
-class MHX_OT_MhxToggleToeTarsalRight(MhxOperator, ToggleToeTarsal):
-    bl_idname = "mhx.toggle_toe_tarsal_right"
-    bl_label = "Right Toes Tarsal Parent"
-    bl_description = "Toggle right toes tarsal parent"
-    bl_options = {'UNDO'}
-
-    def run(self, context):
-        self.toggle(context, "MhaToeTarsal_R", "R")
+def toggleToeTarsal_R(amt, context):
+    toggleToeTarsal(amt, context, "MhaToeTarsal_R", "R")
 
 #----------------------------------------------------------
 #   Toggle forearms follow
 #----------------------------------------------------------
 
-def setForearmFollow(amt, rig, prop, suffix):
-    if not rig or rig.data != amt:
-        print("ForearmFollow", rig, amt)
-        return
+def setForearmFollow(amt, context, prop, suffix):
+    rig = getMhxRig(amt, context)
     follows = getattr(amt, prop)
     pb = rig.pose.bones["forearm"+suffix]
     for cns in pb.constraints:
@@ -767,12 +751,10 @@ def setForearmFollow(amt, rig, prop, suffix):
 
 
 def setForearmFollowLeft(amt, context):
-    global theMhxRig
-    setForearmFollow(amt, theMhxRig, "MhaForearmFollow_L", ".L")
+    setForearmFollow(amt, context, "MhaForearmFollow_L", ".L")
 
 def setForearmFollowRight(amt, context):
-    global theMhxRig
-    setForearmFollow(amt, theMhxRig, "MhaForearmFollow_R", ".R")
+    setForearmFollow(amt, context, "MhaForearmFollow_R", ".R")
 
 #----------------------------------------------------------
 #   Toggle limits
@@ -813,8 +795,6 @@ classes = [
     MHX_OT_MhxToggleFkIkRightArm,
     MHX_OT_MhxToggleFkIkLeftLeg,
     MHX_OT_MhxToggleFkIkRightLeg,
-    MHX_OT_MhxToggleToeTarsalLeft,
-    MHX_OT_MhxToggleToeTarsalRight,
     MHX_OT_MhxToggleFkIkLimits,
 ]
 

@@ -157,10 +157,8 @@ class MHX_PT_Properties(MhxPanel):
         self.layout.separator()
         self.layout.label(text = "Toes Tarsal Parents")
         row = self.layout.row()
-        icon = 'CHECKBOX_HLT' if amt.MhaToeTarsal_L else 'CHECKBOX_DEHLT'
-        row.operator("mhx.toggle_toe_tarsal_left", icon=icon, emboss=False)
-        icon = 'CHECKBOX_HLT' if amt.MhaToeTarsal_R else 'CHECKBOX_DEHLT'
-        row.operator("mhx.toggle_toe_tarsal_right", icon=icon, emboss=False)
+        row.prop(amt, "MhaToeTarsal_L")
+        row.prop(amt, "MhaToeTarsal_R")
 
 #------------------------------------------------------------------------
 #    Mhx FK/IK switch panel
