@@ -608,7 +608,7 @@ def getMhxRig(amt, context):
     global theMhxRig
     if theMhxRig and theMhxRig.data == amt:
         return theMhxRig
-    for ob in context.objects:
+    for ob in context.view_layer.objects:
         if ob.type == 'ARMATURE' and ob.data == amt:
             theMhxRig = ob
             return ob
@@ -760,23 +760,16 @@ def setForearmFollowRight(amt, context):
 #   Toggle limits
 #----------------------------------------------------------
 
-class MHX_OT_MhxToggleFkIkLimits(MhxOperator):
-    bl_idname = "mhx.toggle_fkik_limits"
-    bl_label = "Rotation Limits"
-    bl_description = "Toggle FK and IK rotation limits.\nIt may be necessary to turn these off for correct FK->IK snapping."
-
-    def run(self, context):
-        rig = context.object
-        checkVisible(rig)
-        on = rig.data.MhaLimitsOn = not rig.data.MhaLimitsOn
-        for pb in rig.pose.bones:
-            for cns in pb.constraints:
-                if cns.type == 'LIMIT_ROTATION' and cns.name != "Hint":
-                    cns.mute = (not on)
-        for suffix in [".L", ".R"]:
-            for bname in ["upper_arm", "forearm", "thigh", "shin"]:
-                pb = rig.pose.bones["%s.ik%s" % (bname, suffix)]
-                pb.use_ik_limit_x = pb.use_ik_limit_y = pb.use_ik_limit_z = on
+def toggleFkIkLimits(amt, context):
+    rig = getMhxRig(amt, context)
+    for pb in rig.pose.bones:
+        for cns in pb.constraints:
+            if cns.type == 'LIMIT_ROTATION' and cns.name != "Hint":
+                cns.mute = (not amt.MhaLimitsOn)
+    for suffix in [".L", ".R"]:
+        for bname in ["upper_arm", "forearm", "thigh", "shin"]:
+            pb = rig.pose.bones["%s.ik%s" % (bname, suffix)]
+            pb.use_ik_limit_x = pb.use_ik_limit_y = pb.use_ik_limit_z = amt.MhaLimitsOn
 
 #----------------------------------------------------------
 #   Initialize
@@ -795,7 +788,6 @@ classes = [
     MHX_OT_MhxToggleFkIkRightArm,
     MHX_OT_MhxToggleFkIkLeftLeg,
     MHX_OT_MhxToggleFkIkRightLeg,
-    MHX_OT_MhxToggleFkIkLimits,
 ]
 
 def register():

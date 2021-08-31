@@ -231,7 +231,10 @@ def initMhxProps():
         description = "Right finger links controlled by IK")
 
     # IK
-    bpy.types.Armature.MhaLimitsOn = BoolPropOVR(True)
+    bpy.types.Armature.MhaLimitsOn = BoolPropOVR(True,
+        name = "Rotation Limits",
+        description = "Toggle FK and IK rotation limits.\nIt may be necessary to turn these off for correct FK->IK snapping.",
+        update = fkik.toggleFkIkLimits)
 
     bpy.types.Armature.MhaLegIkToAnkle_L = BoolPropOVR(False,
         name = "Left Ankle IK",

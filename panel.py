@@ -133,8 +133,7 @@ class MHX_PT_Properties(MhxPanel):
 
         self.layout.separator()
         self.layout.label(text = "IK And Limits")
-        icon = 'CHECKBOX_HLT' if amt.MhaLimitsOn else 'CHECKBOX_DEHLT'
-        self.layout.operator("mhx.toggle_fkik_limits", icon=icon, emboss=False)
+        self.layout.prop(amt, "MhaLimitsOn")
         row = self.layout.row()
         row.prop(amt, "MhaLegIkToAnkle_L")
         row.prop(amt, "MhaLegIkToAnkle_R")
