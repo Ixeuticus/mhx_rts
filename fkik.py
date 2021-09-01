@@ -602,17 +602,12 @@ class MHX_OT_MhxToggleFkIkRightLeg(MhxOperator, ToggleFkIk):
 #   Toggle Stretch
 #----------------------------------------------------------
 
-theMhxRig = None
-
 def getMhxRig(amt, context):
-    global theMhxRig
-    if theMhxRig and theMhxRig.data == amt:
-        return theMhxRig
-    for ob in context.view_layer.objects:
-        if ob.type == 'ARMATURE' and ob.data == amt:
-            theMhxRig = ob
-            return ob
-    raise MhxError("No MHX rig found")
+    rigs = [ob for ob in context.view_layer.objects if ob.data == amt]
+    if rigs:
+        return rigs[0]
+    else:
+        raise MhxError("No MHX rig found")
 
 
 def toggleStretch(amt, context, prop, armname, handname, suffix):
@@ -637,13 +632,7 @@ def toggleStretch(amt, context, prop, armname, handname, suffix):
         wason = True
     setConstraint(rig, "%s.bend.%s" % (armname, suffix), wason)
     setConstraint(rig, "%s.twist.%s" % (armname, suffix), wason)
-    try:
-        setMode('EDIT')
-        ok = True
-    except RuntimeError:
-        ok = False
-    if not ok:
-        raise MhxError("Cannot toggle stretch for this armature")
+    setMode('EDIT', "Cannot toggle stretch for this armature")
     setConnected(rig, "%s.%s" % (handname, suffix), wason)
     setConnected(rig, "%s.fk.%s" % (handname, suffix), wason)
     setMode('POSE')
@@ -703,13 +692,7 @@ def toggleToeTarsal(amt, context, prop, suffix):
         wason = True
     for smallname in ["big_toe", "small_toe_1", "small_toe_2", "small_toe_3", "small_toe_4"]:
         setConstraint(rig, "%s.01.%s" % (smallname, suffix), toename, wason)
-    try:
-        setMode('EDIT')
-        ok = True
-    except RuntimeError:
-        ok = False
-    if not ok:
-        raise MhxError("Cannot toggle toe tarsal parents for this armature")
+    setMode('EDIT', "Cannot toggle toe tarsal parents for this armature")
     toe = amt.edit_bones[toename]
     tarsal = amt.edit_bones[tarsalname]
     for smallname in ["big_toe", "small_toe_1", "small_toe_2", "small_toe_3", "small_toe_4"]:

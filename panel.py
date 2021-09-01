@@ -29,7 +29,6 @@ import bpy
 from .utils import *
 from .layers import *
 from .buildnumber import BUILD
-from . import fkik
 
 #------------------------------------------------------------------------
 #    Mhx Layers Panel
@@ -99,7 +98,7 @@ class MHX_PT_Properties(MhxPanel):
     bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
-        rig = fkik.theMhxRig = context.object
+        rig = context.object
         amt = rig.data
         if self.needsMhxUpdate(rig):
             return
