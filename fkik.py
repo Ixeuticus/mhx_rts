@@ -623,7 +623,10 @@ def toggleStretch(amt, context, prop, armname, handname, suffix):
         if bname not in rig.data.edit_bones:
             return
         eb = rig.data.edit_bones[bname]
-        eb.use_connect = value
+        if isDrvBone(eb.parent.name):
+            eb.parent.use_connect = value
+        else:
+            eb.use_connect = value
 
     rig = getMhxRig(amt, context)
     if prop in amt.keys():

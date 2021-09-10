@@ -46,6 +46,10 @@ def isKeyed(rig, pb, path):
                     return True
     return False
 
+
+def isDrvBone(string):
+    return (string[-3:] == "Drv" or string[-5:] == "(drv)")
+
 #-------------------------------------------------------------
 #   Overridable properties
 #-------------------------------------------------------------
