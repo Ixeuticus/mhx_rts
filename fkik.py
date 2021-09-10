@@ -677,6 +677,8 @@ def toggleToeTarsal(amt, context, prop, suffix):
         if bname not in rig.data.edit_bones:
             return
         eb = rig.data.edit_bones[bname]
+        if isDrvBone(eb.parent.name):
+            eb = eb.parent
         if wason:
             eb.parent = toe
         else:
