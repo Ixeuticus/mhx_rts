@@ -248,6 +248,36 @@ def initMhxProps():
     bpy.types.Armature.MhaArmIk_R = FloatPropOVR(0.0, precision=3, min=0.0, max=1.0)
     bpy.types.Armature.MhaLegIk_R = FloatPropOVR(0.0, precision=3, min=0.0, max=1.0)
 
+    elbowEnums = [
+        ('HAND', "Hand", "Parent elbow pole target to IK hand"),
+        ('SHOULDER', "Shoulder", "Parent elbow pole target to shoulder"),
+        ('MASTER', "Master", "Parent elbow pole target to the master bone")]
+    bpy.types.Armature.MhaElbowParent_L = EnumProperty(
+        items = elbowEnums,
+        name = "Left Elbow Parent",
+        description = "Parent of left elbow pole target",
+        update = fkik.toggleElbowParent_L)
+    bpy.types.Armature.MhaElbowParent_R = EnumProperty(
+        items = elbowEnums,
+        name = "Right Elbow Parent",
+        description = "Parent of right elbow pole target",
+        update = fkik.toggleElbowParent_R)
+
+    kneeEnums = [
+        ('FOOT', "Foot", "Parent knee pole target to IK foot"),
+        ('HIP', "Hip", "Parent knee pole target to hip"),
+        ('MASTER', "Master", "Parent knee pole target to the master bone")]
+    bpy.types.Armature.MhaKneeParent_L = EnumProperty(
+        items = kneeEnums,
+        name = "Left Knee Parent",
+        description = "Parent of left knee pole target",
+        update = fkik.toggleKneeParent_L)
+    bpy.types.Armature.MhaKneeParent_R = EnumProperty(
+        items = kneeEnums,
+        name = "Right Knee Parent",
+        description = "Parent of right knee pole target",
+        update = fkik.toggleKneeParent_R)
+
     # Deform
     bpy.types.Armature.MhaDazShin_L = BoolPropOVR(False,
         name = "Left DAZ Shin",

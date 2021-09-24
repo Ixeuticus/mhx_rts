@@ -136,6 +136,12 @@ class MHX_PT_Properties(MhxPanel):
         row = self.layout.row()
         row.prop(amt, "MhaLegIkToAnkle_L")
         row.prop(amt, "MhaLegIkToAnkle_R")
+        row = self.layout.row()
+        row.prop(amt, "MhaElbowParent_L")
+        row.prop(amt, "MhaElbowParent_R")
+        row = self.layout.row()
+        row.prop(amt, "MhaKneeParent_L")
+        row.prop(amt, "MhaKneeParent_R")
 
         self.layout.separator()
         self.layout.label(text = "Deform")
