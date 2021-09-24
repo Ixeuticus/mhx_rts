@@ -68,6 +68,8 @@ class FrameRange(Updater):
 
         active = getActiveFrames0(self.rig)
         frames = list(active.keys())
+        if not frames:
+            return frames
         frames.sort()
         while frames[0] < self.startFrame:
             frames = frames[1:]
@@ -351,7 +353,7 @@ class MHX_OT_TransferToFk(Transferer, FootSnapper, HidePropsOperator, Bender, Fr
         self.transferMhxToFk(context)
         self.setInterpolation()
         time2 = time.perf_counter()
-        raise MhxMessage("Transfer to FK completed\nin %1f seconds" % (time2-time1))
+        displayMessage("Transfer to FK completed\nin %1f seconds" % (time2-time1))
 
 
     def transferMhxToFk(self, context):
@@ -405,7 +407,7 @@ class MHX_OT_TransferToIk(Transferer, FootSnapper, HidePropsOperator, FrameRange
         self.transferMhxToIk(context)
         self.setInterpolation()
         time2 = time.perf_counter()
-        raise MhxMessage("Transfer to IK completed\nin %1f seconds" % (time2-time1))
+        displayMessage("Transfer to IK completed\nin %1f seconds" % (time2-time1))
 
 
     def transferMhxToIk(self, context):
@@ -494,7 +496,7 @@ class MHX_OT_ClearAnimation(HidePropsOperator):
             msg = "Animation cleared"
         else:
             msg = "No F-curves removed"
-        raise MhxMessage(msg)
+        displayMessage(msg)
 
     def getCurrentAction(self, rig):
         if not rig.animation_data:
@@ -698,7 +700,7 @@ class MHX_OT_ShiftBoneFCurves(HidePropsOperator, FrameRange, Basic):
                     self.insertLocation(pb, mat)
                 self.insertRotation(pb, mat)
 
-        raise MhxMessage("Animation shifted")
+        displayMessage("Animation shifted")
 
 
     def getBaseMatrices(self, act, frames, useAll):
@@ -780,7 +782,7 @@ class MHX_OT_FloorFkFoot(HidePropsOperator, Footer, FrameRange):
         frames = self.getActiveFrames()
         self.floorFkFoot(scn, frames)
         self.setInterpolation()
-        raise MhxMessage("FK Feet kept above floor")
+        displayMessage("FK Feet kept above floor")
 
 
     def floorFkFoot(self, scn, frames):
@@ -869,7 +871,7 @@ class MHX_OT_FloorIkFoot(HidePropsOperator, Footer, FrameRange):
         frames = self.getActiveFrames()
         self.floorIkFoot(scn, frames)
         self.setInterpolation()
-        raise MhxMessage("FK Feet kept above floor")
+        displayMessage("FK Feet kept above floor")
 
 
     def floorIkFoot(self, scn, frames):

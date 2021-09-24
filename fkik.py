@@ -96,10 +96,10 @@ class Basic:
 
     def findBoneFCurves(self, pb, mode):
         if self.rig.animation_data is None:
-            return None
+            return []
         act = self.rig.animation_data.action
         if act is None:
-            return None
+            return []
         if mode == 'rotation':
             if pb.rotation_mode == 'QUATERNION':
                 mode = "rotation_quaternion"

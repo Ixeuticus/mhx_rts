@@ -163,6 +163,11 @@ class MhxMessage(Exception):
         print(theMessage)
 
 
+def displayMessage(msg):
+    #raise MhxMessage(msg)
+    print(msg)
+
+
 class MhxPopup(bpy.types.Operator):
     def execute(self, context):
         return {'RUNNING_MODAL'}
