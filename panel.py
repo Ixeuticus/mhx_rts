@@ -144,12 +144,6 @@ class MHX_PT_Properties(MhxPanel):
         row.prop(amt, "MhaKneeParent_R")
 
         self.layout.separator()
-        self.layout.label(text = "Deform")
-        row = self.layout.row()
-        row.prop(amt, "MhaDazShin_L")
-        row.prop(amt, "MhaDazShin_R")
-
-        self.layout.separator()
         self.layout.label(text = "Stretchiness")
         row = self.layout.row()
         row.prop(amt, "MhaArmStretch_L")

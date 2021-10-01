@@ -29,8 +29,8 @@
 bl_info = {
     "name": "MHX Runtime System",
     "author": "Thomas Larsson",
-    "version": (1,6,0),
-    "blender": (2,92,0),
+    "version": (1,6,1),
+    "blender": (2,93,0),
     "location": "UI > MHX",
     "description": "MHX runtime system",
     "warning": "",
@@ -38,28 +38,33 @@ bl_info = {
     "tracker_url": "https://bitbucket.org/Diffeomorphic/import_daz/issues?status=new&status=open",
     "category": "Rigging"}
 
-# To support reload properly, try to access a package var, if it's there, reload everything
-if "bpy" in locals():
-    print("Reloading MHX RTS")
-    import imp
-    imp.reload(utils)
-    imp.reload(layers)
-    imp.reload(fkik)
-    imp.reload(mhx)
-    imp.reload(animation)
-    imp.reload(panel)
+def importModules():
+    import os
+    import importlib
+    global theModules
 
-else:
-    print("Loading MHX RTS")
-    import bpy
-    from . import utils
-    from . import layers
-    from . import fkik
-    from . import mhx
-    from . import animation
-    from . import panel
+    try:
+        theModules
+    except NameError:
+        theModules = []
+
+    if theModules:
+        print("\nReloading MHX RTS")
+        for mod in theModules:
+            importlib.reload(mod)
+    else:
+        print("\nLoading MHX RTS")
+        modnames = ["runtime.toggle",
+                    "utils", "layers", "fkik",
+                    "mhx", "animation", "panel"]
+        anchor = os.path.basename(__file__[0:-12])
+        theModules = []
+        for modname in modnames:
+            mod = importlib.import_module("." + modname, anchor)
+            theModules.append(mod)
 
 import bpy
+importModules()
 
 #----------------------------------------------------------
 #   Register

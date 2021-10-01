@@ -31,6 +31,7 @@ from bpy.props import EnumProperty
 from .utils import *
 from .layers import *
 from . import fkik
+from . import runtime
 
 # ---------------------------------------------------------------------
 #   Convert MHX actions from legacy to modern
@@ -129,7 +130,7 @@ def getMhxProps(amt):
     for prop in ["MhaArmIk", "MhaGaze", "MhaLegIk"]:
         floats.append(prop+"_L")
         floats.append(prop+"_R")
-    for prop in ["MhaArmHinge", "MhaFingerControl", "MhaLegHinge", "MhaLegIkToAnkle", "MhaDazShin"]:
+    for prop in ["MhaArmHinge", "MhaFingerControl", "MhaLegHinge", "MhaLegIkToAnkle"]:
         bools.append(prop+"_L")
         bools.append(prop+"_R")
     return floats, bools
@@ -256,12 +257,12 @@ def initMhxProps():
         items = elbowEnums,
         name = "Left Elbow Parent",
         description = "Parent of left elbow pole target",
-        update = fkik.toggleElbowParent_L)
+        update = runtime.toggle.toggleElbowParent_L)
     bpy.types.Armature.MhaElbowParent_R = EnumProperty(
         items = elbowEnums,
         name = "Right Elbow Parent",
         description = "Parent of right elbow pole target",
-        update = fkik.toggleElbowParent_R)
+        update = runtime.toggle.toggleElbowParent_R)
 
     kneeEnums = [
         ('FOOT', "Foot", "Parent knee pole target to IK foot"),
@@ -271,20 +272,12 @@ def initMhxProps():
         items = kneeEnums,
         name = "Left Knee Parent",
         description = "Parent of left knee pole target",
-        update = fkik.toggleKneeParent_L)
+        update = runtime.toggle.toggleKneeParent_L)
     bpy.types.Armature.MhaKneeParent_R = EnumProperty(
         items = kneeEnums,
         name = "Right Knee Parent",
         description = "Parent of right knee pole target",
-        update = fkik.toggleKneeParent_R)
-
-    # Deform
-    bpy.types.Armature.MhaDazShin_L = BoolPropOVR(False,
-        name = "Left DAZ Shin",
-        description = "Deform the left shin as in DAZ Studio")
-    bpy.types.Armature.MhaDazShin_R = BoolPropOVR(False,
-        name = "Right DAZ Shin",
-        description = "Deform the right shin as in DAZ Studio")
+        update = runtime.toggle.toggleKneeParent_R)
 
     # Stretchiness
     bpy.types.Armature.MhaArmStretch_L = BoolPropOVR(True,

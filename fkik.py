@@ -30,6 +30,7 @@ from bpy.props import StringProperty, BoolProperty
 from mathutils import *
 from .utils import *
 from .layers import *
+from .runtime.toggle import getMhxRig
 
 #------------------------------------------------------------------
 #   Updater
@@ -743,40 +744,6 @@ def setForearmFollowLeft(amt, context):
 
 def setForearmFollowRight(amt, context):
     setForearmFollow(amt, context, "MhaForearmFollow_R", ".R")
-
-#----------------------------------------------------------
-#   Toggle elbow and knee parents
-#----------------------------------------------------------
-
-def toggleElbowKneeParent(amt, context, prop, bname, polep, limbpar):
-    rig = getMhxRig(amt, context)
-    pb = rig.pose.bones[bname]
-    wmat = pb.matrix.copy()
-    partype = getattr(amt, prop)
-    if partype in ['HAND', 'FOOT']:
-        parname = polep
-    elif partype in ['SHOULDER', 'HIP']:
-        parname = limbpar
-    elif partype == 'MASTER':
-        parname = 'master'
-    setMode('EDIT', "Cannot toggle parent for this armature")
-    eb = rig.data.edit_bones[bname]
-    eb.parent = rig.data.edit_bones[parname]
-    setMode('POSE')
-    pb = rig.pose.bones[bname]
-    pb.matrix = wmat
-
-def toggleElbowParent_L(amt, context):
-    toggleElbowKneeParent(amt, context, "MhaElbowParent_L", "elbow.pt.ik.L", "elbowPoleP.L",  "arm_parent.L")
-
-def toggleElbowParent_R(amt, context):
-    toggleElbowKneeParent(amt, context, "MhaElbowParent_R", "elbow.pt.ik.R", "elbowPoleP.L",  "arm_parent.R")
-
-def toggleKneeParent_L(amt, context):
-    toggleElbowKneeParent(amt, context, "MhaKneeParent_L", "knee.pt.ik.L", "kneePoleP.L",  "hip")
-
-def toggleKneeParent_R(amt, context):
-    toggleElbowKneeParent(amt, context, "MhaKneeParent_R", "knee.pt.ik.R", "kneePoleP.L",  "hip")
 
 #----------------------------------------------------------
 #   Toggle limits
