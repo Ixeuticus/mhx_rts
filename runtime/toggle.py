@@ -60,6 +60,18 @@ def getMhxRig(amt, context):
 def toggleElbowKneeParent(rig, prop, bname, polep, limbpar):
     pb = rig.pose.bones[bname]
     wmat = pb.matrix.copy()
+    try:
+        bpy.ops.object.mode_set(mode='EDIT')
+    except RuntimeError as err:
+        print(err)
+        return
+    setElbowKneeParent(rig, prop, bname, polep, limbpar)
+    bpy.ops.object.mode_set(mode='POSE')
+    pb = rig.pose.bones[bname]
+    pb.matrix = wmat
+
+
+def setElbowKneeParent(rig, prop, bname, polep, limbpar):
     partype = getattr(rig.data, prop)
     if partype in ['HAND', 'FOOT']:
         parname = polep
@@ -67,16 +79,9 @@ def toggleElbowKneeParent(rig, prop, bname, polep, limbpar):
         parname = limbpar
     elif partype == 'MASTER':
         parname = 'master'
-    try:
-        bpy.ops.object.mode_set(mode='EDIT')
-    except RuntimeError as err:
-        print(err)
-        return
     eb = rig.data.edit_bones[bname]
     eb.parent = rig.data.edit_bones[parname]
-    bpy.ops.object.mode_set(mode='POSE')
-    pb = rig.pose.bones[bname]
-    pb.matrix = wmat
+
 
 def toggleElbowParent_L(amt, context):
     rig = getMhxRig(amt, context)
@@ -139,14 +144,30 @@ def initToggleProps():
 
 @persistent
 def updateHandler(scn):
+    elbowKnees = [
+        ("MhaElbowParent_L", "elbow.pt.ik.L", "elbowPoleP.L",  "arm_parent.L"),
+        ("MhaElbowParent_R", "elbow.pt.ik.R", "elbowPoleP.R",  "arm_parent.R"),
+        ("MhaKneeParent_L", "knee.pt.ik.L", "kneePoleP.L",  "hip"),
+        ("MhaKneeParent_R", "knee.pt.ik.R", "kneePoleP.R",  "hip")]
     for rig in scn.objects:
         if (rig.MhxRig and
             not rig.hide_get() and
             not rig.hide_viewport):
-            toggleElbowKneeParent(rig, "MhaElbowParent_L", "elbow.pt.ik.L", "elbowPoleP.L",  "arm_parent.L")
-            toggleElbowKneeParent(rig, "MhaElbowParent_R", "elbow.pt.ik.R", "elbowPoleP.R",  "arm_parent.R")
-            toggleElbowKneeParent(rig, "MhaKneeParent_L", "knee.pt.ik.L", "kneePoleP.L",  "hip")
-            toggleElbowKneeParent(rig, "MhaKneeParent_R", "knee.pt.ik.R", "kneePoleP.R",  "hip")
+            wmats = {}
+            for prop,bname,polep,limbpar in elbowKnees:
+                pb = rig.pose.bones[bname]
+                wmats[bname] = pb.matrix.copy()
+            try:
+                bpy.ops.object.mode_set(mode='EDIT')
+            except RuntimeError as err:
+                print(err)
+                return
+            for prop,bname,polep,limbpar in elbowKnees:
+                setElbowKneeParent(rig, prop, bname, polep, limbpar)
+            bpy.ops.object.mode_set(mode='POSE')
+            for prop,bname,polep,limbpar in elbowKnees:
+                pb = rig.pose.bones[bname]
+                pb.matrix = wmats[bname]
 
 
 def register():
