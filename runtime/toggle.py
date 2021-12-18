@@ -58,29 +58,26 @@ def getMhxRig(amt, context):
 #----------------------------------------------------------
 
 def toggleElbowKneeParent(rig, prop, bname, polep, limbpar):
+    def getChildOf(pb):
+        for cns in pb.constraints:
+            if cns.type == 'CHILD_OF':
+                return cns
+        return None
+
     pb = rig.pose.bones[bname]
-    wmat = pb.matrix.copy()
-    try:
-        bpy.ops.object.mode_set(mode='EDIT')
-    except RuntimeError as err:
-        print(err)
+    cns = getChildOf(pb)
+    if cns is None:
+        print("%s has not child-of constraint." % bname)
         return
-    setElbowKneeParent(rig, prop, bname, polep, limbpar)
-    bpy.ops.object.mode_set(mode='POSE')
-    pb = rig.pose.bones[bname]
-    pb.matrix = wmat
-
-
-def setElbowKneeParent(rig, prop, bname, polep, limbpar):
     partype = getattr(rig.data, prop)
     if partype in ['HAND', 'FOOT']:
-        parname = polep
+        cns.subtarget = polep
     elif partype in ['SHOULDER', 'HIP']:
-        parname = limbpar
+        cns.subtarget = limbpar
     elif partype == 'MASTER':
-        parname = 'master'
-    eb = rig.data.edit_bones[bname]
-    eb.parent = rig.data.edit_bones[parname]
+        cns.subtarget = 'master'
+    rig.data.bones.active = pb.bone
+    bpy.ops.constraint.childof_set_inverse(constraint=cns.name, owner='BONE')
 
 
 def toggleElbowParent_L(amt, context):
@@ -153,21 +150,8 @@ def updateHandler(scn):
         if (rig.MhxRig and
             not rig.hide_get() and
             not rig.hide_viewport):
-            wmats = {}
             for prop,bname,polep,limbpar in elbowKnees:
-                pb = rig.pose.bones[bname]
-                wmats[bname] = pb.matrix.copy()
-            try:
-                bpy.ops.object.mode_set(mode='EDIT')
-            except RuntimeError as err:
-                print(err)
-                return
-            for prop,bname,polep,limbpar in elbowKnees:
-                setElbowKneeParent(rig, prop, bname, polep, limbpar)
-            bpy.ops.object.mode_set(mode='POSE')
-            for prop,bname,polep,limbpar in elbowKnees:
-                pb = rig.pose.bones[bname]
-                pb.matrix = wmats[bname]
+                toggleElbowKneeParent(rig, prop, bname, polep, limbpar)
 
 
 def register():
