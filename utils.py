@@ -51,35 +51,6 @@ def isDrvBone(string):
     return (string[-3:] == "Drv" or string[-5:] == "(drv)")
 
 #-------------------------------------------------------------
-#   Overridable properties
-#-------------------------------------------------------------
-
-if bpy.app.version < (2,90,0):
-    def BoolPropOVR(default, name="", description="", update=None):
-        return bpy.props.BoolProperty(name=name, default=default, description=description, update=update)
-
-    def FloatPropOVR(default, name="", description="", precision=2, min=0, max=1, update=None):
-        return bpy.props.FloatProperty(name=name, default=default, description=description, precision=precision, min=min, max=max, update=update)
-
-    def setOverridable(rna, attr):
-        pass
-else:
-    def BoolPropOVR(default, name="", description="", update=None):
-        return bpy.props.BoolProperty(name=name, default=default, description=description, update=update, override={'LIBRARY_OVERRIDABLE'})
-
-    def FloatPropOVR(default, name="", description="", precision=2, min=0, max=1, update=None):
-        return bpy.props.FloatProperty(name=name, default=default, description=description, precision=precision, min=min, max=max, update=update, override={'LIBRARY_OVERRIDABLE'})
-
-    def setOverridable(rna, attr):
-        rna.property_overridable_library_set(propRef(attr), True)
-
-
-def setattrOVR(rna, attr, value):
-    setattr(rna, attr, value)
-    rna[attr] = value
-    setOverridable(rna, attr)
-
-#-------------------------------------------------------------
 #   Progress
 #-------------------------------------------------------------
 

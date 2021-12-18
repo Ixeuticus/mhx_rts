@@ -119,61 +119,28 @@ class MHX_OT_DisableAllLayers(MhxOperator):
             rig.data.layers = layers
 
 #-------------------------------------------------------------
-#   Update MHX rig for armature properties
+#   Overridable properties
 #-------------------------------------------------------------
 
-def getMhxProps(amt):
-    floats = ["MhaGazeFollowsHead"]
-    bools = []
-    for prop in ["MhaArmIk", "MhaGaze", "MhaLegIk"]:
-        floats.append(prop+"_L")
-        floats.append(prop+"_R")
-    for prop in ["MhaArmHinge", "MhaFingerControl", "MhaLegHinge", "MhaLegIkToAnkle"]:
-        bools.append(prop+"_L")
-        bools.append(prop+"_R")
-    return floats, bools
+def BoolPropOVR(default, name="", description="", update=None):
+    return bpy.props.BoolProperty(
+        name=name,
+        default=default,
+        description=description,
+        update=update,
+        options={'LIBRARY_EDITABLE'},
+        override={'LIBRARY_OVERRIDABLE'})
 
-
-def setPropMinMax(rna, prop, min, max):
-    rna_ui = rna.get('_RNA_UI')
-    if rna_ui is None:
-        rna_ui = rna['_RNA_UI'] = {}
-    struct = { "min": min, "max": max, "soft_min": min, "soft_max": max}
-    rna_ui[prop] = struct
-
-
-class MHX_OT_UpdateMhx(MhxOperator):
-    bl_idname = "mhx.update_mhx"
-    bl_label = "Update MHX"
-    bl_description = "Update MHX rig for driving armature properties"
-    bl_options = {'UNDO'}
-
-    def run(self, context):
-        rig = context.object
-        initMhxProps()
-        floats,bools = getMhxProps(rig)
-        for prop in floats+bools:
-            if prop in rig.keys():
-                del rig[prop]
-        for prop in bools:
-            rig.data[prop] = False
-        for prop in floats:
-            rig.data[prop] = 1.0
-            setPropMinMax(rig, prop, 0.0, 1.0)
-        self.updateDrivers(rig)
-
-    def updateDrivers(self, rig):
-        if rig.animation_data:
-            for fcu in rig.animation_data.drivers:
-                for var in fcu.driver.variables:
-                    for trg in var.targets:
-                        if trg.data_path[0:5] == '["Mha':
-                            trg.id_type = 'ARMATURE'
-                            trg.id = rig.data
-                        elif trg.data_path == propRef("MhxGazeFollowsHead"):
-                            trg.id_type = 'ARMATURE'
-                            trg.id = rig.data
-                            trg.data_path = propRef("MhaGazeFollowsHead")
+def FloatPropOVR(default, name="", description="", precision=2, min=0, max=1, update=None):
+    return bpy.props.FloatProperty(
+        name=name,
+        default=default,
+        description=description,
+        precision=precision,
+        min=min, max=max,
+        update=update,
+        options={'LIBRARY_EDITABLE'},
+        override={'LIBRARY_OVERRIDABLE'})
 
 
 def initMhxProps():
@@ -233,6 +200,14 @@ def initMhxProps():
         name = "Right Finger IK",
         description = "Right finger links controlled by IK")
 
+    # Legs
+    bpy.types.Armature.MhaDazShin_L = BoolPropOVR(False,
+        name = "Left DAZ Shin",
+        description = "Left shin as in DAZ Studio")
+    bpy.types.Armature.MhaDazShin_R = BoolPropOVR(False,
+        name = "Right DAZ Shin",
+        description = "Right shin as in DAZ Studio")
+
     # IK
     bpy.types.Armature.MhaLimitsOn = BoolPropOVR(True,
         name = "Rotation Limits",
@@ -287,7 +262,6 @@ classes = [
     MHX_OT_EnableAllLayers,
     MHX_OT_DisableAllLayers,
     MHX_OT_ConvertMhxActions,
-    MHX_OT_UpdateMhx,
 ]
 
 def register():

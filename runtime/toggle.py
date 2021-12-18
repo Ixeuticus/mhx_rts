@@ -116,11 +116,15 @@ def initToggleProps():
         items = elbowEnums,
         name = "Left Elbow Parent",
         description = "Parent of left elbow pole target",
+        options={'LIBRARY_EDITABLE'},
+        override={'LIBRARY_OVERRIDABLE'},
         update = toggleElbowParent_L)
     bpy.types.Armature.MhaElbowParent_R = EnumProperty(
         items = elbowEnums,
         name = "Right Elbow Parent",
         description = "Parent of right elbow pole target",
+        options={'LIBRARY_EDITABLE'},
+        override={'LIBRARY_OVERRIDABLE'},
         update = toggleElbowParent_R)
 
     kneeEnums = [
@@ -131,11 +135,15 @@ def initToggleProps():
         items = kneeEnums,
         name = "Left Knee Parent",
         description = "Parent of left knee pole target",
+        options={'LIBRARY_EDITABLE'},
+        override={'LIBRARY_OVERRIDABLE'},
         update = toggleKneeParent_L)
     bpy.types.Armature.MhaKneeParent_R = EnumProperty(
         items = kneeEnums,
         name = "Right Knee Parent",
         description = "Parent of right knee pole target",
+        options={'LIBRARY_EDITABLE'},
+        override={'LIBRARY_OVERRIDABLE'},
         update = toggleKneeParent_R)
 
 
