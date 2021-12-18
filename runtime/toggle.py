@@ -69,6 +69,7 @@ def toggleElbowKneeParent(rig, prop, bname, polep, limbpar):
     if cns is None:
         print("%s has not child-of constraint." % bname)
         return
+    wmat = pb.matrix.copy()
     partype = getattr(rig.data, prop)
     if partype in ['HAND', 'FOOT']:
         cns.subtarget = polep
@@ -76,8 +77,12 @@ def toggleElbowKneeParent(rig, prop, bname, polep, limbpar):
         cns.subtarget = limbpar
     elif partype == 'MASTER':
         cns.subtarget = 'master'
-    rig.data.bones.active = pb.bone
+    bones = rig.data.bones
+    active = bones.active.name
+    bones.active = pb.bone
     bpy.ops.constraint.childof_set_inverse(constraint=cns.name, owner='BONE')
+    bones.active = bones[active]
+    pb.matrix = wmat
 
 
 def toggleElbowParent_L(amt, context):

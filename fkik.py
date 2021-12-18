@@ -231,6 +231,7 @@ class Snapper(Updater, Basic):
             p = p0 + 1*pb.bone.length*d
         else:
             p = p0
+        self.updateChildof(pb)
         pb.matrix = Matrix.Translation(p)
         self.updatePose()
         self.insertLocation(pb)
@@ -255,10 +256,22 @@ class Snapper(Updater, Basic):
         #the multipled length should be set with forearm or upperarm)
         tr_mat = Matrix.Translation(pole_vec)
         pos = tr_mat @ poleA.matrix
+        self.updateChildof(poleTrg)
         poleTrg.matrix = pos
         poleTrg.rotation_euler = (0.0, 0.0, 0.0)
         self.updatePose()
         self.insertLocation(poleTrg)
+
+
+    def updateChildof(self, pb):
+        for cns in pb.constraints:
+            if cns.type == 'CHILD_OF':
+                bones = self.rig.data.bones
+                active = bones.active.name
+                bones.active = pb.bone
+                bpy.ops.constraint.childof_set_inverse(constraint=cns.name, owner='BONE')
+                bones.active = bones[active]
+                return
 
 
     def matchPoseReverse(self, pb, src):
