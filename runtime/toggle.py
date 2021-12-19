@@ -78,10 +78,15 @@ def toggleElbowKneeParent(rig, prop, bname, polep, limbpar):
     elif partype == 'MASTER':
         cns.subtarget = 'master'
     bones = rig.data.bones
-    active = bones.active.name
+    if bones.active:
+        active = bones.active.name
+    else:
+        active = None
     bones.active = pb.bone
     bpy.ops.constraint.childof_set_inverse(constraint=cns.name, owner='BONE')
-    bones.active = bones[active]
+    if active:
+        bones.active = bones[active]
+    pb.bone.select = False
     pb.matrix = wmat
 
 

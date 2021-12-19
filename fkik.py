@@ -160,10 +160,13 @@ class Snapper(Updater, Basic):
 
 
     def restore(self, context, value, fk, ik):
-        if context.scene.MhxUseSwitch:
+        scn = context.scene
+        if scn.MhxUseSwitch:
             self.amt[self.prop] = value
             self.state[self.fk] = fk
             self.state[self.ik] = ik
+            if self.auto:
+                self.amt.keyframe_insert(propRef(self.prop), frame=scn.frame_current)
         else:
             self.amt[self.prop] = self.oldvalue
         self.updatePose()
@@ -267,10 +270,17 @@ class Snapper(Updater, Basic):
         for cns in pb.constraints:
             if cns.type == 'CHILD_OF':
                 bones = self.rig.data.bones
-                active = bones.active.name
+                if bones.active:
+                    active = bones.active.name
+                else:
+                    active = None
                 bones.active = pb.bone
                 bpy.ops.constraint.childof_set_inverse(constraint=cns.name, owner='BONE')
-                bones.active = bones[active]
+                if active:
+                    bones.active = bones[active]
+                else:
+                    bones.active = None
+                pb.bone.select = False
                 return
 
 
