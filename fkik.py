@@ -567,8 +567,9 @@ class ToggleFkIk(Updater):
         rig.data[prop] = value
         rig.data.layers[fklayer] = fk
         rig.data.layers[iklayer] = ik
-        path = (propRef(prop))
-        if isKeyed(rig, None, path):
+        path = propRef(prop)
+        if (scn.tool_settings.use_keyframe_insert_auto or
+            isKeyed(rig, None, path)):
             rig.data.keyframe_insert(path, frame=scn.frame_current)
         self.updatePose()
 

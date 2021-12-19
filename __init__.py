@@ -56,7 +56,7 @@ def importModules():
         print("\nLoading MHX RTS")
         modnames = ["runtime.toggle",
                     "utils", "layers", "fkik",
-                    "mhx", "animation", "panel"]
+                    "props", "animation", "panel"]
         anchor = os.path.basename(__file__[0:-12])
         theModules = []
         for modname in modnames:
@@ -77,7 +77,7 @@ classes = [
 
 def register():
     fkik.register()
-    mhx.register()
+    props.register()
     animation.register()
     panel.register()
     for cls in classes:
@@ -86,7 +86,7 @@ def register():
 def unregister():
     panel.unregister()
     animation.unregister()
-    mhx.unregister()
+    props.unregister()
     fkik.unregister()
     for cls in classes:
         bpy.utils.unregister_class(cls)

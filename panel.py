@@ -104,10 +104,10 @@ class MHX_PT_Properties(MhxPanel):
             return
 
         self.layout.label(text = "Gaze")
-        self.layout.prop(amt, "MhaGazeFollowsHead")
+        self.layout.prop(amt, propRef("MhaGazeFollowsHead"))
         row = self.layout.row()
-        row.prop(amt, "MhaGaze_L")
-        row.prop(amt, "MhaGaze_R")
+        row.prop(amt, propRef("MhaGaze_L"))
+        row.prop(amt, propRef("MhaGaze_R"))
 
         self.layout.separator()
         self.layout.label(text = "Hinge")
@@ -194,12 +194,12 @@ class MHX_PT_FKIK(MhxPanel):
         self.layout.label(text = "IK Influence")
         row = self.layout.row()
         row.label(text = "Arm")
-        row.prop(amt, "MhaArmIk_L", text="")
-        row.prop(amt, "MhaArmIk_R", text="")
+        row.prop(amt, propRef("MhaArmIk_L"), text="")
+        row.prop(amt, propRef("MhaArmIk_R"), text="")
         row = self.layout.row()
         row.label(text = "Leg")
-        row.prop(amt, "MhaLegIk_L", text="")
-        row.prop(amt, "MhaLegIk_R", text="")
+        row.prop(amt, propRef("MhaLegIk_L"), text="")
+        row.prop(amt, propRef("MhaLegIk_R"), text="")
 
         self.layout.separator()
         self.layout.label(text = "Snap Arm Bones")
