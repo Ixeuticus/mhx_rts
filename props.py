@@ -27,9 +27,9 @@
 
 
 import bpy
-from bpy.props import EnumProperty
 from .utils import *
 from .layers import *
+from bpy.props import EnumProperty, BoolProperty
 
 # ---------------------------------------------------------------------
 #   Convert MHX actions from legacy to modern
@@ -122,31 +122,48 @@ class MHX_OT_DisableAllLayers(MhxOperator):
 #   Overridable properties
 #-------------------------------------------------------------
 
-def BoolPropOVR(default, name="", description="", update=None):
-    return bpy.props.BoolProperty(
-        name=name,
-        default=default,
-        description=description,
-        update=update,
-        options={'LIBRARY_EDITABLE'},
-        override={'LIBRARY_OVERRIDABLE'})
+if bpy.app.version < (2,90,0):
+    def BoolPropOVR(default, name="", description="", update=None):
+        return bpy.props.BoolProperty(
+            name=name,
+            default=default,
+            description=description,
+            update=update)
 
-def FloatPropOVR(default, name="", description="", precision=2, min=0, max=1, update=None):
-    return bpy.props.FloatProperty(
-        name=name,
-        default=default,
-        description=description,
-        precision=precision,
-        min=min, max=max,
-        update=update,
-        options={'LIBRARY_EDITABLE'},
-        override={'LIBRARY_OVERRIDABLE'})
+    def FloatPropOVR(default, name="", description="", precision=2, min=0, max=1, update=None):
+        return bpy.props.FloatProperty(
+            name=name,
+            default=default,
+            description=description,
+            precision=precision,
+            min=min, max=max,
+            update=update)
+else:
+    def BoolPropOVR(default, name="", description="", update=None):
+        return bpy.props.BoolProperty(
+            name=name,
+            default=default,
+            description=description,
+            update=update,
+            options={'LIBRARY_EDITABLE'},
+            override={'LIBRARY_OVERRIDABLE'})
+
+    def FloatPropOVR(default, name="", description="", precision=2, min=0, max=1, update=None):
+        return bpy.props.FloatProperty(
+            name=name,
+            default=default,
+            description=description,
+            precision=precision,
+            min=min, max=max,
+            update=update,
+            options={'LIBRARY_EDITABLE'},
+            override={'LIBRARY_OVERRIDABLE'})
 
 
 def initMhxProps():
-    from . import runtime
     from . import fkik
-    runtime.toggle.initToggleProps()
+
+    bpy.types.Object.MhxRig = BoolProperty(default = False)
 
     # Gaze
     bpy.types.Armature.MhaGazeFollowsHead = FloatPropOVR(0.0, min=0.0, max=1.0,
@@ -226,36 +243,63 @@ def initMhxProps():
     bpy.types.Armature.MhaArmIk_R = FloatPropOVR(0.0, precision=3, min=0.0, max=1.0)
     bpy.types.Armature.MhaLegIk_R = FloatPropOVR(0.0, precision=3, min=0.0, max=1.0)
 
+    #
+    elbowEnums = [
+        ('HAND', "Hand", "Parent elbow pole target to IK hand"),
+        ('SHOULDER', "Shoulder", "Parent elbow pole target to shoulder"),
+        ('MASTER', "Master", "Parent elbow pole target to the master bone")]
+    bpy.types.Armature.MhaElbowParent_L = EnumProperty(
+        items = elbowEnums,
+        name = "Left Elbow Parent",
+        description = "Parent of left elbow pole target")
+    bpy.types.Armature.MhaElbowParent_R = EnumProperty(
+        items = elbowEnums,
+        name = "Right Elbow Parent",
+        description = "Parent of right elbow pole target")
+
+    kneeEnums = [
+        ('FOOT', "Foot", "Parent knee pole target to IK foot"),
+        ('HIP', "Hip", "Parent knee pole target to hip"),
+        ('MASTER', "Master", "Parent knee pole target to the master bone")]
+    bpy.types.Armature.MhaKneeParent_L = EnumProperty(
+        items = kneeEnums,
+        name = "Left Knee Parent",
+        description = "Parent of left knee pole target")
+    bpy.types.Armature.MhaKneeParent_R = EnumProperty(
+        items = kneeEnums,
+        name = "Right Knee Parent",
+        description = "Parent of right knee pole target")
+
     # Stretchiness
-    bpy.types.Armature.MhaArmStretch_L = BoolPropOVR(True,
+    bpy.types.Armature.MhaArmStretch_L = BoolProperty(
         name = "Left Arm Stretch",
         description = "Toggle left arm stretchiness",
-        update = fkik.toggleArmStretch_L)
+        default = True)
 
-    bpy.types.Armature.MhaLegStretch_L = BoolPropOVR(True,
+    bpy.types.Armature.MhaLegStretch_L = BoolProperty(
         name = "Left Leg Stretch",
         description = "Toggle left leg stretchiness",
-        update = fkik.toggleLegStretch_L)
+        default = True)
 
-    bpy.types.Armature.MhaArmStretch_R = BoolPropOVR(True,
+    bpy.types.Armature.MhaArmStretch_R = BoolProperty(
         name = "Right Arm Stretch",
         description = "Toggle right arm stretchiness",
-        update = fkik.toggleArmStretch_R)
+        default = True)
 
-    bpy.types.Armature.MhaLegStretch_R = BoolPropOVR(True,
+    bpy.types.Armature.MhaLegStretch_R = BoolProperty(
         name = "Right Leg Stretch",
         description = "Toggle right leg stretchiness",
-        update = fkik.toggleLegStretch_R)
+        default = True)
 
-    bpy.types.Armature.MhaToeTarsal_L = BoolPropOVR(False,
+    bpy.types.Armature.MhaToeTarsal_L = BoolProperty(
         name = "Left Toes Tarsal Parent",
         description = "Toggle left toes tarsal parent",
-        update = fkik.toggleToeTarsal_L)
+        default = False)
 
-    bpy.types.Armature.MhaToeTarsal_R = BoolPropOVR(False,
+    bpy.types.Armature.MhaToeTarsal_R = BoolProperty(
         name = "Right Toes Tarsal Parent",
         description = "Toggle right toes tarsal parent",
-        update = fkik.toggleToeTarsal_R)
+        default = False)
 
 
 classes = [

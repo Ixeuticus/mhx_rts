@@ -54,8 +54,7 @@ def importModules():
             importlib.reload(mod)
     else:
         print("\nLoading MHX RTS")
-        modnames = ["runtime.toggle",
-                    "utils", "layers", "fkik",
+        modnames = ["utils", "layers", "fkik",
                     "props", "animation", "panel"]
         anchor = os.path.basename(__file__[0:-12])
         theModules = []

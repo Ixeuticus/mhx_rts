@@ -136,27 +136,37 @@ class MHX_PT_Properties(MhxPanel):
         row = self.layout.row()
         row.prop(amt, "MhaLegIkToAnkle_L")
         row.prop(amt, "MhaLegIkToAnkle_R")
+
+        self.layout.separator()
+        self.layout.label(text = "Pole Target Parents")
         row = self.layout.row()
         row.prop(amt, "MhaElbowParent_L")
         row.prop(amt, "MhaElbowParent_R")
         row = self.layout.row()
         row.prop(amt, "MhaKneeParent_L")
         row.prop(amt, "MhaKneeParent_R")
+        self.layout.operator("mhx.update_elbow_knee_parents")
 
         self.layout.separator()
         self.layout.label(text = "Stretchiness")
         row = self.layout.row()
-        row.prop(amt, "MhaArmStretch_L")
-        row.prop(amt, "MhaArmStretch_R")
+        self.updateFunction(row, amt, "MhaArmStretch_L", "mhx.toggle_left_arm_stretch")
+        self.updateFunction(row, amt, "MhaArmStretch_R", "mhx.toggle_right_arm_stretch")
         row = self.layout.row()
-        row.prop(amt, "MhaLegStretch_L")
-        row.prop(amt, "MhaLegStretch_R")
+        self.updateFunction(row, amt, "MhaLegStretch_L", "mhx.toggle_left_leg_stretch")
+        self.updateFunction(row, amt, "MhaLegStretch_R", "mhx.toggle_right_leg_stretch")
 
         self.layout.separator()
         self.layout.label(text = "Toes Tarsal Parents")
         row = self.layout.row()
-        row.prop(amt, "MhaToeTarsal_L")
-        row.prop(amt, "MhaToeTarsal_R")
+        self.updateFunction(row, amt, "MhaToeTarsal_L", "mhx.toggle_left_toe_tarsal")
+        self.updateFunction(row, amt, "MhaToeTarsal_R", "mhx.toggle_right_toe_tarsal")
+
+
+    def updateFunction(self, layout, amt, prop, opname):
+        icon = ('CHECKBOX_HLT' if getattr(amt, prop) else 'CHECKBOX_DEHLT')
+        layout.operator(opname, icon=icon)
+
 
 #------------------------------------------------------------------------
 #    Mhx FK/IK switch panel

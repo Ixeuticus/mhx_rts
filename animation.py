@@ -222,7 +222,6 @@ class MHX_OT_RemoveUnusedFcurves(MhxOperator):
         for kp in fcu.keyframe_points:
             if abs(kp.co[1] - default) > 1e-6:
                 return False
-        print("TRIV", fcu.data_path, fcu.array_index)
         return True
 
 #-------------------------------------------------------------
@@ -957,10 +956,7 @@ class MHX_OT_FloorIkFoot(HidePropsOperator, Footer, FrameRange):
             return
         fcus = self.findBoneFCurves(leg, "rotation")
         fcus += self.findBoneFCurves(leg, "location")
-        print("LL", leg.name, frames)
         groups = self.getGroups(frames)
-        for group in groups:
-            print("  R", group)
         for frame0,frame1 in groups:
             for fcu in fcus:
                 self.average(fcu, frame0, frame1)
@@ -971,7 +967,6 @@ class MHX_OT_FloorIkFoot(HidePropsOperator, Footer, FrameRange):
         frame0 = frame1 = frames[0]
         while frames:
             frame0 = frame1 = frames[0]
-            print("SS", frame0)
             for n,frame in enumerate(frames[1:]):
                 n1 = n+1
                 if frame == frame1+1:
@@ -990,7 +985,7 @@ class MHX_OT_FloorIkFoot(HidePropsOperator, Footer, FrameRange):
         yvals = [kp.co[1] for kp in kps]
         if len(yvals) == 0:
             return
-        n = self.easeInOut
+        n = min(self.easeInOut, len(kps)-2)
         if len(kps) < 2*n:
             y0 = kps[0].co[1]
             y1 = kps[-1].co[1]
