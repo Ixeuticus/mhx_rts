@@ -965,6 +965,7 @@ class MHX_OT_FloorIkFoot(HidePropsOperator, Footer, FrameRange):
     def getGroups(self, frames):
         groups = []
         frame0 = frame1 = frames[0]
+        n1 = 1
         while frames:
             frame0 = frame1 = frames[0]
             for n,frame in enumerate(frames[1:]):
