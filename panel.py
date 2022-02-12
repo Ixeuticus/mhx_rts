@@ -108,6 +108,7 @@ class MHX_PT_Properties(MhxPanel):
         row = self.layout.row()
         row.prop(amt, propRef("MhaGaze_L"))
         row.prop(amt, propRef("MhaGaze_R"))
+        self.layout.prop(amt, "MhaTongueIk")
 
         self.layout.separator()
         self.layout.label(text = "Hinge")

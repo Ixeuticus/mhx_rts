@@ -176,6 +176,10 @@ def initMhxProps():
         name = "Right Gaze",
         description = "Right eye tracking the right gaze bone amount")
 
+    bpy.types.Armature.MhaTongueIk = BoolPropOVR(False,
+        name = "Tongue IK",
+        description = "Tongue bones controlled by IK")
+
     # Hinge
     bpy.types.Armature.MhaArmHinge_L = BoolPropOVR(False,
         name = "Left Arm Hinge",
