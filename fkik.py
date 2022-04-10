@@ -44,7 +44,11 @@ class Updater:
         deps.update()
 
     def setFrame(self, scn, frame):
-        scn.frame_set(frame)
+        try:
+            scn.frame_set(frame)
+        except TypeError:
+            frame = int(frame)
+            scn.frame_set(frame)
         self.frame = frame
         self.updateScene()
 
