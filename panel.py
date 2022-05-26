@@ -104,10 +104,10 @@ class MHX_PT_Properties(MhxPanel):
             return
 
         self.layout.label(text = "Gaze")
-        self.layout.prop(amt, propRef("MhaGazeFollowsHead"))
+        self.layout.prop(amt, propRef("MhaGazeFollowsHead"), text="Gaze Follows Head")
         row = self.layout.row()
-        row.prop(amt, propRef("MhaGaze_L"))
-        row.prop(amt, propRef("MhaGaze_R"))
+        row.prop(amt, propRef("MhaGaze_L"), text="Left Gaze")
+        row.prop(amt, propRef("MhaGaze_R"), text="Right Gaze")
         self.layout.prop(amt, "MhaTongueIk")
 
         self.layout.separator()
