@@ -813,9 +813,8 @@ def setForearmFollow(amt, context, prop, suffix):
     pb = rig.pose.bones["forearm"+suffix]
     for cns in pb.constraints:
         if (cns.type == 'COPY_ROTATION' and
-            cns.subtarget == "hand.fk"+suffix):
+            cns.subtarget in ["hand.fk"+suffix, "hand0.ik"+suffix]):
             cns.mute = not follows
-            break
     hand = rig.pose.bones["hand.fk"+suffix]
     for cns in hand.constraints:
         if cns.type == 'LIMIT_ROTATION':
