@@ -635,24 +635,32 @@ class MHX_OT_MhxUpdateElbowKneeParents(MhxOperator, Updater):
 
 
     def toggle(self, context, prop, bname, polep, limbpar):
+        def getChildOfConstraint(pb):
+            for cns in pb.constraints:
+                if cns.type == 'CHILD_OF':
+                    return cns
+            return None
+
         rig = context.object
         pb = rig.pose.bones[bname]
         wmat = pb.matrix.copy()
-        try:
-            bpy.ops.object.mode_set(mode='EDIT')
-        except RuntimeError as err:
-            print(err)
-            return
         partype = getattr(rig.data, prop)
         if partype in ['HAND', 'FOOT']:
             parname = polep
         elif partype in ['SHOULDER', 'HIP']:
             parname = limbpar
         elif partype == 'MASTER':
-            parname = 'master'
-        eb = rig.data.edit_bones[bname]
-        eb.parent = rig.data.edit_bones[parname]
-        bpy.ops.object.mode_set(mode='POSE')
+            parname = "master"
+        cns = getChildOfConstraint(pb)
+        if cns:
+            rig.data.bones.active = pb.bone
+            cns.subtarget = parname
+            bpy.ops.constraint.childof_set_inverse(constraint=cns.name, owner='BONE')
+        else:
+            setMode('EDIT', "Cannot update parents for this armature")
+            eb = rig.data.edit_bones[bname]
+            eb.parent = rig.data.edit_bones[parname]
+            setMode('POSE')
         pb = rig.pose.bones[bname]
         pb.matrix = wmat
 
@@ -662,13 +670,21 @@ class MHX_OT_MhxUpdateElbowKneeParents(MhxOperator, Updater):
 
 class ToggleStretch(Updater):
     def toggle(self, context, prop, armname, handname, suffix):
-        def setConstraint(rig, bname, mute):
+        def getCopyLocConstraint(rig, bname):
+            pb = rig.pose.bones[bname]
+            for cns in pb.constraints:
+                if (cns.type == 'COPY_LOCATION' and
+                    cns.head_tail == 1.0):
+                    return cns
+            return None
+
+        def getStretchToConstraint(rig, bname):
             if bname not in rig.pose.bones:
                 return
             pb = rig.pose.bones[bname]
             for cns in pb.constraints:
                 if cns.type == 'STRETCH_TO':
-                    cns.mute = mute
+                    return cns
 
         def setConnected(rig, bname, value):
             if bname not in rig.data.edit_bones:
@@ -685,12 +701,20 @@ class ToggleStretch(Updater):
             wason = amt[prop]
         else:
             wason = True
-        setConstraint(rig, "%s.bend.%s" % (armname, suffix), wason)
-        setConstraint(rig, "%s.twist.%s" % (armname, suffix), wason)
-        setMode('EDIT', "Cannot toggle stretch for this armature")
-        setConnected(rig, "%s.%s" % (handname, suffix), wason)
-        setConnected(rig, "%s.fk.%s" % (handname, suffix), wason)
-        setMode('POSE')
+        cns = getStretchToConstraint(rig, "%s.bend.%s" % (armname, suffix))
+        cns.mute = wason
+        cns = getStretchToConstraint(rig, "%s.twist.%s" % (armname, suffix))
+        cns.mute = wason
+        cns = getCopyLocConstraint(rig, "%s.%s" % (handname, suffix))
+        if cns:
+            cns.mute = (not wason)
+            cns = getCopyLocConstraint(rig, "%s.fk.%s" % (handname, suffix))
+            cns.mute = (not wason)
+        else:
+            setMode('EDIT', "Cannot toggle stretch for this armature")
+            setConnected(rig, "%s.%s" % (handname, suffix), wason)
+            setConnected(rig, "%s.fk.%s" % (handname, suffix), wason)
+            setMode('POSE')
         bpy.context.view_layer.update()
         if wason:
             handFk = rig.pose.bones["%s.fk.%s" % (handname, suffix)]
