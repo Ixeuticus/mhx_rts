@@ -181,19 +181,19 @@ def initMhxProps():
         description = "Tongue bones controlled by IK")
 
     # Hinge
-    bpy.types.Armature.MhaArmHinge_L = BoolPropOVR(False,
+    bpy.types.Armature.MhaArmHinge_L = FloatPropOVR(0.0,
         name = "Left Arm Hinge",
         description = "Left arm decoupled from the spine rotation")
 
-    bpy.types.Armature.MhaArmHinge_R = BoolPropOVR(False,
+    bpy.types.Armature.MhaArmHinge_R = FloatPropOVR(0.0,
         name = "Right Arm Hinge",
         description = "Right arm decoupled from the spine rotation")
 
-    bpy.types.Armature.MhaLegHinge_L = BoolPropOVR(False,
+    bpy.types.Armature.MhaLegHinge_L = FloatPropOVR(0.0,
         name = "Left Leg Hinge",
         description = "Left leg decoupled from the pelvis rotation")
 
-    bpy.types.Armature.MhaLegHinge_R = BoolPropOVR(False,
+    bpy.types.Armature.MhaLegHinge_R = FloatPropOVR(0.0,
         name = "Right Leg Hinge",
         description = "Right leg decoupled from the pelvis rotation")
 
@@ -220,14 +220,6 @@ def initMhxProps():
     bpy.types.Armature.MhaFingerIk_R = BoolPropOVR(False,
         name = "Right Finger IK",
         description = "Right finger links controlled by IK")
-
-    # Legs
-    bpy.types.Armature.MhaDazShin_L = BoolPropOVR(False,
-        name = "Left DAZ Shin",
-        description = "Left shin as in DAZ Studio")
-    bpy.types.Armature.MhaDazShin_R = BoolPropOVR(False,
-        name = "Right DAZ Shin",
-        description = "Right shin as in DAZ Studio")
 
     # IK
     bpy.types.Armature.MhaLimitsOn = BoolPropOVR(True,
@@ -275,25 +267,21 @@ def initMhxProps():
         description = "Parent of right knee pole target")
 
     # Stretchiness
-    bpy.types.Armature.MhaArmStretch_L = BoolProperty(
+    bpy.types.Armature.MhaArmStretch_L = FloatPropOVR(1.0,
         name = "Left Arm Stretch",
-        description = "Toggle left arm stretchiness",
-        default = True)
+        description = "Toggle left arm stretchiness")
 
-    bpy.types.Armature.MhaLegStretch_L = BoolProperty(
+    bpy.types.Armature.MhaLegStretch_L = FloatPropOVR(1.0,
         name = "Left Leg Stretch",
-        description = "Toggle left leg stretchiness",
-        default = True)
+        description = "Toggle left leg stretchiness")
 
-    bpy.types.Armature.MhaArmStretch_R = BoolProperty(
+    bpy.types.Armature.MhaArmStretch_R = FloatPropOVR(1.0,
         name = "Right Arm Stretch",
-        description = "Toggle right arm stretchiness",
-        default = True)
+        description = "Toggle right arm stretchiness")
 
-    bpy.types.Armature.MhaLegStretch_R = BoolProperty(
+    bpy.types.Armature.MhaLegStretch_R = FloatPropOVR(1.0,
         name = "Right Leg Stretch",
-        description = "Toggle right leg stretchiness",
-        default = True)
+        description = "Toggle right leg stretchiness")
 
     bpy.types.Armature.MhaToeTarsal_L = BoolProperty(
         name = "Left Toes Tarsal Parent",

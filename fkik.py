@@ -667,7 +667,7 @@ class MHX_OT_MhxUpdateElbowKneeParents(MhxOperator, Updater):
 #----------------------------------------------------------
 #   Toggle Stretch
 #----------------------------------------------------------
-
+'''
 class ToggleStretch(Updater):
     def toggle(self, context, prop, armname, handname, suffix):
         def getCopyLocConstraint(rig, bname):
@@ -757,7 +757,7 @@ class MHX_OT_MhxToggleRightLegStretch(MhxOperator, ToggleStretch):
 
     def run(self, context):
         self.toggle(context, "MhaLegStretch_R", "shin", "foot", "R")
-
+'''
 #----------------------------------------------------------
 #   Toggle Toe Tarsal parenting
 #----------------------------------------------------------
@@ -892,10 +892,10 @@ classes = [
     MHX_OT_MhxToggleFkIkLeftLeg,
     MHX_OT_MhxToggleFkIkRightLeg,
     MHX_OT_MhxUpdateElbowKneeParents,
-    MHX_OT_MhxToggleLeftArmStretch,
-    MHX_OT_MhxToggleRightArmStretch,
-    MHX_OT_MhxToggleLeftLegStretch,
-    MHX_OT_MhxToggleRightLegStretch,
+    #MHX_OT_MhxToggleLeftArmStretch,
+    #MHX_OT_MhxToggleRightArmStretch,
+    #MHX_OT_MhxToggleLeftLegStretch,
+    #MHX_OT_MhxToggleRightLegStretch,
     MHX_OT_MhxToggleLeftToeTarsal,
     MHX_OT_MhxToggleRightToeTarsal,
 ]
