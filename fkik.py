@@ -157,7 +157,7 @@ class Snapper(Updater, Basic):
         checkVisible(context.object)
         setMode('POSE')
         self.oldvalue = value
-        self.amt[self.prop] = value
+        self.rig[self.prop] = value
         self.auto = context.scene.tool_settings.use_keyframe_insert_auto
         self.updatePose()
 
@@ -165,13 +165,13 @@ class Snapper(Updater, Basic):
     def restore(self, context, value, fk, ik):
         scn = context.scene
         if scn.MhxUseSwitch:
-            self.amt[self.prop] = value
+            self.rig[self.prop] = value
             self.state[self.fk] = fk
             self.state[self.ik] = ik
             if self.auto:
-                self.amt.keyframe_insert(propRef(self.prop), frame=scn.frame_current)
+                self.rig.keyframe_insert(propRef(self.prop), frame=scn.frame_current)
         else:
-            self.amt[self.prop] = self.oldvalue
+            self.rig[self.prop] = self.oldvalue
         self.updatePose()
 
 
@@ -434,7 +434,7 @@ class MHX_OT_MhxSnapFkLeftLeg(Snapper, HideOperator):
         self.setup(context, 1.0)
         snapFk,_cnsFk = self.getSnapBones("LegFK", "L")
         snapIk,_cnsIk = self.getSnapBones("LegIK", "L")
-        self.snapFkLeg(snapFk, snapIk, self.amt["MhaLegIkToAnkle_L"])
+        self.snapFkLeg(snapFk, snapIk, self.rig["MhaLegIkToAnkle_L"])
         self.restore(context, 0.0, True, False)
 
 
@@ -454,7 +454,7 @@ class MHX_OT_MhxSnapFkRightLeg(Snapper, HideOperator):
         self.setup(context, 1.0)
         snapFk,_cnsFk = self.getSnapBones("LegFK", "R")
         snapIk,_cnsIk = self.getSnapBones("LegIK", "R")
-        self.snapFkLeg(snapFk, snapIk, self.amt["MhaLegIkToAnkle_R"])
+        self.snapFkLeg(snapFk, snapIk, self.rig["MhaLegIkToAnkle_R"])
         self.restore(context, 0.0, True, False)
 
 
@@ -515,7 +515,7 @@ class MHX_OT_MhxSnapIkLeftLeg(FootSnapper, HideOperator):
         self.setup(context, 0.0)
         snapFk,_cnsFk = self.getSnapBones("LegFK", "L")
         snapIk,_cnsIk = self.getSnapBones("LegIK", "L")
-        self.snapIkLeg(snapFk, snapIk, self.amt["MhaLegIkToAnkle_L"])
+        self.snapIkLeg(snapFk, snapIk, self.rig["MhaLegIkToAnkle_L"])
         self.restore(context, 1.0, False, True)
 
 
@@ -536,7 +536,7 @@ class MHX_OT_MhxSnapIkRightLeg(FootSnapper, HideOperator):
         self.setup(context, 0.0)
         snapFk,_cnsFk = self.getSnapBones("LegFK", "R")
         snapIk,_cnsIk = self.getSnapBones("LegIK", "R")
-        self.snapIkLeg(snapFk, snapIk, self.amt["MhaLegIkToAnkle_R"])
+        self.snapIkLeg(snapFk, snapIk, self.rig["MhaLegIkToAnkle_R"])
         self.restore(context, 1.0, False, True)
 
 #----------------------------------------------------------
@@ -548,7 +548,7 @@ class ToggleFkIk(Updater):
         rig = context.object
         checkVisible(rig)
         scn = context.scene
-        value = rig.data[prop]
+        value = rig[prop]
         if value > 0.5:
             value = 0.0
             fk = True
@@ -557,7 +557,7 @@ class ToggleFkIk(Updater):
             value = 1.0
             fk = False
             ik = True
-        rig.data[prop] = value
+        rig[prop] = value
         rig.data.layers[fklayer] = fk
         rig.data.layers[iklayer] = ik
         path = propRef(prop)
@@ -607,17 +607,6 @@ class MHX_OT_MhxToggleFkIkRightLeg(MhxOperator, ToggleFkIk):
         self.toggle(context, "MhaLegIk_R", L_RLEGFK, L_RLEGIK)
 
 #----------------------------------------------------------
-#   Get MHX rig
-#----------------------------------------------------------
-
-def getMhxRig(amt, context):
-    rigs = [ob for ob in context.view_layer.objects if ob.data == amt]
-    if rigs:
-        return rigs[0]
-    else:
-        print("No MHX rig found")
-
-#----------------------------------------------------------
 #   Toggle elbow and knee parents
 #----------------------------------------------------------
 
@@ -665,100 +654,6 @@ class MHX_OT_MhxUpdateElbowKneeParents(MhxOperator, Updater):
         pb.matrix = wmat
 
 #----------------------------------------------------------
-#   Toggle Stretch
-#----------------------------------------------------------
-'''
-class ToggleStretch(Updater):
-    def toggle(self, context, prop, armname, handname, suffix):
-        def getCopyLocConstraint(rig, bname):
-            pb = rig.pose.bones[bname]
-            for cns in pb.constraints:
-                if (cns.type == 'COPY_LOCATION' and
-                    cns.head_tail == 1.0):
-                    return cns
-            return None
-
-        def getStretchToConstraint(rig, bname):
-            if bname not in rig.pose.bones:
-                return
-            pb = rig.pose.bones[bname]
-            for cns in pb.constraints:
-                if cns.type == 'STRETCH_TO':
-                    return cns
-
-        def setConnected(rig, bname, value):
-            if bname not in rig.data.edit_bones:
-                return
-            eb = rig.data.edit_bones[bname]
-            if isDrvBone(eb.parent.name):
-                eb.parent.use_connect = value
-            else:
-                eb.use_connect = value
-
-        rig = context.object
-        amt = rig.data
-        if prop in amt.keys():
-            wason = amt[prop]
-        else:
-            wason = True
-        cns = getStretchToConstraint(rig, "%s.bend.%s" % (armname, suffix))
-        cns.mute = wason
-        cns = getStretchToConstraint(rig, "%s.twist.%s" % (armname, suffix))
-        cns.mute = wason
-        cns = getCopyLocConstraint(rig, "%s.%s" % (handname, suffix))
-        if cns:
-            cns.mute = (not wason)
-            cns = getCopyLocConstraint(rig, "%s.fk.%s" % (handname, suffix))
-            cns.mute = (not wason)
-        else:
-            setMode('EDIT', "Cannot toggle stretch for this armature")
-            setConnected(rig, "%s.%s" % (handname, suffix), wason)
-            setConnected(rig, "%s.fk.%s" % (handname, suffix), wason)
-            setMode('POSE')
-        bpy.context.view_layer.update()
-        if wason:
-            handFk = rig.pose.bones["%s.fk.%s" % (handname, suffix)]
-            handFk.location = (0,0,0)
-        amt[prop] = not wason
-
-
-class MHX_OT_MhxToggleLeftArmStretch(MhxOperator, ToggleStretch):
-    bl_idname = "mhx.toggle_left_arm_stretch"
-    bl_label = "Left Arm"
-    bl_description = "Toggle left arm stretchiness"
-    bl_options = {'UNDO'}
-
-    def run(self, context):
-        self.toggle(context, "MhaArmStretch_L", "forearm", "hand", "L")
-
-class MHX_OT_MhxToggleRightArmStretch(MhxOperator, ToggleStretch):
-    bl_idname = "mhx.toggle_right_arm_stretch"
-    bl_label = "Right Arm"
-    bl_description = "Toggle right arm stretchiness"
-    bl_options = {'UNDO'}
-
-    def run(self, context):
-        self.toggle(context, "MhaArmStretch_R", "forearm", "hand", "R")
-
-class MHX_OT_MhxToggleLeftLegStretch(MhxOperator, ToggleStretch):
-    bl_idname = "mhx.toggle_left_leg_stretch"
-    bl_label = "Left Leg"
-    bl_description = "Toggle left leg stretchiness"
-    bl_options = {'UNDO'}
-
-    def run(self, context):
-        self.toggle(context, "MhaLegStretch_L", "shin", "foot", "L")
-
-class MHX_OT_MhxToggleRightLegStretch(MhxOperator, ToggleStretch):
-    bl_idname = "mhx.toggle_right_leg_stretch"
-    bl_label = "Right Leg"
-    bl_description = "Toggle right leg stretchiness"
-    bl_options = {'UNDO'}
-
-    def run(self, context):
-        self.toggle(context, "MhaLegStretch_R", "shin", "foot", "R")
-'''
-#----------------------------------------------------------
 #   Toggle Toe Tarsal parenting
 #----------------------------------------------------------
 
@@ -787,26 +682,25 @@ class ToggleToeTarsal:
                 eb.parent = tarsal
 
         rig = context.object
-        amt = rig.data
         toename = "toe.%s" % suffix
         tarsalname = "tarsal.%s" % suffix
-        if (toename not in amt.bones.keys() or
-            tarsalname not in amt.bones.keys()):
+        if (toename not in rig.data.bones.keys() or
+            tarsalname not in rig.data.bones.keys()):
             msg = ("Missing bones: %s or %s" % (toename, tarsalname))
             raise MhxError(msg)
-        if prop in amt.keys():
-            wason = amt[prop]
+        if prop in rig.keys():
+            wason = rig[prop]
         else:
             wason = True
         for smallname in ["big_toe", "small_toe_1", "small_toe_2", "small_toe_3", "small_toe_4"]:
             setConstraint(rig, "%s.01.%s" % (smallname, suffix), toename, wason)
         setMode('EDIT', "Cannot toggle toe tarsal parents for this armature")
-        toe = amt.edit_bones[toename]
-        tarsal = amt.edit_bones[tarsalname]
+        toe = rig.data.edit_bones[toename]
+        tarsal = rig.data.edit_bones[tarsalname]
         for smallname in ["big_toe", "small_toe_1", "small_toe_2", "small_toe_3", "small_toe_4"]:
             setParent(rig, "%s.01.%s" % (smallname, suffix), toe, tarsal, wason)
         setMode('POSE')
-        amt[prop] = not wason
+        rig[prop] = not wason
 
 
 class MHX_OT_MhxToggleLeftToeTarsal(MhxOperator, ToggleToeTarsal):
@@ -831,9 +725,8 @@ class MHX_OT_MhxToggleRightToeTarsal(MhxOperator, ToggleToeTarsal):
 #   Toggle forearms follow
 #----------------------------------------------------------
 
-def setForearmFollow(amt, context, prop, suffix):
-    rig = getMhxRig(amt, context)
-    follows = getattr(amt, prop)
+def setForearmFollow(rig, context, prop, suffix):
+    follows = getattr(rig, prop)
     pb = rig.pose.bones["forearm"+suffix]
     for cns in pb.constraints:
         if (cns.type == 'COPY_ROTATION' and
@@ -853,26 +746,25 @@ def setForearmFollow(amt, context, prop, suffix):
         hand.rotation_euler[1] = 0
 
 
-def setForearmFollowLeft(amt, context):
-    setForearmFollow(amt, context, "MhaForearmFollow_L", ".L")
+def setForearmFollowLeft(rig, context):
+    setForearmFollow(rig, context, "MhaForearmFollow_L", ".L")
 
-def setForearmFollowRight(amt, context):
-    setForearmFollow(amt, context, "MhaForearmFollow_R", ".R")
+def setForearmFollowRight(rig, context):
+    setForearmFollow(rig, context, "MhaForearmFollow_R", ".R")
 
 #----------------------------------------------------------
 #   Toggle limits
 #----------------------------------------------------------
 
-def toggleFkIkLimits(amt, context):
-    rig = getMhxRig(amt, context)
+def toggleFkIkLimits(rig, context):
     for pb in rig.pose.bones:
         for cns in pb.constraints:
             if cns.type == 'LIMIT_ROTATION' and cns.name != "Hint":
-                cns.mute = (not amt.MhaLimitsOn)
+                cns.mute = (not rig.MhaLimitsOn)
     for suffix in [".L", ".R"]:
         for bname in ["upper_arm", "forearm", "thigh", "shin"]:
             pb = rig.pose.bones["%s.ik%s" % (bname, suffix)]
-            pb.use_ik_limit_x = pb.use_ik_limit_y = pb.use_ik_limit_z = amt.MhaLimitsOn
+            pb.use_ik_limit_x = pb.use_ik_limit_y = pb.use_ik_limit_z = rig.MhaLimitsOn
 
 #----------------------------------------------------------
 #   Initialize

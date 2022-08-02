@@ -57,7 +57,7 @@ class MhxPanel(bpy.types.Panel):
     def needsMhxUpdate(self, rig):
         if rig is None:
             return True
-        if "MhaGaze_L" in rig.keys():
+        if "MhaGaze_L" in rig.data.keys():
             self.layout.operator("mhx.update_mhx")
             return True
         return False
@@ -99,73 +99,72 @@ class MHX_PT_Properties(MhxPanel):
 
     def draw(self, context):
         rig = context.object
-        amt = rig.data
         if self.needsMhxUpdate(rig):
             return
 
         self.layout.label(text = "Gaze")
-        self.layout.prop(amt, propRef("MhaGazeFollowsHead"), text="Gaze Follows Head")
+        self.layout.prop(rig, propRef("MhaGazeFollowsHead"), text="Gaze Follows Head")
         row = self.layout.row()
-        row.prop(amt, propRef("MhaGaze_L"), text="Left Gaze")
-        row.prop(amt, propRef("MhaGaze_R"), text="Right Gaze")
-        self.layout.prop(amt, "MhaTongueIk")
+        row.prop(rig, propRef("MhaGaze_L"), text="Left Gaze")
+        row.prop(rig, propRef("MhaGaze_R"), text="Right Gaze")
+        self.layout.prop(rig, "MhaTongueIk")
 
         self.layout.separator()
         self.layout.label(text = "Hinge")
         row = self.layout.row()
-        row.prop(amt, propRef("MhaArmHinge_L"), text="Left Arm Hinge")
-        row.prop(amt, propRef("MhaArmHinge_R"), text="Right Arm Hinge")
+        row.prop(rig, propRef("MhaArmHinge_L"), text="Left Arm Hinge")
+        row.prop(rig, propRef("MhaArmHinge_R"), text="Right Arm Hinge")
         row = self.layout.row()
-        row.prop(amt, propRef("MhaLegHinge_L"), text="Left Leg Hinge")
-        row.prop(amt, propRef("MhaLegHinge_R"), text="Right Leg Hinge")
+        row.prop(rig, propRef("MhaLegHinge_L"), text="Left Leg Hinge")
+        row.prop(rig, propRef("MhaLegHinge_R"), text="Right Leg Hinge")
 
         self.layout.separator()
         self.layout.label(text = "Hands And Fingers")
         row = self.layout.row()
-        row.prop(amt, "MhaForearmFollow_L")
-        row.prop(amt, "MhaForearmFollow_R")
+        row.prop(rig, "MhaForearmFollow_L")
+        row.prop(rig, "MhaForearmFollow_R")
         row = self.layout.row()
-        row.prop(amt, "MhaFingerControl_L")
-        row.prop(amt, "MhaFingerControl_R")
+        row.prop(rig, "MhaFingerControl_L")
+        row.prop(rig, "MhaFingerControl_R")
         row = self.layout.row()
-        row.prop(amt, "MhaFingerIk_L")
-        row.prop(amt, "MhaFingerIk_R")
+        row.prop(rig, "MhaFingerIk_L")
+        row.prop(rig, "MhaFingerIk_R")
 
         self.layout.separator()
         self.layout.label(text = "IK And Limits")
-        self.layout.prop(amt, "MhaLimitsOn")
+        self.layout.prop(rig, "MhaLimitsOn")
         row = self.layout.row()
-        row.prop(amt, "MhaLegIkToAnkle_L")
-        row.prop(amt, "MhaLegIkToAnkle_R")
+        row.prop(rig, "MhaLegIkToAnkle_L")
+        row.prop(rig, "MhaLegIkToAnkle_R")
 
         self.layout.separator()
         self.layout.label(text = "Pole Target Parents")
         row = self.layout.row()
-        row.prop(amt, "MhaElbowParent_L")
-        row.prop(amt, "MhaElbowParent_R")
+        row.prop(rig, "MhaElbowParent_L")
+        row.prop(rig, "MhaElbowParent_R")
         row = self.layout.row()
-        row.prop(amt, "MhaKneeParent_L")
-        row.prop(amt, "MhaKneeParent_R")
+        row.prop(rig, "MhaKneeParent_L")
+        row.prop(rig, "MhaKneeParent_R")
         self.layout.operator("mhx.update_elbow_knee_parents")
 
         self.layout.separator()
         self.layout.label(text = "Stretchiness")
         row = self.layout.row()
-        row.prop(amt, propRef("MhaArmStretch_L"), text="Left Arm Stretch")
-        row.prop(amt, propRef("MhaArmStretch_R"), text="Right Arm Stretch")
+        row.prop(rig, propRef("MhaArmStretch_L"), text="Left Arm Stretch")
+        row.prop(rig, propRef("MhaArmStretch_R"), text="Right Arm Stretch")
         row = self.layout.row()
-        row.prop(amt, propRef("MhaLegStretch_L"), text="Left Leg Stretch")
-        row.prop(amt, propRef("MhaLegStretch_R"), text="Right Leg Stretch")
+        row.prop(rig, propRef("MhaLegStretch_L"), text="Left Leg Stretch")
+        row.prop(rig, propRef("MhaLegStretch_R"), text="Right Leg Stretch")
 
         self.layout.separator()
         self.layout.label(text = "Toes Tarsal Parents")
         row = self.layout.row()
-        self.updateFunction(row, amt, "MhaToeTarsal_L", "mhx.toggle_left_toe_tarsal")
-        self.updateFunction(row, amt, "MhaToeTarsal_R", "mhx.toggle_right_toe_tarsal")
+        self.updateFunction(row, rig, "MhaToeTarsal_L", "mhx.toggle_left_toe_tarsal")
+        self.updateFunction(row, rig, "MhaToeTarsal_R", "mhx.toggle_right_toe_tarsal")
 
 
-    def updateFunction(self, layout, amt, prop, opname):
-        icon = ('CHECKBOX_HLT' if getattr(amt, prop) else 'CHECKBOX_DEHLT')
+    def updateFunction(self, layout, rig, prop, opname):
+        icon = ('CHECKBOX_HLT' if getattr(rig, prop) else 'CHECKBOX_DEHLT')
         layout.operator(opname, icon=icon)
 
 
@@ -186,7 +185,6 @@ class MHX_PT_FKIK(MhxPanel):
         if self.needsMhxUpdate(rig):
             return
 
-        amt = rig.data
         row = self.layout.row()
         row.label(text = "")
         row.label(text = "Left")
@@ -195,22 +193,22 @@ class MHX_PT_FKIK(MhxPanel):
         self.layout.label(text = "FK/IK switch")
         row = self.layout.row()
         row.label(text = "Arm")
-        self.toggleFKIK(row, amt.MhaArmIk_L, "mhx.toggle_fkik_left_arm")
-        self.toggleFKIK(row, amt.MhaArmIk_R, "mhx.toggle_fkik_right_arm")
+        self.toggleFKIK(row, rig.MhaArmIk_L, "mhx.toggle_fkik_left_arm")
+        self.toggleFKIK(row, rig.MhaArmIk_R, "mhx.toggle_fkik_right_arm")
         row = self.layout.row()
         row.label(text = "Leg")
-        self.toggleFKIK(row, amt.MhaLegIk_L, "mhx.toggle_fkik_left_leg")
-        self.toggleFKIK(row, amt.MhaLegIk_R, "mhx.toggle_fkik_right_leg")
+        self.toggleFKIK(row, rig.MhaLegIk_L, "mhx.toggle_fkik_left_leg")
+        self.toggleFKIK(row, rig.MhaLegIk_R, "mhx.toggle_fkik_right_leg")
 
         self.layout.label(text = "IK Influence")
         row = self.layout.row()
         row.label(text = "Arm")
-        row.prop(amt, propRef("MhaArmIk_L"), text="")
-        row.prop(amt, propRef("MhaArmIk_R"), text="")
+        row.prop(rig, propRef("MhaArmIk_L"), text="")
+        row.prop(rig, propRef("MhaArmIk_R"), text="")
         row = self.layout.row()
         row.label(text = "Leg")
-        row.prop(amt, propRef("MhaLegIk_L"), text="")
-        row.prop(amt, propRef("MhaLegIk_R"), text="")
+        row.prop(rig, propRef("MhaLegIk_L"), text="")
+        row.prop(rig, propRef("MhaLegIk_R"), text="")
 
         self.layout.separator()
         self.layout.label(text = "Snap Arm Bones")
