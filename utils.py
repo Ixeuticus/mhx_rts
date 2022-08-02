@@ -34,6 +34,12 @@ import bpy
 def propRef(prop):
     return '["%s"]' % prop
 
+def baseRef(prop):
+    if prop[0:2] == '["':
+        return prop[2:-2]
+    else:
+        return prop
+
 
 def isKeyed(rig, pb, path):
     if rig.animation_data:

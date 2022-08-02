@@ -191,6 +191,14 @@ class Snapper(Updater, Basic):
     def matchPoseTransform(self, pb, src):
         pb.matrix = src.matrix
         self.updatePose()
+        if pb.rotation_mode == 'QUATERNION':
+            for idx in range(4):
+                if pb.lock_rotation[idx]:
+                    pb.rotation_quaternion[idx] = 0
+        else:
+            for idx in range(3):
+                if pb.lock_rotation[idx]:
+                    pb.rotation_euler[idx] = 0
         self.insertRotation(pb)
 
 
@@ -322,9 +330,19 @@ class Snapper(Updater, Basic):
             self.setPoleTarget(handIk, elbowPt, elbowPoleA, forearmFk)
         else:
             self.matchPoleTarget(elbowPt, uparmFk, forearmFk)
+        self.setChildofInverse(elbowPt)
         if uparmIkTwist:
             self.matchPoseTransform(uparmIkTwist, uparmFk)
             self.matchPoseTransform(forearmIkTwist, forearmFk)
+
+
+    def setChildofInverse(self, pb):
+        for cns in pb.constraints:
+            if cns.type == 'CHILD_OF':
+                self.rig.data.bones.active = pb.bone
+                print("SET INV", pb.name, self.rig.data.bones.active, cns.name)
+                bpy.ops.constraint.childof_set_inverse(constraint=cns.name, owner='BONE')
+                print("DONE")
 
 
     def snapFkLeg(self, snapFk, snapIk, legIkToAnkle):
@@ -362,6 +380,7 @@ class Snapper(Updater, Basic):
             self.setPoleTarget(footInvIk, kneePt, kneePoleA, shinFk)
         else:
             self.matchPoleTarget(kneePt, thighFk, shinFk)
+        self.setChildofInverse(kneePt)
         if shinIkTwist:
             self.matchPoseTransform(thighIkTwist, thighFk)
             self.matchPoseTransform(shinIkTwist, shinFk)
@@ -607,53 +626,6 @@ class MHX_OT_MhxToggleFkIkRightLeg(MhxOperator, ToggleFkIk):
         self.toggle(context, "MhaLegIk_R", L_RLEGFK, L_RLEGIK)
 
 #----------------------------------------------------------
-#   Toggle elbow and knee parents
-#----------------------------------------------------------
-
-class MHX_OT_MhxUpdateElbowKneeParents(MhxOperator, Updater):
-    bl_idname = "mhx.update_elbow_knee_parents"
-    bl_label = "Update Elbow And Knee Parents"
-    bl_description = "Update parents of the elbow and knee pole targets"
-    bl_options = {'UNDO'}
-
-    def run(self, context):
-        self.toggle(context, "MhaElbowParent_L", "elbow.pt.ik.L", "elbowPoleP.L",  "arm_parent.L")
-        self.toggle(context, "MhaElbowParent_R", "elbow.pt.ik.R", "elbowPoleP.R",  "arm_parent.R")
-        self.toggle(context, "MhaKneeParent_L", "knee.pt.ik.L", "kneePoleP.L",  "arm_parent.L")
-        self.toggle(context, "MhaKneeParent_R", "knee.pt.ik.R", "kneePoleP.R",  "arm_parent.R")
-
-
-    def toggle(self, context, prop, bname, polep, limbpar):
-        def getChildOfConstraint(pb):
-            for cns in pb.constraints:
-                if cns.type == 'CHILD_OF':
-                    return cns
-            return None
-
-        rig = context.object
-        pb = rig.pose.bones[bname]
-        wmat = pb.matrix.copy()
-        partype = getattr(rig.data, prop)
-        if partype in ['HAND', 'FOOT']:
-            parname = polep
-        elif partype in ['SHOULDER', 'HIP']:
-            parname = limbpar
-        elif partype == 'MASTER':
-            parname = "master"
-        cns = getChildOfConstraint(pb)
-        if cns:
-            rig.data.bones.active = pb.bone
-            cns.subtarget = parname
-            bpy.ops.constraint.childof_set_inverse(constraint=cns.name, owner='BONE')
-        else:
-            setMode('EDIT', "Cannot update parents for this armature")
-            eb = rig.data.edit_bones[bname]
-            eb.parent = rig.data.edit_bones[parname]
-            setMode('POSE')
-        pb = rig.pose.bones[bname]
-        pb.matrix = wmat
-
-#----------------------------------------------------------
 #   Toggle Toe Tarsal parenting
 #----------------------------------------------------------
 
@@ -783,11 +755,6 @@ classes = [
     MHX_OT_MhxToggleFkIkRightArm,
     MHX_OT_MhxToggleFkIkLeftLeg,
     MHX_OT_MhxToggleFkIkRightLeg,
-    MHX_OT_MhxUpdateElbowKneeParents,
-    #MHX_OT_MhxToggleLeftArmStretch,
-    #MHX_OT_MhxToggleRightArmStretch,
-    #MHX_OT_MhxToggleLeftLegStretch,
-    #MHX_OT_MhxToggleRightLegStretch,
     MHX_OT_MhxToggleLeftToeTarsal,
     MHX_OT_MhxToggleRightToeTarsal,
 ]
