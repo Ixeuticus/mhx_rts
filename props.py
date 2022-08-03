@@ -197,13 +197,13 @@ def initMhxProps():
     bpy.types.Object.MhxRig = BoolProperty(default = False)
 
     # Gaze
-    bpy.types.Object.MhaGazeFollowsHead = FloatPropOVR(0.0, min=0.0, max=1.0,
+    bpy.types.Object.MhaGazeFollowsHead = FloatPropOVR(0.0,
         name = "Gaze Follows Head",
         description = "The gaze bone follows the head bone rotations")
-    bpy.types.Object.MhaGaze_L = FloatPropOVR(0.0, min=0.0, max=1.0,
+    bpy.types.Object.MhaGaze_L = FloatPropOVR(0.0,
         name = "Gaze Left",
         description = "eye tracking the left gaze bone amount")
-    bpy.types.Object.MhaGaze_R = FloatPropOVR(0.0, min=0.0, max=1.0,
+    bpy.types.Object.MhaGaze_R = FloatPropOVR(0.0,
         name = "Gaze Right",
         description = "eye tracking the right gaze bone amount")
 
@@ -298,19 +298,19 @@ def initMhxProps():
         description = "Parent right knee pole to hip")
 
     # Stretchiness
-    bpy.types.Object.MhaArmStretch_L = FloatPropOVR(1.0,
+    bpy.types.Object.MhaArmStretch_L = FloatPropOVR(0.0,
         name = "Arm Stretch Left",
         description = "Toggle left arm stretchiness")
 
-    bpy.types.Object.MhaLegStretch_L = FloatPropOVR(1.0,
+    bpy.types.Object.MhaLegStretch_L = FloatPropOVR(0.0,
         name = "Leg Stretch Left",
         description = "Toggle left leg stretchiness")
 
-    bpy.types.Object.MhaArmStretch_R = FloatPropOVR(1.0,
+    bpy.types.Object.MhaArmStretch_R = FloatPropOVR(0.0,
         name = "Arm Stretch Right",
         description = "Toggle right arm stretchiness")
 
-    bpy.types.Object.MhaLegStretch_R = FloatPropOVR(1.0,
+    bpy.types.Object.MhaLegStretch_R = FloatPropOVR(0.0,
         name = "Leg Stretch Right",
         description = "Toggle right leg stretchiness")
 
