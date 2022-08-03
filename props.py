@@ -272,29 +272,29 @@ def initMhxProps():
 
     # Elbow and Knee parents
     bpy.types.Object.MhaElbowHand_L = FloatPropOVR(0.0,
-        name = "Elbow->Hand Left",
+        name = "Hand>Elbow Left",
         description = "Parent left elbow pole to hand")
     bpy.types.Object.MhaElbowShoulder_L = FloatPropOVR(0.0,
-        name = "Elbow->Shoulder Left",
+        name = "Shoulder>Elbow Left",
         description = "Parent left elbow pole to shoulder")
     bpy.types.Object.MhaElbowHand_R = FloatPropOVR(0.0,
-        name = "Elbow->Hand Right",
+        name = "Hand>Elbow Right",
         description = "Parent right elbow pole to hand")
     bpy.types.Object.MhaElbowShoulder_R = FloatPropOVR(0.0,
-        name = "Elbow->Shoulder Right",
+        name = "Shoulder>Elbow Right",
         description = "Parent right elbow pole to shoulder")
 
     bpy.types.Object.MhaKneeFoot_L = FloatPropOVR(0.0,
-        name = "Knee->Foot Left",
+        name = "Foot>Knee Left",
         description = "Parent left knee pole to foot")
     bpy.types.Object.MhaKneeHip_L = FloatPropOVR(0.0,
-        name = "Knee->Hip Left",
+        name = "Hip>Knee Left",
         description = "Parent left knee pole to hip")
     bpy.types.Object.MhaKneeFoot_R = FloatPropOVR(0.0,
-        name = "Knee->Foot Right",
+        name = "Foot>Knee Right",
         description = "Parent right knee pole to foot")
     bpy.types.Object.MhaKneeHip_R = FloatPropOVR(0.0,
-        name = "Knee->Hip Right",
+        name = "Hip>Knee Right",
         description = "Parent right knee pole to hip")
 
     # Stretchiness
