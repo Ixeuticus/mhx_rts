@@ -152,6 +152,16 @@ class MHX_PT_Properties(MhxPanel):
             row = self.layout.row()
             row.prop(rig, "MhaKneeHip_L")
             row.prop(rig, "MhaKneeHip_R")
+        else:
+            self.layout.separator()
+            self.layout.label(text = "Pole Target Parents")
+            row = self.layout.row()
+            row.prop(rig, "MhaElbowParent_L")
+            row.prop(rig, "MhaElbowParent_R")
+            row = self.layout.row()
+            row.prop(rig, "MhaKneeParent_L")
+            row.prop(rig, "MhaKneeParent_R")
+            self.layout.operator("mhx.update_elbow_knee_parents")
 
         self.layout.separator()
         self.layout.label(text = "Stretchiness")

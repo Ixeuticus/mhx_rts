@@ -314,6 +314,33 @@ def initMhxProps():
         name = "Hip>Knee Right",
         description = "Parent right knee pole to hip")
 
+    # Elbow and knee parents, changed in edit mode
+    elbowEnums = [
+        ('HAND', "Hand", "Parent elbow pole target to IK hand"),
+        ('SHOULDER', "Shoulder", "Parent elbow pole target to shoulder"),
+        ('MASTER', "Master", "Parent elbow pole target to the master bone")]
+    bpy.types.Object.MhaElbowParent_L = EnumProperty(
+        items = elbowEnums,
+        name = "Left Elbow Parent",
+        description = "Parent of left elbow pole target")
+    bpy.types.Object.MhaElbowParent_R = EnumProperty(
+        items = elbowEnums,
+        name = "Right Elbow Parent",
+        description = "Parent of right elbow pole target")
+
+    kneeEnums = [
+        ('FOOT', "Foot", "Parent knee pole target to IK foot"),
+        ('HIP', "Hip", "Parent knee pole target to hip"),
+        ('MASTER', "Master", "Parent knee pole target to the master bone")]
+    bpy.types.Object.MhaKneeParent_L = EnumProperty(
+        items = kneeEnums,
+        name = "Left Knee Parent",
+        description = "Parent of left knee pole target")
+    bpy.types.Object.MhaKneeParent_R = EnumProperty(
+        items = kneeEnums,
+        name = "Right Knee Parent",
+        description = "Parent of right knee pole target")
+
     # Stretchiness
     bpy.types.Object.MhaArmStretch_L = FloatPropOVR(0.0,
         name = "Arm Stretch Left",

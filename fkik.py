@@ -625,6 +625,40 @@ class MHX_OT_MhxToggleFkIkRightLeg(MhxOperator, ToggleFkIk):
         self.toggle(context, "MhaLegIk_R", L_RLEGFK, L_RLEGIK)
 
 #----------------------------------------------------------
+#   Toggle elbow and knee parents
+#----------------------------------------------------------
+
+class MHX_OT_MhxUpdateElbowKneeParents(MhxOperator, Updater):
+    bl_idname = "mhx.update_elbow_knee_parents"
+    bl_label = "Update Elbow And Knee Parents"
+    bl_description = "Update parents of the elbow and knee pole targets"
+    bl_options = {'UNDO'}
+
+    def run(self, context):
+        self.toggle(context, "MhaElbowParent_L", "elbow.pt.ik.L", "elbowPoleP.L",  "arm_parent.L")
+        self.toggle(context, "MhaElbowParent_R", "elbow.pt.ik.R", "elbowPoleP.R",  "arm_parent.R")
+        self.toggle(context, "MhaKneeParent_L", "knee.pt.ik.L", "kneePoleP.L",  "hip")
+        self.toggle(context, "MhaKneeParent_R", "knee.pt.ik.R", "kneePoleP.R",  "hip")
+
+    def toggle(self, context, prop, bname, polep, limbpar):
+        rig = context.object
+        pb = rig.pose.bones[bname]
+        wmat = pb.matrix.copy()
+        setMode('EDIT', "Cannot set elbow and knee parents for this armature")
+        partype = getattr(rig, prop)
+        if partype in ['HAND', 'FOOT']:
+            parname = polep
+        elif partype in ['SHOULDER', 'HIP']:
+            parname = limbpar
+        elif partype == 'MASTER':
+            parname = 'master'
+        eb = rig.data.edit_bones[bname]
+        eb.parent = rig.data.edit_bones[parname]
+        bpy.ops.object.mode_set(mode='POSE')
+        pb = rig.pose.bones[bname]
+        pb.matrix = wmat
+
+#----------------------------------------------------------
 #   Toggle Toe Tarsal parenting
 #----------------------------------------------------------
 
@@ -754,6 +788,7 @@ classes = [
     MHX_OT_MhxToggleFkIkRightArm,
     MHX_OT_MhxToggleFkIkLeftLeg,
     MHX_OT_MhxToggleFkIkRightLeg,
+    MHX_OT_MhxUpdateElbowKneeParents,
     MHX_OT_MhxToggleLeftToeTarsal,
     MHX_OT_MhxToggleRightToeTarsal,
 ]
