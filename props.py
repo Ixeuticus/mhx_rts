@@ -132,7 +132,7 @@ class MHX_OT_UpdateMhx(MhxOperator):
         for key in list(rig.data.keys()):
             if key[0:3] == "Mha":
                 print("FIX", key)
-                rig[key] = rig.data[key]
+                setattr(rig, key, rig.data[key])
                 del rig.data[key]
         if rig.animation_data:
             amt = rig.data
@@ -200,9 +200,11 @@ def initMhxProps():
     bpy.types.Object.MhaGazeFollowsHead = FloatPropOVR(0.0,
         name = "Gaze Follows Head",
         description = "The gaze bone follows the head bone rotations")
+
     bpy.types.Object.MhaGaze_L = FloatPropOVR(0.0,
         name = "Gaze Left",
         description = "eye tracking the left gaze bone amount")
+
     bpy.types.Object.MhaGaze_R = FloatPropOVR(0.0,
         name = "Gaze Right",
         description = "eye tracking the right gaze bone amount")
@@ -233,6 +235,7 @@ def initMhxProps():
         name = "Forearm Follows Hand Left",
         description = "Control left forearm twist with left hand twist.\nIt may be necessary to turn this off for correct FK->IK snapping.",
         update = fkik.setForearmFollowLeft)
+
     bpy.types.Object.MhaForearmFollow_R = BoolPropOVR(True,
         name = "Forearm Follows Hand Right",
         description = "Control right forearm twist with right hand twist.\nIt may be necessary to turn this off for correct FK->IK snapping.",
@@ -241,6 +244,7 @@ def initMhxProps():
     bpy.types.Object.MhaFingerControl_L = BoolPropOVR(False,
         name = "Long Fingers Left",
         description = "finger links controlled by the long finger bones")
+
     bpy.types.Object.MhaFingerControl_R = BoolPropOVR(False,
         name = "Long Fingers Right",
         description = "finger links controlled by the long finger bones")
@@ -248,6 +252,7 @@ def initMhxProps():
     bpy.types.Object.MhaFingerIk_L = BoolPropOVR(False,
         name = "Finger IK Left",
         description = "finger links controlled by IK")
+
     bpy.types.Object.MhaFingerIk_R = BoolPropOVR(False,
         name = "Finger IK Right",
         description = "finger links controlled by IK")
@@ -261,14 +266,26 @@ def initMhxProps():
     bpy.types.Object.MhaLegIkToAnkle_L = BoolPropOVR(False,
         name = "Ankle IK Left",
         description = "Use ankle bone as IK target for left leg")
+
     bpy.types.Object.MhaLegIkToAnkle_R = BoolPropOVR(False,
         name = "Ankle IK Right",
         description = "Use ankle bone as IK target for right leg")
 
-    bpy.types.Object.MhaArmIk_L = FloatPropOVR(0.0, precision=3, min=0.0, max=1.0)
-    bpy.types.Object.MhaLegIk_L = FloatPropOVR(0.0, precision=3, min=0.0, max=1.0)
-    bpy.types.Object.MhaArmIk_R = FloatPropOVR(0.0, precision=3, min=0.0, max=1.0)
-    bpy.types.Object.MhaLegIk_R = FloatPropOVR(0.0, precision=3, min=0.0, max=1.0)
+    bpy.types.Object.MhaArmIk_L = FloatPropOVR(0.0, precision=3,
+        name = "Arm IK Left",
+        description = "Left arm IK influence")
+
+    bpy.types.Object.MhaLegIk_L = FloatPropOVR(0.0, precision=3,
+        name = "Arm IK Right",
+        description = "Right arm IK influence")
+
+    bpy.types.Object.MhaArmIk_R = FloatPropOVR(0.0, precision=3,
+        name = "Leg IK Left",
+        description = "Left leg IK influence")
+
+    bpy.types.Object.MhaLegIk_R = FloatPropOVR(0.0, precision=3,
+        name = "Leg IK Right",
+        description = "Right leg IK influence")
 
     # Elbow and Knee parents
     bpy.types.Object.MhaElbowHand_L = FloatPropOVR(0.0,
