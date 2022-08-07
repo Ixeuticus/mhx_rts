@@ -130,26 +130,28 @@ class MHX_OT_UpdateMhx(MhxOperator):
     def run(self, context):
         rig = context.object
         for key in list(rig.data.keys()):
-            if key[0:3] == "Mha":
+            if key[0:3] == "Mha" and hasattr(rig, key):
                 print("FIX", key)
                 setattr(rig, key, rig.data[key])
                 del rig.data[key]
         if rig.animation_data:
             amt = rig.data
             for fcu in rig.animation_data.drivers:
-                words = fcu.data_path.rsplit(".")
-                if words[-1] in ["influence", "mute"]:
+                channel = fcu.data_path.rsplit(".")[-1]
+                if channel in ["influence", "mute"]:
                     for var in list(fcu.driver.variables):
                         trg = var.targets[0]
-                        if trg.id == amt:
-                            nvar = fcu.driver.variables.new()
-                            varname = var.name
-                            ntrg = nvar.targets[0]
-                            ntrg.id_type == 'OBJECT'
-                            ntrg.id = rig
-                            ntrg.data_path = baseRef(trg.data_path)
-                            fcu.driver.variables.remove(var)
-                            nvar.name = varname
+                        if trg.id == amt and trg.data_path[0:5] == '["Mha':
+                            prop = baseRef(trg.data_path)
+                            if hasattr(rig, prop):
+                                nvar = fcu.driver.variables.new()
+                                varname = var.name
+                                ntrg = nvar.targets[0]
+                                ntrg.id_type == 'OBJECT'
+                                ntrg.id = rig
+                                ntrg.data_path = prop
+                                fcu.driver.variables.remove(var)
+                                nvar.name = varname
 
 #-------------------------------------------------------------
 #   Overridable properties

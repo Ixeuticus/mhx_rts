@@ -553,9 +553,9 @@ class Footer(Basic):
 
     def getMarkers(self, suffix):
         try:
-            mBall = self.getBone("ball.marker" + suffix)
-            mToe = self.getBone("toe.marker" + suffix)
-            mHeel = self.getBone("heel.marker" + suffix)
+            mBall = self.getBone("ball.marker.%s" % suffix)
+            mToe = self.getBone("toe.marker.%s" % suffix)
+            mHeel = self.getBone("heel.marker.%s" % suffix)
             return mBall,mToe,mHeel
         except KeyError:
             return None
@@ -623,13 +623,13 @@ class MHX_OT_SetConstraints(MhxOperator):
 
         rig = context.object
         checkVisible(rig)
-        for suffix in [".L", ".R"]:
+        for suffix in ["L", "R"]:
             for bname,lock in locks.items():
-                pb = rig.pose.bones[bname+suffix]
+                pb = rig.pose.bones["%s.%s" % (bname % suffix)]
                 for idx in lock:
                     pb.lock_rotation[idx] = True
             for bname,limit in limits.items():
-                pb = rig.pose.bones[bname+suffix]
+                pb = rig.pose.bones["%s.%s" % (bname % suffix)]
                 for cns in pb.constraints:
                     if cns.type == 'LIMIT_ROTATION':
                         for attr,val in limit.items():
@@ -811,8 +811,8 @@ class MHX_OT_FloorFkFoot(HidePropsOperator, Footer, FrameRange):
 
 
     def getFkFeetBones(self, suffix):
-        foot = self.getBone("foot.fk" + suffix)
-        toe = self.getBone("toe.fk" + suffix)
+        foot = self.getBone("foot.fk.%s" % suffix)
+        toe = self.getBone("toe.fk.%s" % suffix)
         return foot,toe
 
 
@@ -941,8 +941,8 @@ class MHX_OT_FloorIkFoot(HidePropsOperator, Footer, FrameRange):
             tailOffset = getTailOffset(leg, ez, origin)
             return max([headOffset, tailOffset])
         else:
-            foot = self.rig.pose.bones["foot.rev" + suffix]
-            toe = self.rig.pose.bones["toe.rev" + suffix]
+            foot = self.rig.pose.bones["foot.rev.%s" % suffix]
+            toe = self.rig.pose.bones["toe.rev.%s" % suffix]
             toeOffset = getHeadOffset(toe, ez, origin)
             ballOffset = getTailOffset(toe, ez, origin)
             ball = foot.matrix.col[3]

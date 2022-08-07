@@ -137,20 +137,10 @@ class Snapper(Updater, Basic):
 
     def prequel(self, context):
         HideOperator.prequel(self, context)
-        self.muteAllConstraints(True)
 
 
     def sequel(self, context):
         HideOperator.sequel(self, context)
-        self.muteAllConstraints(False)
-
-
-    def muteAllConstraints(self, value):
-        for part in ["ArmIK", "ArmFK", "LegIK", "LegFK"]:
-            for suffix in ["L", "R"]:
-                _snap,constraints = self.getSnapBones(part, suffix)
-                for cns in constraints:
-                    cns.mute = value
 
 
     def setup(self, context, value):
@@ -186,11 +176,18 @@ class Snapper(Updater, Basic):
         self.updatePose()
         self.insertLocation(pb)
         self.insertRotation(pb)
+        self.imposeLocks(pb)
 
 
     def matchPoseTransform(self, pb, src):
         pb.matrix = src.matrix
         self.updatePose()
+        self.imposeLocks(pb)
+        self.insertRotation(pb)
+
+
+    def imposeLocks(self, pb):
+        return
         if pb.rotation_mode == 'QUATERNION':
             for idx in range(4):
                 if pb.lock_rotation[idx]:
@@ -199,7 +196,6 @@ class Snapper(Updater, Basic):
             for idx in range(3):
                 if pb.lock_rotation[idx]:
                     pb.rotation_euler[idx] = 0
-        self.insertRotation(pb)
 
 
     def matchIkLeg(self, legIk, toeFk):
@@ -403,7 +399,7 @@ class MHX_OT_MhxSnapFkLeftArm(Snapper, HideOperator):
     bl_description = "Snap the left FK arm to the pose of the left IK arm"
     bl_options = {'UNDO'}
 
-    suffix = ".L"
+    suffix = "L"
     prop = "MhaArmIk_L"
     ik = L_LARMIK
     fk = L_LARMFK
@@ -423,7 +419,7 @@ class MHX_OT_MhxSnapFkRightArm(Snapper, HideOperator):
     bl_description = "Snap the right FK arm to the pose of the right IK arm"
     bl_options = {'UNDO'}
 
-    suffix = ".R"
+    suffix = "R"
     prop = "MhaArmIk_R"
     ik = L_RARMIK
     fk = L_RARMFK
@@ -443,7 +439,7 @@ class MHX_OT_MhxSnapFkLeftLeg(Snapper, HideOperator):
     bl_description = "Snap the left FK leg to the pose of the left IK leg"
     bl_options = {'UNDO'}
 
-    suffix = ".L"
+    suffix = "L"
     prop = "MhaLegIk_L"
     ik = L_LLEGIK
     fk = L_LLEGFK
@@ -463,7 +459,7 @@ class MHX_OT_MhxSnapFkRightLeg(Snapper, HideOperator):
     bl_description = "Snap the right FK leg to the pose of the right IK leg"
     bl_options = {'UNDO'}
 
-    suffix = ".R"
+    suffix = "R"
     prop = "MhaLegIk_R"
     ik = L_RLEGIK
     fk = L_RLEGFK
@@ -483,7 +479,7 @@ class MHX_OT_MhxSnapIkLeftArm(Snapper, HideOperator):
     bl_description = "Snap the left IK arm to the pose of the left FK arm"
     bl_options = {'UNDO'}
 
-    suffix = ".L"
+    suffix = "L"
     prop = "MhaArmIk_L"
     ik = L_LARMIK
     fk = L_LARMFK
@@ -503,7 +499,7 @@ class MHX_OT_MhxSnapIkRightArm(Snapper, HideOperator):
     bl_description = "Snap the right IK arm to the pose of the right FK arm"
     bl_options = {'UNDO'}
 
-    suffix = ".R"
+    suffix = "R"
     prop = "MhaArmIk_R"
     ik = L_RARMIK
     fk = L_RARMFK
@@ -523,7 +519,7 @@ class MHX_OT_MhxSnapIkLeftLeg(FootSnapper, HideOperator):
     bl_description = "Snap the left IK leg to the pose of the left FK leg"
     bl_options = {'UNDO'}
 
-    suffix = ".L"
+    suffix = "L"
     prop = "MhaLegIk_L"
     ik = L_LLEGIK
     fk = L_LLEGFK
@@ -544,7 +540,7 @@ class MHX_OT_MhxSnapIkRightLeg(FootSnapper, HideOperator):
     bl_description = "Snap the right IK leg to the pose of the right FK leg"
     bl_options = {'UNDO'}
 
-    suffix = ".R"
+    suffix = "R"
     prop = "MhaLegIk_R"
     ik = L_RLEGIK
     fk = L_RLEGFK
@@ -732,17 +728,17 @@ class MHX_OT_MhxToggleRightToeTarsal(MhxOperator, ToggleToeTarsal):
 
 def setForearmFollow(rig, context, prop, suffix):
     follows = getattr(rig, prop)
-    pb = rig.pose.bones["forearm"+suffix]
+    pb = rig.pose.bones["forearm.%s" % suffix]
     for cns in pb.constraints:
         if (cns.type == 'COPY_ROTATION' and
-            cns.subtarget in ["hand.fk"+suffix, "hand0.ik"+suffix]):
+            cns.subtarget in ["hand.fk.%s" % suffix, "hand0.ik.%s" % suffix]):
             cns.mute = not follows
-    hand = rig.pose.bones["hand.fk"+suffix]
+    hand = rig.pose.bones["hand.fk.%s" % suffix]
     for cns in hand.constraints:
         if cns.type == 'LIMIT_ROTATION':
             cns.use_limit_y = not follows
             break
-    forearm = rig.pose.bones["forearm.fk"+suffix]
+    forearm = rig.pose.bones["forearm.fk.%s" % suffix]
     if follows:
         hand.rotation_euler[1] = forearm.rotation_euler[1]
         forearm.rotation_euler[1] = 0
@@ -752,10 +748,10 @@ def setForearmFollow(rig, context, prop, suffix):
 
 
 def setForearmFollowLeft(rig, context):
-    setForearmFollow(rig, context, "MhaForearmFollow_L", ".L")
+    setForearmFollow(rig, context, "MhaForearmFollow_L", "L")
 
 def setForearmFollowRight(rig, context):
-    setForearmFollow(rig, context, "MhaForearmFollow_R", ".R")
+    setForearmFollow(rig, context, "MhaForearmFollow_R", "R")
 
 #----------------------------------------------------------
 #   Toggle limits
@@ -766,9 +762,9 @@ def toggleFkIkLimits(rig, context):
         for cns in pb.constraints:
             if cns.type == 'LIMIT_ROTATION' and cns.name != "Hint":
                 cns.mute = (not rig.MhaLimitsOn)
-    for suffix in [".L", ".R"]:
+    for suffix in ["L", "R"]:
         for bname in ["upper_arm", "forearm", "thigh", "shin"]:
-            pb = rig.pose.bones["%s.ik%s" % (bname, suffix)]
+            pb = rig.pose.bones["%s.ik.%s" % (bname, suffix)]
             pb.use_ik_limit_x = pb.use_ik_limit_y = pb.use_ik_limit_z = rig.MhaLimitsOn
 
 #----------------------------------------------------------
