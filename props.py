@@ -131,8 +131,13 @@ class MHX_OT_UpdateMhx(MhxOperator):
         rig = context.object
         for key in list(rig.data.keys()):
             if key[0:3] == "Mha" and hasattr(rig, key):
-                print("FIX", key)
-                setattr(rig, key, rig.data[key])
+                value = rig.data[key]
+                if key.startswith("MhaElbowParent") and isinstance(value, int):
+                    value = {0: 'HAND', 1: 'SHOULDER', 2: 'MASTER'}[value]
+                elif key.startswith("MhaKneeParent") and isinstance(value, int):
+                    value = {0: 'FOOT', 1: 'HIP', 2: 'MASTER'}[value]
+                print("FIX", key, value)
+                setattr(rig, key, value)
                 del rig.data[key]
         if rig.animation_data:
             amt = rig.data
@@ -197,6 +202,7 @@ def initMhxProps():
     from . import fkik
 
     bpy.types.Object.MhxRig = BoolProperty(default = False)
+    bpy.types.Object.MhxChildOfConstraints = BoolProperty(default = False)
 
     # Gaze
     bpy.types.Object.MhaGazeFollowsHead = FloatPropOVR(0.0,

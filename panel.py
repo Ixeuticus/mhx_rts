@@ -137,7 +137,7 @@ class MHX_PT_Properties(MhxPanel):
         row.prop(rig, "MhaLegIkToAnkle_L")
         row.prop(rig, "MhaLegIkToAnkle_R")
 
-        if "MhaElbowHand_L" in rig.keys():
+        if rig.MhxChildOfConstraints:
             self.layout.separator()
             self.layout.label(text = "Pole Target Parents")
             row = self.layout.row()

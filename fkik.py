@@ -689,10 +689,7 @@ class ToggleToeTarsal:
             tarsalname not in rig.data.bones.keys()):
             msg = ("Missing bones: %s or %s" % (toename, tarsalname))
             raise MhxError(msg)
-        if prop in rig.keys():
-            wason = getattr(rig, prop)
-        else:
-            wason = True
+        wason = getattr(rig, prop)
         for smallname in ["big_toe", "small_toe_1", "small_toe_2", "small_toe_3", "small_toe_4"]:
             setConstraint(rig, "%s.01.%s" % (smallname, suffix), toename, wason)
         setMode('EDIT', "Cannot toggle toe tarsal parents for this armature")
@@ -701,7 +698,7 @@ class ToggleToeTarsal:
         for smallname in ["big_toe", "small_toe_1", "small_toe_2", "small_toe_3", "small_toe_4"]:
             setParent(rig, "%s.01.%s" % (smallname, suffix), toe, tarsal, wason)
         setMode('POSE')
-        setattr(self.rig, prop, (not wason))
+        setattr(rig, prop, (not wason))
 
 
 class MHX_OT_MhxToggleLeftToeTarsal(MhxOperator, ToggleToeTarsal):
