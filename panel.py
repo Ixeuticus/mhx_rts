@@ -178,6 +178,9 @@ class MHX_PT_Properties(MhxPanel):
         self.updateFunction(row, rig, "MhaToeTarsal_L", "mhx.toggle_left_toe_tarsal")
         self.updateFunction(row, rig, "MhaToeTarsal_R", "mhx.toggle_right_toe_tarsal")
 
+        self.layout.separator()
+        self.layout.operator("mhx.update_mhx")
+
 
     def updateFunction(self, layout, rig, prop, opname):
         icon = ('CHECKBOX_HLT' if getattr(rig, prop) else 'CHECKBOX_DEHLT')

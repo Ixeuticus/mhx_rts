@@ -171,9 +171,10 @@ class MHX_OT_UpdateMhx(MhxOperator):
                 pb = rig.pose.bones.get("%s.%s" % (bname, suffix))
                 prop2 = "%s_%s" % (prop, suffix)
                 if pb:
-                    for cns in pb.constraints:
-                        if cns.type == 'STRETCH_TO':
-                            addDriver(cns, "influence", rig, prop2, "x")
+                    cns = getConstraint(pb, 'STRETCH_TO')
+                    if cns:
+                        cns.driver_remove("influence")
+                        addDriver(cns, "influence", rig, prop2, "x")
             for bname,prop in [
                 ("foot", "MhaLegStretch"),
                 ("foot.fk", "MhaLegStretch"),
@@ -182,8 +183,16 @@ class MHX_OT_UpdateMhx(MhxOperator):
             ]:
                 pb = rig.pose.bones["%s.%s" % (bname, suffix)]
                 prop2 = "%s_%s" % (prop, suffix)
-                cns = copyLocation(pb, pb.parent, rig, prop2, "1-x")
-                cns.head_tail = 1.0
+                if not getConstraint(pb, 'COPY_LOCATION'):
+                    cns = copyLocation(pb, pb.parent, rig, prop2, "1-x")
+                    cns.head_tail = 1.0
+
+
+def getConstraint(pb, ctype):
+    for cns in pb.constraints:
+        if cns.type == ctype:
+            return cns
+    return None
 
 #-------------------------------------------------------------
 #   Overridable properties
