@@ -139,6 +139,7 @@ class MHX_OT_UpdateMhx(MhxOperator):
                 print("FIX", key, value)
                 setattr(rig, key, value)
                 del rig.data[key]
+
         if rig.animation_data:
             amt = rig.data
             for fcu in rig.animation_data.drivers:
@@ -157,6 +158,32 @@ class MHX_OT_UpdateMhx(MhxOperator):
                                 ntrg.data_path = prop
                                 fcu.driver.variables.remove(var)
                                 nvar.name = varname
+
+        from import_daz.mhx import addDriver, copyLocation
+        for suffix in ["L", "R"]:
+            for bname,prop in [
+                ("shin", "MhaLegStretch"),
+                ("shin.bend", "MhaLegStretch"),
+                ("shin.twist", "MhaLegStretch"),
+                ("forearm.bend", "MhaArmStretch"),
+                ("forearm.twist", "MhaArmStretch"),
+            ]:
+                pb = rig.pose.bones.get("%s.%s" % (bname, suffix))
+                prop2 = "%s_%s" % (prop, suffix)
+                if pb:
+                    for cns in pb.constraints:
+                        if cns.type == 'STRETCH_TO':
+                            addDriver(cns, "influence", rig, prop2, "x")
+            for bname,prop in [
+                ("foot", "MhaLegStretch"),
+                ("foot.fk", "MhaLegStretch"),
+                ("hand", "MhaArmStretch"),
+                ("hand.fk", "MhaArmStretch"),
+            ]:
+                pb = rig.pose.bones["%s.%s" % (bname, suffix)]
+                prop2 = "%s_%s" % (prop, suffix)
+                cns = copyLocation(pb, pb.parent, rig, prop2, "1-x")
+                cns.head_tail = 1.0
 
 #-------------------------------------------------------------
 #   Overridable properties
