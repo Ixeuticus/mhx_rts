@@ -326,11 +326,11 @@ def initMhxProps():
         description = "Toggle FK and IK rotation limits.\nIt may be necessary to turn these off for correct FK->IK snapping.",
         update = fkik.toggleFkIkLimits)
 
-    bpy.types.Object.MhaLegIkToAnkle_L = BoolPropOVR(False,
+    bpy.types.Object.MhaLegIkToAnkle_L = FloatPropOVR(0.0, precision=3,
         name = "Ankle IK Left",
         description = "Use ankle bone as IK target for left leg")
 
-    bpy.types.Object.MhaLegIkToAnkle_R = BoolPropOVR(False,
+    bpy.types.Object.MhaLegIkToAnkle_R = FloatPropOVR(0.0, precision=3,
         name = "Ankle IK Right",
         description = "Use ankle bone as IK target for right leg")
 
@@ -338,11 +338,11 @@ def initMhxProps():
         name = "Arm IK Left",
         description = "Left arm IK influence")
 
-    bpy.types.Object.MhaLegIk_L = FloatPropOVR(0.0, precision=3,
+    bpy.types.Object.MhaArmIk_R = FloatPropOVR(0.0, precision=3,
         name = "Arm IK Right",
         description = "Right arm IK influence")
 
-    bpy.types.Object.MhaArmIk_R = FloatPropOVR(0.0, precision=3,
+    bpy.types.Object.MhaLegIk_L = FloatPropOVR(0.0, precision=3,
         name = "Leg IK Left",
         description = "Left leg IK influence")
 

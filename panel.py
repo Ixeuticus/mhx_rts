@@ -134,8 +134,15 @@ class MHX_PT_Properties(MhxPanel):
         self.layout.label(text = "IK And Limits")
         self.layout.prop(rig, "MhaLimitsOn")
         row = self.layout.row()
-        row.prop(rig, "MhaLegIkToAnkle_L")
-        row.prop(rig, "MhaLegIkToAnkle_R")
+        row.prop(rig, "MhaArmIk_L")
+        row.prop(rig, "MhaArmIk_R")
+        row = self.layout.row()
+        row.prop(rig, "MhaLegIk_L")
+        row.prop(rig, "MhaLegIk_R")
+        if "foot.2.L" in rig.pose.bones.keys():
+            row = self.layout.row()
+            row.prop(rig, "MhaLegIkToAnkle_L")
+            row.prop(rig, "MhaLegIkToAnkle_R")
 
         if rig.MhxChildOfConstraints:
             self.layout.separator()

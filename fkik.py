@@ -130,10 +130,11 @@ SnapBones = {
     "ArmIK" : ["upper_arm.ik", "forearm.ik", "upper_arm.ik.twist", "forearm.ik.twist", "elbow.pt.ik", "elbowPoleA", "hand.ik"],
     "Leg"   : ["thigh", "shin", "foot", "toe"],
     "LegFK" : ["thigh.fk", "shin.fk", "foot.fk", "toe.fk"],
-    "LegIK" : ["thigh.ik", "shin.ik", "thigh.ik.twist", "shin.ik.twist", "knee.pt.ik", "kneePoleA", "ankle", "ankle.ik", "foot.ik", "foot.rev", "toe.rev", "foot.inv.fk", "toe.inv.fk", "foot.inv.ik", "toe.inv.ik"],
+    "LegIK" : ["thigh.ik", "shin.ik", "thigh.ik.twist", "shin.ik.twist", "knee.pt.ik", "kneePoleA", "foot.2", "ankle.ik", "foot.ik", "foot.rev", "toe.rev", "foot.inv.fk", "toe.inv.fk", "foot.inv.ik", "toe.inv.ik"],
 }
 
 class Snapper(Updater, Basic):
+    prop2 = None
 
     def prequel(self, context):
         HideOperator.prequel(self, context)
@@ -148,6 +149,8 @@ class Snapper(Updater, Basic):
         setMode('POSE')
         self.oldvalue = value
         setattr(self.rig, self.prop, value)
+        if self.prop2:
+            setattr(self.rig, self.prop2, 0)
         self.auto = context.scene.tool_settings.use_keyframe_insert_auto
         self.updatePose()
 
@@ -291,6 +294,7 @@ class Snapper(Updater, Basic):
             elif ("PoleA" in bname or
                   "inv.fk" in bname or
                   "inv.ik" in bname or
+                  "foot.2" in bname or
                   "ik.twist" in bname):
                 pbones.append(None)
                 continue
@@ -343,7 +347,7 @@ class Snapper(Updater, Basic):
 
     def snapFkLeg(self, snapFk, snapIk, legIkToAnkle):
         (thighFk, shinFk, footFk, toeFk) = snapFk
-        (thighIk, shinIk, thighIkTwist, shinIkTwist, kneePt, kneePoleA, ankle, ankleIk, legIk, footRev, toeRev, footInvFk, toeInvFk, footInvIk, toeInvIk) = snapIk
+        (thighIk, shinIk, thighIkTwist, shinIkTwist, kneePt, kneePoleA, foot2, ankleIk, legIk, footRev, toeRev, footInvFk, toeInvFk, footInvIk, toeInvIk) = snapIk
 
         if shinIkTwist:
             self.matchPoseTransform(thighFk, thighIkTwist)
@@ -358,11 +362,12 @@ class Snapper(Updater, Basic):
 
     def snapIkLeg(self, snapFk, snapIk, legIkToAnkle):
         (thighFk, shinFk, footFk, toeFk) = snapFk
-        (thighIk, shinIk, thighIkTwist, shinIkTwist, kneePt, kneePoleA, ankle, ankleIk, legIk, footRev, toeRev, footInvFk, toeInvFk, footInvIk, toeInvIk) = snapIk
+        (thighIk, shinIk, thighIkTwist, shinIkTwist, kneePt, kneePoleA, foot2, ankleIk, legIk, footRev, toeRev, footInvFk, toeInvFk, footInvIk, toeInvIk) = snapIk
 
         footFk.location = (0,0,0)
-        if legIkToAnkle:
-            self.matchPoseTranslation(ankle, footFk)
+        if legIkToAnkle and foot2:
+            self.matchPoseTransform(foot2, footFk)
+            self.matchPoseTransform(toe2, toeFk)
         else:
             self.matchIkLeg(legIk, toeFk)
             if toeInvFk:
@@ -521,6 +526,7 @@ class MHX_OT_MhxSnapIkLeftLeg(FootSnapper, HideOperator):
 
     suffix = "L"
     prop = "MhaLegIk_L"
+    prop2 = "MhaLegIkToAnkle_L"
     ik = L_LLEGIK
     fk = L_LLEGFK
 
@@ -542,6 +548,7 @@ class MHX_OT_MhxSnapIkRightLeg(FootSnapper, HideOperator):
 
     suffix = "R"
     prop = "MhaLegIk_R"
+    prop2 = "MhaLegIkToAnkle_R"
     ik = L_RLEGIK
     fk = L_RLEGFK
 
