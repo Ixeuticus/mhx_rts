@@ -136,6 +136,10 @@ class MHX_OT_UpdateMhx(MhxOperator):
                     value = {0: 'HAND', 1: 'SHOULDER', 2: 'MASTER'}[value]
                 elif key.startswith("MhaKneeParent") and isinstance(value, int):
                     value = {0: 'FOOT', 1: 'HIP', 2: 'MASTER'}[value]
+                elif key.startswith("MhaFingerIk") and isinstance(value, float):
+                    value = bool(value)
+                elif key.startswith("MhaTongueIk") and isinstance(value, float):
+                    value = bool(value)
                 print("FIX", key, value)
                 setattr(rig, key, value)
                 del rig.data[key]
@@ -186,6 +190,21 @@ class MHX_OT_UpdateMhx(MhxOperator):
                 if not getConstraint(pb, 'COPY_LOCATION'):
                     cns = copyLocation(pb, pb.parent, rig, prop2, "1-x")
                     cns.head_tail = 1.0
+
+        setMode('EDIT')
+        for suffix in ["L", "R"]:
+            for bname,conn in [
+                ("hand", False),
+                ("hand.fk", False),
+                ("foot", False),
+                ("foot.fk", False),
+                ("toe", True),
+                ("toe.fk", True),
+            ]:
+                eb = rig.data.edit_bones["%s.%s" % (bname, suffix)]
+                eb.use_connect = conn
+        setMode('POSE')
+
 
 
 def getConstraint(pb, ctype):
