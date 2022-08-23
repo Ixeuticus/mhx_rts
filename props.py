@@ -128,6 +128,24 @@ class MHX_OT_UpdateMhx(MhxOperator):
     bl_options = {'UNDO'}
 
     def run(self, context):
+        def fixFcurve(rig, fcu, channels):
+                channel = fcu.data_path.rsplit(".")[-1]
+                if channel in channels:
+                    for var in list(fcu.driver.variables):
+                        trg = var.targets[0]
+                        if trg.id == rig.data and trg.data_path[0:5] == '["Mha':
+                            prop = baseRef(trg.data_path)
+                            if hasattr(rig, prop):
+                                print("DRV", fcu.data_path, prop)
+                                nvar = fcu.driver.variables.new()
+                                varname = var.name
+                                ntrg = nvar.targets[0]
+                                ntrg.id_type == 'OBJECT'
+                                ntrg.id = rig
+                                ntrg.data_path = prop
+                                fcu.driver.variables.remove(var)
+                                nvar.name = varname
+
         rig = context.object
         for key in list(rig.data.keys()):
             if key[0:3] == "Mha" and hasattr(rig, key):
@@ -145,23 +163,11 @@ class MHX_OT_UpdateMhx(MhxOperator):
                 del rig.data[key]
 
         if rig.animation_data:
-            amt = rig.data
             for fcu in rig.animation_data.drivers:
-                channel = fcu.data_path.rsplit(".")[-1]
-                if channel in ["influence", "mute"]:
-                    for var in list(fcu.driver.variables):
-                        trg = var.targets[0]
-                        if trg.id == amt and trg.data_path[0:5] == '["Mha':
-                            prop = baseRef(trg.data_path)
-                            if hasattr(rig, prop):
-                                nvar = fcu.driver.variables.new()
-                                varname = var.name
-                                ntrg = nvar.targets[0]
-                                ntrg.id_type == 'OBJECT'
-                                ntrg.id = rig
-                                ntrg.data_path = prop
-                                fcu.driver.variables.remove(var)
-                                nvar.name = varname
+                fixFcurve(rig, fcu, ["influence", "mute"])
+        if rig.data.animation_data:
+            for fcu in rig.data.animation_data.drivers:
+                fixFcurve(rig, fcu, ["hide"])
 
         from import_daz.mhx import addDriver, copyLocation
         for suffix in ["L", "R"]:
