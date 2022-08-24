@@ -236,7 +236,6 @@ class HideOperator(MhxOperator):
 
     def prequel(self, context):
         self.rig = context.object
-        self.amt = self.rig.data
         scn = context.scene
         self.frame = scn.frame_current
         self.state = list(self.rig.data.layers)

@@ -311,13 +311,13 @@ class Transferer:
         ikLayers = []
         fkLayers = []
         if self.useArms:
-            self.amt["MhaArmIk_L"] = value
-            self.amt["MhaArmIk_R"] = value
+            self.rig.MhaArmIk_L = value
+            self.rig.MhaArmIk_R = value
             ikLayers += [L_LARMIK, L_RARMIK]
             fkLayers += [L_LARMFK, L_RARMFK]
         if self.useLegs:
-            self.amt["MhaLegIk_L"] = value
-            self.amt["MhaLegIk_R"] = value
+            self.rig.MhaLegIk_L = value
+            self.rig.MhaLegIk_R = value
             ikLayers += [L_LLEGIK, L_RLEGIK]
             fkLayers += [L_LLEGFK, L_RLEGFK]
         if value:
@@ -368,8 +368,8 @@ class MHX_OT_TransferToFk(Transferer, FootSnapper, HidePropsOperator, Bender, Fr
         scn = context.scene
         self.auto = True
         self.setMhxIk(1.0)
-        lLegIkToAnkle = self.amt["MhaLegIkToAnkle_L"]
-        rLegIkToAnkle = self.amt["MhaLegIkToAnkle_R"]
+        lLegIkToAnkle = self.rig.MhaLegIkToAnkle_L
+        rLegIkToAnkle = self.rig.MhaLegIkToAnkle_R
         frames = self.getActiveFrames()
         nFrames = len(frames)
 
@@ -422,8 +422,8 @@ class MHX_OT_TransferToIk(Transferer, FootSnapper, HidePropsOperator, FrameRange
         scn = context.scene
         self.auto = True
         self.setMhxIk(0.0)
-        lLegIkToAnkle = self.amt["MhaLegIkToAnkle_L"]
-        rLegIkToAnkle = self.amt["MhaLegIkToAnkle_R"]
+        lLegIkToAnkle = self.rig.MhaLegIkToAnkle_L
+        rLegIkToAnkle = self.rig.MhaLegIkToAnkle_R
         frames = self.getActiveFrames()
         nFrames = len(frames)
         for n,frame in enumerate(frames):
@@ -786,11 +786,11 @@ class MHX_OT_FloorFkFoot(HidePropsOperator, Footer, FrameRange):
 
     def floorFkFoot(self, scn, frames):
         hip = self.getBone("hip")
-        lFoot,lToe = self.getFkFeetBones(".L")
-        rFoot,rToe = self.getFkFeetBones(".R")
+        lFoot,lToe = self.getFkFeetBones("L")
+        rFoot,rToe = self.getFkFeetBones("R")
         if self.useMarkers:
-            lMarkers = self.getMarkers(".L")
-            rMarkers = self.getMarkers(".R")
+            lMarkers = self.getMarkers("L")
+            rMarkers = self.getMarkers("R")
         else:
             lMarkers = rMarkers = None
         ez,origin,rot = self.getPlaneInfo()
@@ -879,8 +879,8 @@ class MHX_OT_FloorIkFoot(HidePropsOperator, Footer, FrameRange):
         rleg = self.rig.pose.bones["foot.ik.R"]
         ez,origin,rot = self.getPlaneInfo()
         if self.useMarkers:
-            lMarkers = self.getMarkers(".L")
-            rMarkers = self.getMarkers(".R")
+            lMarkers = self.getMarkers("L")
+            rMarkers = self.getMarkers("R")
         else:
             lMarkers = rMarkers = None
 

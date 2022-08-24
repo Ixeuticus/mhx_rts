@@ -59,11 +59,11 @@ class Updater:
 class Basic:
 
     def getBone(self, bname):
-        try:
+        if bname in self.rig.pose.bones.keys():
             return self.rig.pose.bones[bname]
-        except KeyError:
-            pass
-        raise MhxError("What? Bone %s not found" % bname)
+        else:
+            hatl
+            raise MhxError("What? Bone %s not found" % bname)
 
 
     def getPoseMatrix(self, gmat, pb):
