@@ -62,7 +62,6 @@ class Basic:
         if bname in self.rig.pose.bones.keys():
             return self.rig.pose.bones[bname]
         else:
-            hatl
             raise MhxError("What? Bone %s not found" % bname)
 
 
