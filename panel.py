@@ -132,7 +132,6 @@ class MHX_PT_Properties(MhxPanel):
 
         self.layout.separator()
         self.layout.label(text = "IK And Limits")
-        self.layout.prop(rig, "MhaLimitsOn")
         row = self.layout.row()
         row.prop(rig, "MhaArmIk_L")
         row.prop(rig, "MhaArmIk_R")
