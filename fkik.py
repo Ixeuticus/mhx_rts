@@ -726,6 +726,27 @@ class MHX_OT_MhxToggleRightToeTarsal(MhxOperator, ToggleToeTarsal):
         self.toggle(context, "MhaToeTarsal_R", "R")
 
 #----------------------------------------------------------
+#   Toggle limits
+#----------------------------------------------------------
+
+class MHX_OT_MhxToggleLimits(MhxOperator):
+    bl_idname = "mhx.toggle_limits"
+    bl_label = "Limits"
+    bl_description = "Toggle limit constraints (location, rotation, scale)"
+
+    def run(self, context):
+        rig = context.object
+        rig.MhaLimitsOn = (not rig.MhaLimitsOn)
+        for pb in rig.pose.bones:
+            for cns in pb.constraints:
+                if cns.type[0:6] == 'LIMIT_' and cns.name != "Hint":
+                    cns.mute = (not rig.MhaLimitsOn)
+        for suffix in ["L", "R"]:
+            for bname in ["upper_arm", "forearm", "thigh", "shin"]:
+                pb = rig.pose.bones["%s.ik.%s" % (bname, suffix)]
+                pb.use_ik_limit_x = pb.use_ik_limit_y = pb.use_ik_limit_z = rig.MhaLimitsOn
+
+#----------------------------------------------------------
 #   Initialize
 #----------------------------------------------------------
 
@@ -745,6 +766,7 @@ classes = [
     MHX_OT_MhxUpdateElbowKneeParents,
     MHX_OT_MhxToggleLeftToeTarsal,
     MHX_OT_MhxToggleRightToeTarsal,
+    MHX_OT_MhxToggleLimits,
 ]
 
 def register():

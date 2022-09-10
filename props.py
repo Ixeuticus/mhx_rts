@@ -224,38 +224,34 @@ def getConstraint(pb, ctype):
 #-------------------------------------------------------------
 
 if bpy.app.version < (2,90,0):
-    def BoolPropOVR(default, name="", description="", update=None):
+    def BoolPropOVR(default, name="", description=""):
         return bpy.props.BoolProperty(
             name=name,
             default=default,
-            description=description,
-            update=update)
+            description=description)
 
-    def FloatPropOVR(default, name="", description="", precision=2, min=0, max=1, update=None):
+    def FloatPropOVR(default, name="", description="", precision=2, min=0, max=1):
         return bpy.props.FloatProperty(
             name=name,
             default=default,
             description=description,
             precision=precision,
-            min=min, max=max,
-            update=update)
+            min=min, max=max)
 else:
-    def BoolPropOVR(default, name="", description="", update=None):
+    def BoolPropOVR(default, name="", description=""):
         return bpy.props.BoolProperty(
             name=name,
             default=default,
             description=description,
-            update=update,
             override={'LIBRARY_OVERRIDABLE'})
 
-    def FloatPropOVR(default, name="", description="", precision=2, min=0, max=1, update=None):
+    def FloatPropOVR(default, name="", description="", precision=2, min=0, max=1):
         return bpy.props.FloatProperty(
             name=name,
             default=default,
             description=description,
             precision=precision,
             min=min, max=max,
-            update=update,
             override={'LIBRARY_OVERRIDABLE'})
 
 
@@ -332,9 +328,7 @@ def initMhxProps():
         description = "finger links controlled by IK")
 
     # IK
-    bpy.types.Object.MhaLimitsOn = BoolPropOVR(True,
-        name = "Rotation Limits",
-        description = "Toggle FK and IK rotation limits.\nIt may be necessary to turn these off for correct FK->IK snapping.")
+    bpy.types.Object.MhaLimitsOn = BoolPropOVR(True, name = "Rotation Limits")
 
     bpy.types.Object.MhaLegIkToAnkle_L = FloatPropOVR(0.0, precision=3,
         name = "Ankle IK Left",
