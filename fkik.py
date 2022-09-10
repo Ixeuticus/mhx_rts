@@ -726,51 +726,6 @@ class MHX_OT_MhxToggleRightToeTarsal(MhxOperator, ToggleToeTarsal):
         self.toggle(context, "MhaToeTarsal_R", "R")
 
 #----------------------------------------------------------
-#   Toggle forearms follow
-#----------------------------------------------------------
-
-def setForearmFollow(rig, context, prop, suffix):
-    follows = getattr(rig, prop)
-    pb = rig.pose.bones["forearm.%s" % suffix]
-    for cns in pb.constraints:
-        if (cns.type == 'COPY_ROTATION' and
-            cns.subtarget in ["hand.fk.%s" % suffix, "hand0.ik.%s" % suffix]):
-            cns.mute = not follows
-    hand = rig.pose.bones["hand.fk.%s" % suffix]
-    for cns in hand.constraints:
-        if cns.type == 'LIMIT_ROTATION':
-            cns.use_limit_y = not follows
-            break
-    forearm = rig.pose.bones["forearm.fk.%s" % suffix]
-    if follows:
-        hand.rotation_euler[1] = forearm.rotation_euler[1]
-        forearm.rotation_euler[1] = 0
-    else:
-        forearm.rotation_euler[1] = hand.rotation_euler[1]
-        hand.rotation_euler[1] = 0
-
-
-def setForearmFollowLeft(rig, context):
-    setForearmFollow(rig, context, "MhaForearmFollow_L", "L")
-
-def setForearmFollowRight(rig, context):
-    setForearmFollow(rig, context, "MhaForearmFollow_R", "R")
-
-#----------------------------------------------------------
-#   Toggle limits
-#----------------------------------------------------------
-
-def toggleFkIkLimits(rig, context):
-    for pb in rig.pose.bones:
-        for cns in pb.constraints:
-            if cns.type == 'LIMIT_ROTATION' and cns.name != "Hint":
-                cns.mute = (not rig.MhaLimitsOn)
-    for suffix in ["L", "R"]:
-        for bname in ["upper_arm", "forearm", "thigh", "shin"]:
-            pb = rig.pose.bones["%s.ik.%s" % (bname, suffix)]
-            pb.use_ik_limit_x = pb.use_ik_limit_y = pb.use_ik_limit_z = rig.MhaLimitsOn
-
-#----------------------------------------------------------
 #   Initialize
 #----------------------------------------------------------
 
