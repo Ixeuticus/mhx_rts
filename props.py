@@ -310,14 +310,12 @@ def initMhxProps():
     bpy.types.Object.MhaForearmFollow_L = BoolPropOVR(True,
         name = "Forearm Follows Hand Left",
         description = "Control left forearm twist with left hand twist.\nIt may be necessary to turn this off for correct FK->IK snapping.",
-        update = fkik.setForearmFollowLeft
-        )
+        update = fkik.setForearmFollowLeft)
 
     bpy.types.Object.MhaForearmFollow_R = BoolPropOVR(True,
         name = "Forearm Follows Hand Right",
         description = "Control right forearm twist with right hand twist.\nIt may be necessary to turn this off for correct FK->IK snapping.",
-        update = fkik.setForearmFollowRight
-        )
+        update = fkik.setForearmFollowRight)
 
     bpy.types.Object.MhaFingerControl_L = BoolPropOVR(False,
         name = "Long Fingers Left",
@@ -336,6 +334,11 @@ def initMhxProps():
         description = "finger links controlled by IK")
 
     # IK
+    bpy.types.Object.MhaLimitsOn = BoolPropOVR(True,
+        name = "Rotation Limits",
+        description = "Toggle FK and IK rotation limits.\nIt may be necessary to turn these off for correct FK->IK snapping.",
+        update = fkik.toggleFkIkLimits)
+
     bpy.types.Object.MhaLegIkToAnkle_L = FloatPropOVR(0.0, precision=3,
         name = "Ankle IK Left",
         min = 0, max = 1,

@@ -757,6 +757,20 @@ def setForearmFollowRight(rig, context):
     setForearmFollow(rig, context, "MhaForearmFollow_R", "R")
 
 #----------------------------------------------------------
+#   Toggle limits
+#----------------------------------------------------------
+
+def toggleFkIkLimits(rig, context):
+    for pb in rig.pose.bones:
+        for cns in pb.constraints:
+            if cns.type == 'LIMIT_ROTATION' and cns.name != "Hint":
+                cns.mute = (not rig.MhaLimitsOn)
+    for suffix in ["L", "R"]:
+        for bname in ["upper_arm", "forearm", "thigh", "shin"]:
+            pb = rig.pose.bones["%s.ik.%s" % (bname, suffix)]
+            pb.use_ik_limit_x = pb.use_ik_limit_y = pb.use_ik_limit_z = rig.MhaLimitsOn
+
+#----------------------------------------------------------
 #   Initialize
 #----------------------------------------------------------
 
