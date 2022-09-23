@@ -228,17 +228,10 @@ class MHX_OT_RemoveUnusedFcurves(MhxOperator):
 #
 #-------------------------------------------------------------
 
-class MHX_OT_EnforceConstraints(HidePropsOperator, Basic, FrameRange):
-    bl_idname = "mhx.enforce_constraints"
-    bl_label = "Enforce Constraints"
-    bl_description = "Keep all rotations within constraints"
-    bl_options = {'UNDO'}
-
-    def draw(self, context):
-        FrameRange.draw(self, context)
-
+class LimitEnforcer:
     def run(self, context):
         checkVisible(self.rig)
+        self.initSettings(context)
         frames = self.getActiveFrames()
         for pb in self.rig.pose.bones:
             cns = self.getLimitRotConstraint(pb)
@@ -259,10 +252,9 @@ class MHX_OT_EnforceConstraints(HidePropsOperator, Basic, FrameRange):
         for bname, locks in extraLocks.items():
             pb = self.getBone(bname)
             for idx in locks:
-                print("Extra", pb, idx)
                 self.constrainFCurve(pb, idx, 0.0, 0.0, frames)
         self.setInterpolation()
-        print("F-curves constrained")
+        print("Limits enforced")
 
 
     def getLimitRotConstraint(self, pb):
@@ -271,6 +263,42 @@ class MHX_OT_EnforceConstraints(HidePropsOperator, Basic, FrameRange):
                 return cns
         return None
 
+
+class MHX_OT_EnforceLimits(LimitEnforcer, HideOperator, Basic):
+    bl_idname = "mhx.enforce_limits"
+    bl_label = "Enforce Limits"
+    bl_description = "Keep all rotations within limits"
+    bl_options = {'UNDO'}
+
+    def getActiveFrames(self):
+        return None
+
+    def initSettings(self, context):
+        scn = context.scene
+        self.auto = scn.tool_settings.use_keyframe_insert_auto
+        self.frame = scn.frame_current
+
+    def constrainFCurve(self, pb, idx, ymin, ymax, frames):
+        value = pb.rotation_euler[idx]
+        pb.rotation_euler[idx] = min(ymax, max(ymin, value))
+        if self.auto or isKeyed(self.rig, pb, "rotation_euler"):
+            pb.keyframe_insert("rotation_euler", frame=self.frame, group=pb.name)
+
+    def setInterpolation(self):
+        pass
+
+
+class MHX_OT_EnforceAllLimits(LimitEnforcer, HidePropsOperator, Basic, FrameRange):
+    bl_idname = "mhx.enforce_all_limits"
+    bl_label = "Enforce All Limits"
+    bl_description = "Keep all rotations within limits for active action"
+    bl_options = {'UNDO'}
+
+    def draw(self, context):
+        FrameRange.draw(self, context)
+
+    def initSettings(self, context):
+        pass
 
     def constrainFCurve(self, pb, idx, ymin, ymax, frames):
         fcu = self.findBoneFCurve(pb, idx)
@@ -1013,7 +1041,8 @@ classes = [
     MHX_OT_RemoveFrameZero,
     MHX_OT_RemoveUnusedFcurves,
     MHX_OT_SetConstraints,
-    MHX_OT_EnforceConstraints,
+    MHX_OT_EnforceLimits,
+    MHX_OT_EnforceAllLimits,
     MHX_OT_LimbsBendPositive,
     MHX_OT_ShiftBoneFCurves,
     MHX_OT_TransferToFk,
