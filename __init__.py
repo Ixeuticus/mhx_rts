@@ -29,12 +29,12 @@
 bl_info = {
     "name": "MHX Runtime System",
     "author": "Thomas Larsson",
-    "version": (1,6,1),
-    "blender": (2,93,0),
+    "version": (1,7,0),
+    "blender": (3,3,0),
     "location": "UI > MHX",
     "description": "MHX runtime system",
     "warning": "",
-    "wiki_url": "https://diffeomorphic.blogspot.com/p/mhx-runtime-system.html",
+    "doc_url": "https://bitbucket.org/Diffeomorphic/mhx_rts/wiki/Home",
     "tracker_url": "https://bitbucket.org/Diffeomorphic/import_daz/issues?status=new&status=open",
     "category": "Rigging"}
 
