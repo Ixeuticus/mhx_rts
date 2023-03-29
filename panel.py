@@ -259,6 +259,9 @@ class MHX_PT_FKIK(MhxPanel):
         row.operator("mhx.snap_ik_left_leg")
         row.operator("mhx.snap_ik_right_leg")
 
+        self.layout.separator()
+        self.layout.operator("mhx.snap_fk_all")
+        self.layout.operator("mhx.snap_ik_all")
         self.layout.prop(scn, "MhxUseSwitch")
         self.layout.prop(scn, "MhxUseSnapRotation")
 

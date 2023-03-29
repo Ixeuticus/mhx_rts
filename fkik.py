@@ -154,6 +154,15 @@ class Snapper(Updater, Basic):
         self.updatePose()
 
 
+    def setupAll(self, context, value):
+        checkVisible(context.object)
+        setMode('POSE')
+        self.oldvalues = [self.rig.MhaArmIk_L, self.rig.MhaArmIk_R, self.rig.MhaLegIk_L, self.rig.MhaLegIk_R]
+        self.rig.MhaArmIk_L = self.rig.MhaArmIk_R = self.rig.MhaLegIk_L = self.rig.MhaLegIk_R = value
+        self.auto = context.scene.tool_settings.use_keyframe_insert_auto
+        self.updatePose()
+
+
     def restore(self, context, value, fk, ik):
         scn = context.scene
         if scn.MhxUseSwitch:
@@ -164,6 +173,25 @@ class Snapper(Updater, Basic):
                 self.rig.keyframe_insert(self.prop, frame=scn.frame_current)
         else:
             setattr(self.rig, self.prop, self.oldvalue)
+        self.updatePose()
+
+
+    def restoreAll(self, context, value, fk, ik):
+        scn = context.scene
+        if scn.MhxUseSwitch:
+            self.rig.MhaArmIk_L = self.rig.MhaArmIk_R = self.rig.MhaLegIk_L = self.rig.MhaLegIk_R = value
+            self.state[L_LARMFK] = self.state[L_RARMFK] = self.state[L_LLEGFK] = self.state[L_RLEGFK] = fk
+            self.state[L_LARMIK] = self.state[L_RARMIK] = self.state[L_LLEGIK] = self.state[L_RLEGIK] = ik
+            if self.auto:
+                self.rig.keyframe_insert("MhaArmIk_L", frame=scn.frame_current)
+                self.rig.keyframe_insert("MhaArmIk_R", frame=scn.frame_current)
+                self.rig.keyframe_insert("MhaLegIk_L", frame=scn.frame_current)
+                self.rig.keyframe_insert("MhaLegIk_R", frame=scn.frame_current)
+        else:
+            self.rig.MhaArmIk_L = self.oldvalues[0]
+            self.rig.MhaArmIk_R = self.oldvalues[1]
+            self.rig.MhaLegIk_L = self.oldvalues[2]
+            self.rig.MhaLegIk_R = self.oldvalues[3]
         self.updatePose()
 
 
@@ -396,6 +424,9 @@ class FootSnapper(Snapper):
         self.layout.prop(self, "useRotation")
 
 
+#-------------------------------------------------------------
+#  Snap FK
+#-------------------------------------------------------------
 
 class MHX_OT_MhxSnapFkLeftArm(Snapper, HideOperator):
     bl_idname = "mhx.snap_fk_left_arm"
@@ -476,6 +507,42 @@ class MHX_OT_MhxSnapFkRightLeg(Snapper, HideOperator):
         self.snapFkLeg(snapFk, snapIk, self.rig.MhaLegIkToAnkle_R)
         self.restore(context, 0.0, True, False)
 
+
+class MHX_OT_MhxSnapFkAll(Snapper, HideOperator):
+    bl_idname = "mhx.snap_fk_all"
+    bl_label = "Snap FK All"
+    bl_description = "Snap all FK limbs to the pose of IK limbs"
+    bl_options = {'UNDO'}
+
+    def run(self, context):
+        print("Snap FK All")
+        self.setupAll(context, 1.0)
+
+        self.prop = "MhaArmIk_L"
+        snapFk,_cnsFk = self.getSnapBones("ArmFK", "L")
+        snapIk,_cnsIk = self.getSnapBones("ArmIK", "L")
+        self.snapFkArm(snapFk, snapIk)
+
+        self.prop = "MhaArmIk_R"
+        snapFk,_cnsFk = self.getSnapBones("ArmFK", "R")
+        snapIk,_cnsIk = self.getSnapBones("ArmIK", "R")
+        self.snapFkArm(snapFk, snapIk)
+
+        self.prop = "MhaLegIk_L"
+        snapFk,_cnsFk = self.getSnapBones("LegFK", "L")
+        snapIk,_cnsIk = self.getSnapBones("LegIK", "L")
+        self.snapFkLeg(snapFk, snapIk, self.rig.MhaLegIkToAnkle_L)
+
+        self.prop = "MhaLegIk_R"
+        snapFk,_cnsFk = self.getSnapBones("LegFK", "R")
+        snapIk,_cnsIk = self.getSnapBones("LegIK", "R")
+        self.snapFkLeg(snapFk, snapIk, self.rig.MhaLegIkToAnkle_R)
+
+        self.restoreAll(context, 0.0, True, False)
+
+#-------------------------------------------------------------
+#  Snap IK
+#-------------------------------------------------------------
 
 class MHX_OT_MhxSnapIkLeftArm(Snapper, HideOperator):
     bl_idname = "mhx.snap_ik_left_arm"
@@ -559,6 +626,40 @@ class MHX_OT_MhxSnapIkRightLeg(FootSnapper, HideOperator):
         snapIk,_cnsIk = self.getSnapBones("LegIK", "R")
         self.snapIkLeg(snapFk, snapIk, self.rig.MhaLegIkToAnkle_R)
         self.restore(context, 1.0, False, True)
+
+
+class MHX_OT_MhxSnapIkAll(FootSnapper, HideOperator):
+    bl_idname = "mhx.snap_ik_all"
+    bl_label = "Snap IK All"
+    bl_description = "Snap all IK limbs to the pose of FK limbs"
+    bl_options = {'UNDO'}
+
+    def run(self, context):
+        print("Snap IK All")
+        self.setupAll(context, 0.0)
+
+        self.prop = "MhaArmIk_L"
+        snapFk,_cnsFk = self.getSnapBones("ArmFK", "L")
+        snapIk,_cnsIk = self.getSnapBones("ArmIK", "L")
+        self.snapIkArm(snapFk, snapIk)
+
+        self.prop = "MhaArmIk_R"
+        snapFk,_cnsFk = self.getSnapBones("ArmFK", "R")
+        snapIk,_cnsIk = self.getSnapBones("ArmIK", "R")
+        self.snapIkArm(snapFk, snapIk)
+
+        self.useRotation = context.scene.MhxUseSnapRotation
+        self.prop = "MhaLegIk_L"
+        snapFk,_cnsFk = self.getSnapBones("LegFK", "L")
+        snapIk,_cnsIk = self.getSnapBones("LegIK", "L")
+        self.snapIkLeg(snapFk, snapIk, self.rig.MhaLegIkToAnkle_L)
+
+        self.prop = "MhaLegIk_R"
+        snapFk,_cnsFk = self.getSnapBones("LegFK", "R")
+        snapIk,_cnsIk = self.getSnapBones("LegIK", "R")
+        self.snapIkLeg(snapFk, snapIk, self.rig.MhaLegIkToAnkle_R)
+
+        self.restoreAll(context, 1.0, False, True)
 
 #----------------------------------------------------------
 #   Toggle FK - IK
@@ -755,10 +856,12 @@ classes = [
     MHX_OT_MhxSnapFkRightArm,
     MHX_OT_MhxSnapFkLeftLeg,
     MHX_OT_MhxSnapFkRightLeg,
+    MHX_OT_MhxSnapFkAll,
     MHX_OT_MhxSnapIkLeftArm,
     MHX_OT_MhxSnapIkRightArm,
     MHX_OT_MhxSnapIkLeftLeg,
     MHX_OT_MhxSnapIkRightLeg,
+    MHX_OT_MhxSnapIkAll,
     MHX_OT_MhxToggleFkIkLeftArm,
     MHX_OT_MhxToggleFkIkRightArm,
     MHX_OT_MhxToggleFkIkLeftLeg,
