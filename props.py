@@ -156,8 +156,8 @@ class MHX_OT_UpdateMhx(MhxOperator):
                     value = {0: 'FOOT', 1: 'HIP', 2: 'MASTER'}[value]
                 elif key.startswith("MhaFingerIk") and isinstance(value, float):
                     value = bool(value)
-                elif key.startswith("MhaTongueIk") and isinstance(value, float):
-                    value = bool(value)
+                #elif key.startswith("MhaTongueIk") and isinstance(value, float):
+                #    value = bool(value)
                 print("FIX", key, value)
                 setattr(rig, key, value)
                 del rig.data[key]
@@ -277,8 +277,9 @@ def initMhxProps():
         min = 0, max = 1,
         description = "eye tracking the right gaze bone amount")
 
-    bpy.types.Object.MhaTongueIk = BoolPropOVR(False,
+    bpy.types.Object.MhaTongueIk = FloatPropOVR(0.0,
         name = "Tongue IK",
+        min = 0, max = 1,
         description = "Tongue bones controlled by IK")
 
     # Hinge
