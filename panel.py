@@ -30,6 +30,9 @@ from .utils import *
 from .layers import *
 from .buildnumber import BUILD
 
+F_TONGUE = 1
+F_FINGER = 2
+
 #------------------------------------------------------------------------
 #    Mhx Layers Panel
 #------------------------------------------------------------------------
@@ -107,7 +110,8 @@ class MHX_PT_Properties(MhxPanel):
         row = self.layout.row()
         row.prop(rig, "MhaGaze_L")
         row.prop(rig, "MhaGaze_R")
-        self.layout.prop(rig, "MhaTongueIk")
+        if rig.data.MhaFeatures & F_TONGUE:
+            self.layout.prop(rig, "MhaTongueIk")
 
         self.layout.separator()
         self.layout.label(text = "Hinge")
@@ -126,9 +130,10 @@ class MHX_PT_Properties(MhxPanel):
         row = self.layout.row()
         row.prop(rig, "MhaFingerControl_L")
         row.prop(rig, "MhaFingerControl_R")
-        row = self.layout.row()
-        row.prop(rig, "MhaFingerIk_L")
-        row.prop(rig, "MhaFingerIk_R")
+        if rig.data.MhaFeatures & F_FINGER:
+            row = self.layout.row()
+            row.prop(rig, "MhaFingerIk_L")
+            row.prop(rig, "MhaFingerIk_R")
 
         self.layout.separator()
         self.layout.label(text = "IK And Limits")

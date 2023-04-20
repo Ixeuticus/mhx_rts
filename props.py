@@ -29,7 +29,7 @@
 import bpy
 from .utils import *
 from .layers import *
-from bpy.props import EnumProperty, BoolProperty
+from bpy.props import *
 
 # ---------------------------------------------------------------------
 #   Convert MHX actions from legacy to modern
@@ -259,6 +259,7 @@ def initMhxProps():
     from . import fkik
 
     bpy.types.Object.MhxRig = BoolProperty(default = False)
+    bpy.types.Armature.MhaFeatures = IntProperty(default = 0)
     bpy.types.Object.MhxChildOfConstraints = BoolProperty(default = False)
 
     # Gaze
