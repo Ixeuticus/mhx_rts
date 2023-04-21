@@ -154,7 +154,7 @@ class MHX_OT_UpdateMhx(MhxOperator):
                     value = {0: 'HAND', 1: 'SHOULDER', 2: 'MASTER'}[value]
                 elif key.startswith("MhaKneeParent") and isinstance(value, int):
                     value = {0: 'FOOT', 1: 'HIP', 2: 'MASTER'}[value]
-                elif key.startswith("MhaFingerIk") and isinstance(value, float):
+                #elif key.startswith("MhaFingerIk") and isinstance(value, float):
                     value = bool(value)
                 #elif key.startswith("MhaTongueIk") and isinstance(value, float):
                 #    value = bool(value)
@@ -321,12 +321,14 @@ def initMhxProps():
         name = "Long Fingers Right",
         description = "finger links controlled by the long finger bones")
 
-    bpy.types.Object.MhaFingerIk_L = BoolPropOVR(False,
+    bpy.types.Object.MhaFingerIk_L = FloatPropOVR(0.0,
         name = "Finger IK Left",
+        min = 0, max = 1,
         description = "finger links controlled by IK")
 
-    bpy.types.Object.MhaFingerIk_R = BoolPropOVR(False,
+    bpy.types.Object.MhaFingerIk_R = FloatPropOVR(0.0,
         name = "Finger IK Right",
+        min = 0, max = 1,
         description = "finger links controlled by IK")
 
     # IK
