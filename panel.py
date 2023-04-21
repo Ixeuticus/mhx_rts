@@ -270,6 +270,23 @@ class MHX_PT_FKIK(MhxPanel):
         self.layout.prop(scn, "MhxUseSwitch")
         self.layout.prop(scn, "MhxUseSnapRotation")
 
+        if rig.data.MhaFeatures & F_FINGER:
+            self.layout.separator()
+            self.layout.label(text = "Finger IK")
+            self.layout.label(text = "IK Influence")
+            row = self.layout.row()
+            row.prop(rig, "MhaFingerIk_L", text="")
+            row.prop(rig, "MhaFingerIk_R", text="")
+            self.layout.label(text = "Snap Finger Bones")
+            row = self.layout.row()
+            row.label(text = "FK Fingers")
+            row.operator("mhx.snap_fk_left_fingers")
+            row.operator("mhx.snap_fk_right_fingers")
+            row = self.layout.row()
+            row.label(text = "IK Fingers")
+            row.operator("mhx.snap_ik_left_fingers")
+            row.operator("mhx.snap_ik_right_fingers")
+
 
     def toggleFKIK(self, row, value, op):
         if value > 0.5:
