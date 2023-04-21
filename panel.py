@@ -287,6 +287,20 @@ class MHX_PT_FKIK(MhxPanel):
             row.operator("mhx.snap_ik_left_fingers")
             row.operator("mhx.snap_ik_right_fingers")
 
+        if rig.data.MhaFeatures & F_TONGUE:
+            self.layout.separator()
+            self.layout.label(text = "Tongue IK")
+            self.layout.label(text = "IK Influence")
+            self.layout.prop(rig, "MhaTongueIk", text="")
+            self.layout.label(text = "Snap Tongue Bones")
+            self.layout.operator("mhx.snap_fk_tongue")
+            self.layout.operator("mhx.snap_ik_tongue")
+
+        self.layout.separator()
+        self.layout.label(text = "Spine, Neck, Head")
+        self.layout.operator("mhx.snap_spine")
+        self.layout.operator("mhx.snap_neck_head")
+
 
     def toggleFKIK(self, row, value, op):
         if value > 0.5:
