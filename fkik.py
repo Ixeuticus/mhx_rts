@@ -362,7 +362,10 @@ class Snapper(Updater, Basic):
 
 
     def getTongue(self):
-        bnames = [bone.name for bone in self.rig.data.bones if bone.name.startswith("tongue")]
+        bnames = []
+        for bone in self.rig.data.bones:
+            if bone.name.startswith("tongue") and not bone.name.endswith("(drv)"):
+                bnames.append(bone.name)
         bnames.sort()
         fkbones = [[self.rig.pose.bones[bname]] for bname in bnames]
         ikbones = [[self.rig.pose.bones["ik_%s" % bname]] for bname in bnames]
@@ -737,7 +740,7 @@ class MHX_OT_MhxSnapFkLeftFingers(Snapper, HideOperator):
 
     suffix = "L"
     prop = "MhaFingerIk_L"
-    fk = L_LHAND
+    fk = L_LFINGER
     ik = L_LHAND
 
     def run(self, context):
@@ -756,7 +759,7 @@ class MHX_OT_MhxSnapFkRightFingers(Snapper, HideOperator):
 
     suffix = "R"
     prop = "MhaFingerIk_R"
-    fk = L_RHAND
+    fk = L_RFINGER
     ik = L_RHAND
 
     def run(self, context):
@@ -776,7 +779,7 @@ class MHX_OT_MhxSnapIkLeftFingers(Snapper, HideOperator):
     suffix = "L"
     prop = "MhaFingerIk_L"
     ik = L_LHAND
-    fk = L_LFINGER
+    fk = L_LHAND
 
     def run(self, context):
         print("Snap Left IK Fingers")
@@ -795,7 +798,7 @@ class MHX_OT_MhxSnapIkRightFingers(Snapper, HideOperator):
     suffix = "R"
     prop = "MhaFingerIk_R"
     ik = L_RHAND
-    fk = L_RFINGER
+    fk = L_RHAND
 
     def run(self, context):
         print("Snap Right IK Fingers")
@@ -835,7 +838,7 @@ class MHX_OT_MhxSnapIkTongue(Snapper, HideOperator):
 
     suffix = ""
     prop = "MhaTongueIk"
-    fk = L_FACE
+    fk = L_HEAD
     ik = L_HEAD
 
     def run(self, context):
