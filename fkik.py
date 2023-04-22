@@ -351,13 +351,13 @@ class Snapper(Updater, Basic):
             iklinks = []
             for fing in ["thumb", "f_index", "f_middle", "f_ring", "f_pinky"]:
                 fkname = "%s.0%d.%s" % (fing, n, suffix)
-                fklinks.append(self.rig.pose.bones[fkname])
+                fklinks.append(self.rig.pose.bones.get(fkname))
                 ikname = "ik_%s" % fkname
-                iklinks.append(self.rig.pose.bones[ikname])
+                iklinks.append(self.rig.pose.bones.get(ikname))
             fkbones.append(fklinks)
             ikbones.append(iklinks)
         longnames = ["%s.%s" % (fing, suffix) for fing in ["thumb", "index", "middle", "ring", "pinky"]]
-        longbones = [self.rig.pose.bones[bname] for bname in longnames]
+        longbones = [self.rig.pose.bones.get(bname) for bname in longnames]
         return longbones, fkbones, ikbones
 
 
@@ -732,7 +732,7 @@ class MHX_OT_MhxSnapIkAll(FootSnapper, HideOperator):
 class MHX_OT_MhxSnapFkLeftFingers(Snapper, HideOperator):
     bl_idname = "mhx.snap_fk_left_fingers"
     bl_label = "Snap Left"
-    bl_description = "Snap the left FK fingers to the pose of the left FK fingers"
+    bl_description = "Snap the left FK finger bones"
     bl_options = {'UNDO'}
 
     suffix = "L"
@@ -751,7 +751,7 @@ class MHX_OT_MhxSnapFkLeftFingers(Snapper, HideOperator):
 class MHX_OT_MhxSnapFkRightFingers(Snapper, HideOperator):
     bl_idname = "mhx.snap_fk_right_fingers"
     bl_label = "Snap Right"
-    bl_description = "Snap the right FK fingers to the pose of the right FK fingers"
+    bl_description = "Snap the right FK finger bones"
     bl_options = {'UNDO'}
 
     suffix = "R"
@@ -770,13 +770,13 @@ class MHX_OT_MhxSnapFkRightFingers(Snapper, HideOperator):
 class MHX_OT_MhxSnapIkLeftFingers(Snapper, HideOperator):
     bl_idname = "mhx.snap_ik_left_fingers"
     bl_label = "Snap Left"
-    bl_description = "Snap the left IK fingers to the pose of the left FK fingers"
+    bl_description = "Snap the left IK finger joints to the pose of the left FK finger bones"
     bl_options = {'UNDO'}
 
     suffix = "L"
     prop = "MhaFingerIk_L"
     ik = L_LHAND
-    fk = L_LHAND
+    fk = L_LFINGER
 
     def run(self, context):
         print("Snap Left IK Fingers")
@@ -789,13 +789,13 @@ class MHX_OT_MhxSnapIkLeftFingers(Snapper, HideOperator):
 class MHX_OT_MhxSnapIkRightFingers(Snapper, HideOperator):
     bl_idname = "mhx.snap_ik_right_fingers"
     bl_label = "Snap Right"
-    bl_description = "Snap the right IK fingers to the pose of the right FK fingers"
+    bl_description = "Snap the right IK finger joints to the pose of the right FK finger bones"
     bl_options = {'UNDO'}
 
     suffix = "R"
     prop = "MhaFingerIk_R"
     ik = L_RHAND
-    fk = L_RHAND
+    fk = L_RFINGER
 
     def run(self, context):
         print("Snap Right IK Fingers")
@@ -810,8 +810,8 @@ class MHX_OT_MhxSnapIkRightFingers(Snapper, HideOperator):
 
 class MHX_OT_MhxSnapFkTongue(Snapper, HideOperator):
     bl_idname = "mhx.snap_fk_tongue"
-    bl_label = "Snap FK Tongue"
-    bl_description = "Snap the FK tongue to the pose of the IK tongue"
+    bl_label = "Snap Tongue Bones"
+    bl_description = "Snap the FK tongue bones to the pose of the IK tongue joints"
     bl_options = {'UNDO'}
 
     suffix = ""
@@ -820,7 +820,7 @@ class MHX_OT_MhxSnapFkTongue(Snapper, HideOperator):
     ik = L_HEAD
 
     def run(self, context):
-        print("Snap FK Tongue")
+        print("Snap Tongue Bones")
         self.setup(context, 1.0, change=False)
         fkbones,ikbones = self.getTongue()
         self.snapFkFingers([], fkbones)
@@ -829,8 +829,8 @@ class MHX_OT_MhxSnapFkTongue(Snapper, HideOperator):
 
 class MHX_OT_MhxSnapIkTongue(Snapper, HideOperator):
     bl_idname = "mhx.snap_ik_tongue"
-    bl_label = "Snap IK Tongue"
-    bl_description = "Snap the IK tongue to the pose of the FK tongue"
+    bl_label = "Snap Tongue Joints"
+    bl_description = "Snap the IK tongue joints to the pose of the FK tongue bones"
     bl_options = {'UNDO'}
 
     suffix = ""
@@ -911,8 +911,9 @@ class ToggleFkIk(Updater):
             fk = False
             ik = True
         setattr(rig, prop, value)
-        rig.data.layers[fklayer] = fk
-        rig.data.layers[iklayer] = ik
+        if fklayer != iklayer:
+            rig.data.layers[fklayer] = fk
+            rig.data.layers[iklayer] = ik
         if (scn.tool_settings.use_keyframe_insert_auto or
             isKeyed(rig, None, prop)):
             rig.keyframe_insert(prop, frame=scn.frame_current)
@@ -957,6 +958,26 @@ class MHX_OT_MhxToggleFkIkRightLeg(MhxOperator, ToggleFkIk):
 
     def run(self, context):
         self.toggle(context, "MhaLegIk_R", L_RLEGFK, L_RLEGIK)
+
+
+class MHX_OT_MhxToggleFkIkLeftFingers(MhxOperator, ToggleFkIk):
+    bl_idname = "mhx.toggle_fkik_left_fingers"
+    bl_label = ""
+    bl_description = "Toggle left fingers FK - IK"
+    bl_options = {'UNDO'}
+
+    def run(self, context):
+        self.toggle(context, "MhaFingerIk_L", L_LHAND, L_LHAND)
+
+
+class MHX_OT_MhxToggleFkIkRightFingers(MhxOperator, ToggleFkIk):
+    bl_idname = "mhx.toggle_fkik_right_fingers"
+    bl_label = ""
+    bl_description = "Toggle right fingers FK - IK"
+    bl_options = {'UNDO'}
+
+    def run(self, context):
+        self.toggle(context, "MhaFingerIk_R", L_RHAND, L_RHAND)
 
 #----------------------------------------------------------
 #   Toggle elbow and knee parents
@@ -1105,6 +1126,8 @@ classes = [
     MHX_OT_MhxToggleFkIkRightArm,
     MHX_OT_MhxToggleFkIkLeftLeg,
     MHX_OT_MhxToggleFkIkRightLeg,
+    MHX_OT_MhxToggleFkIkLeftFingers,
+    MHX_OT_MhxToggleFkIkRightFingers,
     MHX_OT_MhxUpdateElbowKneeParents,
     MHX_OT_MhxToggleLeftToeTarsal,
     MHX_OT_MhxToggleRightToeTarsal,

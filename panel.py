@@ -205,8 +205,8 @@ class MHX_PT_Properties(MhxPanel):
 #    Mhx FK/IK switch panel
 #------------------------------------------------------------------------
 
-class MHX_PT_FKIK(MhxPanel):
-    bl_label = "FK/IK Switch"
+class MHX_PT_FKIKArmsLegs(MhxPanel):
+    bl_label = "FK/IK Arms Legs"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_category = "MHX"
@@ -219,19 +219,18 @@ class MHX_PT_FKIK(MhxPanel):
             return
 
         row = self.layout.row()
-        row.label(text = "")
+        row.label(text = "FK/IK switch")
         row.label(text = "Left")
         row.label(text = "Right")
 
-        self.layout.label(text = "FK/IK switch")
         row = self.layout.row()
         row.label(text = "Arm")
-        self.toggleFKIK(row, rig.MhaArmIk_L, "mhx.toggle_fkik_left_arm")
-        self.toggleFKIK(row, rig.MhaArmIk_R, "mhx.toggle_fkik_right_arm")
+        toggleFKIK(row, rig.MhaArmIk_L, "mhx.toggle_fkik_left_arm")
+        toggleFKIK(row, rig.MhaArmIk_R, "mhx.toggle_fkik_right_arm")
         row = self.layout.row()
         row.label(text = "Leg")
-        self.toggleFKIK(row, rig.MhaLegIk_L, "mhx.toggle_fkik_left_leg")
-        self.toggleFKIK(row, rig.MhaLegIk_R, "mhx.toggle_fkik_right_leg")
+        toggleFKIK(row, rig.MhaLegIk_L, "mhx.toggle_fkik_left_leg")
+        toggleFKIK(row, rig.MhaLegIk_R, "mhx.toggle_fkik_right_leg")
 
         self.layout.label(text = "IK Influence")
         row = self.layout.row()
@@ -270,43 +269,63 @@ class MHX_PT_FKIK(MhxPanel):
         self.layout.prop(scn, "MhxUseSwitch")
         self.layout.prop(scn, "MhxUseSnapRotation")
 
+
+def toggleFKIK(row, value, op):
+    if value > 0.5:
+        row.operator(op, text="IK")
+    else:
+        row.operator(op, text="FK")
+
+
+class MHX_PT_FKIKFingers(MhxPanel):
+    bl_label = "FK/IK Fingers Tongue"
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "UI"
+    bl_category = "MHX"
+    bl_options = {'DEFAULT_CLOSED'}
+
+    def draw(self, context):
+        rig = context.object
+        scn = context.scene
+        if self.needsMhxUpdate(rig):
+            return
+
         if rig.data.MhaFeatures & F_FINGER:
-            self.layout.separator()
-            self.layout.label(text = "Finger IK")
-            self.layout.label(text = "IK Influence")
             row = self.layout.row()
+            row.label(text = "Fingers")
+            row.label(text = "Left")
+            row.label(text = "Right")
+
+            row = self.layout.row()
+            row.label(text = "FK/IK switch")
+            toggleFKIK(row, rig.MhaFingerIk_L, "mhx.toggle_fkik_left_fingers")
+            toggleFKIK(row, rig.MhaFingerIk_R, "mhx.toggle_fkik_right_fingers")
+
+            row = self.layout.row()
+            row.label(text = "IK Influence")
             row.prop(rig, "MhaFingerIk_L", text="")
             row.prop(rig, "MhaFingerIk_R", text="")
-            self.layout.label(text = "Snap Finger Bones")
+
+        self.layout.label(text = "Snap Fingers")
+        row = self.layout.row()
+        row.label(text = "Bones")
+        row.operator("mhx.snap_fk_left_fingers")
+        row.operator("mhx.snap_fk_right_fingers")
+        if rig.data.MhaFeatures & F_FINGER:
             row = self.layout.row()
-            row.label(text = "FK Fingers")
-            row.operator("mhx.snap_fk_left_fingers")
-            row.operator("mhx.snap_fk_right_fingers")
-            row = self.layout.row()
-            row.label(text = "IK Fingers")
+            row.label(text = "Joints")
             row.operator("mhx.snap_ik_left_fingers")
             row.operator("mhx.snap_ik_right_fingers")
+            self.layout.separator()
 
         if rig.data.MhaFeatures & F_TONGUE:
-            self.layout.separator()
-            self.layout.label(text = "Tongue IK")
-            self.layout.label(text = "IK Influence")
-            self.layout.prop(rig, "MhaTongueIk", text="")
-            self.layout.label(text = "Snap Tongue Bones")
+            self.layout.prop(rig, "MhaTongueIk")
             self.layout.operator("mhx.snap_fk_tongue")
             self.layout.operator("mhx.snap_ik_tongue")
+            self.layout.separator()
 
-        self.layout.separator()
-        self.layout.label(text = "Spine, Neck, Head")
         self.layout.operator("mhx.snap_spine")
         self.layout.operator("mhx.snap_neck_head")
-
-
-    def toggleFKIK(self, row, value, op):
-        if value > 0.5:
-            row.operator(op, text="IK")
-        else:
-            row.operator(op, text="FK")
 
 #------------------------------------------------------------------------
 #    Mhx Animation Panel
@@ -346,7 +365,8 @@ classes = [
     MHX_PT_Main,
     MHX_PT_Layers,
     MHX_PT_Properties,
-    MHX_PT_FKIK,
+    MHX_PT_FKIKArmsLegs,
+    MHX_PT_FKIKFingers,
     MHX_PT_Animation,
 ]
 
