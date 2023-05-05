@@ -38,7 +38,7 @@ F_FINGER = 2
 #------------------------------------------------------------------------
 
 class MHX_PT_Main(bpy.types.Panel):
-    bl_label = "MHX (version 1.7.0.%04d)" % BUILD
+    bl_label = "MHX (version 1.7.1.%04d)" % BUILD
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_category = "MHX"
@@ -46,6 +46,12 @@ class MHX_PT_Main(bpy.types.Panel):
 
     def draw(self, context):
         rig = context.object
+        if rig is None:
+            pass
+        elif rig.DazRig == "mhx":
+            self.layout.operator("mhx.bake_mhx")
+        elif rig.DazRig == "baked-mhx":
+            self.layout.operator("mhx.unbake_mhx")
 
 #------------------------------------------------------------------------
 #    Mhx Layers Panel
