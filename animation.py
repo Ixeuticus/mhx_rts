@@ -37,7 +37,7 @@ from .fkik import Snapper, Basic, Updater, FootSnapper
 #   Frame range
 #-------------------------------------------------------------
 
-class FrameRange(Updater):
+class FrameRange(HidePropsOperator, Updater):
     startFrame : IntProperty(
         name = "Start Frame",
         description = "Starting frame for the animation",
@@ -78,6 +78,22 @@ class FrameRange(Updater):
             frames = frames[1:]
         frames.reverse()
         return frames
+
+
+    def invoke(self, context, event):
+        rig = context.object
+        adata = rig.animation_data
+        if adata and adata.action:
+            tmin = tmax = 1
+            for fcu in adata.action.fcurves:
+                times = [kp.co[0] for kp in fcu.keyframe_points]
+                tmin = min(int(min(times)), tmin)
+                tmax = max(int(max(times)), tmax)
+            self.startFrame = tmin
+            self.endFrame = tmax
+        else:
+            self.startFrame = self.endFrame = context.scene.frame_current
+        return HidePropsOperator.invoke(self, context, event)
 
 
     def setInterpolation(self):
@@ -146,7 +162,7 @@ class Bender(Basic):
                     kp.co[1] = y0
 
 
-class MHX_OT_LimbsBendPositive(HidePropsOperator, Bender, FrameRange):
+class MHX_OT_LimbsBendPositive(FrameRange, Bender):
     bl_idname = "mhx.limbs_bend_positive"
     bl_label = "Bend Limbs Positive"
     bl_description = "Ensure that limbs' X rotation is positive."
@@ -288,7 +304,7 @@ class MHX_OT_EnforceLimits(LimitEnforcer, HideOperator, Basic):
         pass
 
 
-class MHX_OT_EnforceAllLimits(LimitEnforcer, HidePropsOperator, Basic, FrameRange):
+class MHX_OT_EnforceAllLimits(LimitEnforcer, FrameRange, Basic):
     bl_idname = "mhx.enforce_all_limits"
     bl_label = "Enforce All Limits"
     bl_description = "Keep all rotations within limits for active action"
@@ -363,7 +379,7 @@ class Transferer:
 #   Transfer to FK
 #------------------------------------------------------------------------
 
-class MHX_OT_TransferToFk(Transferer, FootSnapper, HidePropsOperator, Bender, FrameRange):
+class MHX_OT_TransferToFk(Transferer, FootSnapper, FrameRange, Bender):
     bl_idname = "mhx.transfer_to_fk"
     bl_label = "Transfer IK => FK"
     bl_description = "Transfer IK animation to FK bones"
@@ -416,7 +432,7 @@ class MHX_OT_TransferToFk(Transferer, FootSnapper, HidePropsOperator, Bender, Fr
 #   Transfer to IK
 #------------------------------------------------------------------------
 
-class MHX_OT_TransferToIk(Transferer, FootSnapper, HidePropsOperator, FrameRange):
+class MHX_OT_TransferToIk(Transferer, FootSnapper, FrameRange):
     bl_idname = "mhx.transfer_to_ik"
     bl_label = "Transfer FK => IK"
     bl_description = "Transfer FK animation to IK bones"
@@ -689,7 +705,7 @@ def getTailOffset(pb, ez, origin):
 #   Floor
 #-------------------------------------------------------------
 
-class MHX_OT_ShiftBoneFCurves(HidePropsOperator, FrameRange, Basic):
+class MHX_OT_ShiftBoneFCurves(FrameRange, Basic):
     bl_idname = "mhx.shift_animation"
     bl_label = "Shift Animation"
     bl_description = "Shift the animation globally for selected boens"
@@ -794,7 +810,7 @@ class MHX_OT_ShiftBoneFCurves(HidePropsOperator, FrameRange, Basic):
 #   Floor FK foot
 #-------------------------------------------------------------
 
-class MHX_OT_FloorFkFoot(HidePropsOperator, Footer, FrameRange):
+class MHX_OT_FloorFkFoot(Footer, FrameRange):
     bl_idname = "mhx.floor_fk_feet"
     bl_label = "Keep FK Feet Above Floor"
     bl_description = "Keep FK Feet Above Zero Plane"
@@ -866,7 +882,7 @@ class MHX_OT_FloorFkFoot(HidePropsOperator, Footer, FrameRange):
 #   Floor IK foot
 #-------------------------------------------------------------
 
-class MHX_OT_FloorIkFoot(HidePropsOperator, Footer, FrameRange):
+class MHX_OT_FloorIkFoot(Footer, FrameRange):
     bl_idname = "mhx.floor_ik_feet"
     bl_label = "Keep IK Feet Above Floor"
     bl_description = "Keep IK Feet Above Zero Plane"
