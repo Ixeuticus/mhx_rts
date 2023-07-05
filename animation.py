@@ -669,11 +669,11 @@ class MHX_OT_SetConstraints(MhxOperator):
         checkVisible(rig)
         for suffix in ["L", "R"]:
             for bname,lock in locks.items():
-                pb = rig.pose.bones["%s.%s" % (bname % suffix)]
+                pb = rig.pose.bones["%s.%s" % (bname, suffix)]
                 for idx in lock:
                     pb.lock_rotation[idx] = True
             for bname,limit in limits.items():
-                pb = rig.pose.bones["%s.%s" % (bname % suffix)]
+                pb = rig.pose.bones["%s.%s" % (bname, suffix)]
                 for cns in pb.constraints:
                     if cns.type == 'LIMIT_ROTATION':
                         for attr,val in limit.items():
