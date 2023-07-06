@@ -174,7 +174,7 @@ class MHX_OT_LimbsBendPositive(FrameRange, Bender):
 
     def run(self, context):
         checkVisible(context.object)
-        frames = self.getActiveFrames()
+        frames = range(self.startFrame, self.endFrame+1)
         self.limbsBendPositive(frames)
         print("Limbs bent positive")
 
@@ -414,11 +414,9 @@ class MHX_OT_TransferToFk(Transferer, FootSnapper, FrameRange, Bender):
         self.setMhxIk(1.0)
         lLegIkToAnkle = self.rig.MhaLegIkToAnkle_L
         rLegIkToAnkle = self.rig.MhaLegIkToAnkle_R
-        frames = self.getActiveFrames()
-        tmin = int(min(frames))
-        tmax = int(max(frames)) + 1
-        nFrames = tmax-tmin
-        for n,frame in enumerate(range(tmin, tmax)):
+        frames = range(self.startFrame, self.endFrame+1)
+        nFrames = len(frames)
+        for n,frame in enumerate(frames):
             showProgress(n, frame, nFrames)
             self.setFrame(scn, frame)
             if self.useArms:
@@ -469,11 +467,9 @@ class MHX_OT_TransferToIk(Transferer, FootSnapper, FrameRange):
         self.setMhxIk(0.0)
         lLegIkToAnkle = self.rig.MhaLegIkToAnkle_L
         rLegIkToAnkle = self.rig.MhaLegIkToAnkle_R
-        frames = self.getActiveFrames()
-        tmin = int(min(frames))
-        tmax = int(max(frames)) + 1
-        nFrames = tmax-tmin
-        for n,frame in enumerate(range(tmin, tmax)):
+        frames = range(self.startFrame, self.endFrame+1)
+        nFrames = len(frames)
+        for n,frame in enumerate(frames):
             showProgress(n, frame, nFrames)
             self.setFrame(scn, frame)
             if self.useArms:
@@ -825,7 +821,7 @@ class MHX_OT_FloorFkFoot(Footer, FrameRange):
         scn = context.scene
         self.rig, self.plane = self.getRigAndPlane(context)
         checkVisible(self.rig)
-        frames = self.getActiveFrames()
+        frames = range(self.startFrame, self.endFrame+1)
         self.floorFkFoot(scn, frames)
         self.setInterpolation()
         displayMessage("FK Feet kept above floor")
