@@ -415,9 +415,10 @@ class MHX_OT_TransferToFk(Transferer, FootSnapper, FrameRange, Bender):
         lLegIkToAnkle = self.rig.MhaLegIkToAnkle_L
         rLegIkToAnkle = self.rig.MhaLegIkToAnkle_R
         frames = self.getActiveFrames()
-        nFrames = len(frames)
-
-        for n,frame in enumerate(frames):
+        tmin = int(min(frames))
+        tmax = int(max(frames)) + 1
+        nFrames = tmax-tmin
+        for n,frame in enumerate(range(tmin, tmax)):
             showProgress(n, frame, nFrames)
             self.setFrame(scn, frame)
             if self.useArms:
@@ -469,8 +470,10 @@ class MHX_OT_TransferToIk(Transferer, FootSnapper, FrameRange):
         lLegIkToAnkle = self.rig.MhaLegIkToAnkle_L
         rLegIkToAnkle = self.rig.MhaLegIkToAnkle_R
         frames = self.getActiveFrames()
-        nFrames = len(frames)
-        for n,frame in enumerate(frames):
+        tmin = int(min(frames))
+        tmax = int(max(frames)) + 1
+        nFrames = tmax-tmin
+        for n,frame in enumerate(range(tmin, tmax)):
             showProgress(n, frame, nFrames)
             self.setFrame(scn, frame)
             if self.useArms:
