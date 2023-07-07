@@ -394,7 +394,6 @@ class MHX_OT_TransferToFk(Transferer, FootSnapper, FrameRange, Bender):
         startProgress("Transfer to FK")
         time1 = time.perf_counter()
         self.transferMhxToFk(context)
-        self.setInterpolation()
         time2 = time.perf_counter()
         displayMessage("Transfer to FK completed\nin %1f seconds" % (time2-time1))
 
@@ -447,7 +446,6 @@ class MHX_OT_TransferToIk(Transferer, FootSnapper, FrameRange):
         startProgress("Transfer to IK")
         time1 = time.perf_counter()
         self.transferMhxToIk(context)
-        self.setInterpolation()
         time2 = time.perf_counter()
         displayMessage("Transfer to IK completed\nin %1f seconds" % (time2-time1))
 
@@ -591,7 +589,6 @@ class Footer(Basic):
         self.layout.prop(self, "useRight")
         self.layout.prop(self, "useHips")
         self.layout.prop(self, "useMarkers")
-        FrameRange.draw(self, context)
 
 
     def getMarkers(self, suffix):
@@ -815,6 +812,10 @@ class MHX_OT_FloorFkFoot(Footer, FrameRange):
     bl_description = "Keep FK Feet Above Zero Plane"
     bl_options = {'UNDO'}
 
+    def draw(self, context):
+        Footer.draw(self, context)
+        FrameRange.draw(self, context)
+
     def run(self, context):
         startProgress("Keep feet above floor")
         self.auto = True
@@ -823,7 +824,6 @@ class MHX_OT_FloorFkFoot(Footer, FrameRange):
         checkVisible(self.rig)
         frames = range(self.startFrame, self.endFrame+1)
         self.floorFkFoot(scn, frames)
-        self.setInterpolation()
         displayMessage("FK Feet kept above floor")
 
 
@@ -902,6 +902,7 @@ class MHX_OT_FloorIkFoot(Footer, FrameRange):
         Footer.draw(self, context)
         self.layout.prop(self, "useGlue")
         self.layout.prop(self, "easeInOut")
+        FrameRange.draw(self, context)
 
 
     def run(self, context):
@@ -910,9 +911,8 @@ class MHX_OT_FloorIkFoot(Footer, FrameRange):
         scn = context.scene
         self.rig, self.plane = self.getRigAndPlane(context)
         checkVisible(self.rig)
-        frames = self.getActiveFrames()
+        frames = range(self.startFrame, self.endFrame+1)
         self.floorIkFoot(scn, frames)
-        self.setInterpolation()
         displayMessage("FK Feet kept above floor")
 
 
