@@ -331,7 +331,8 @@ class Snapper(Updater, Basic):
                   "inv.fk" in bname or
                   "inv.ik" in bname or
                   "foot.2" in bname or
-                  "ik.twist" in bname):
+                  "ik.twist" in bname or
+                  "pt.ik" in bname):
                 pbones.append(None)
                 continue
             else:
@@ -391,11 +392,12 @@ class Snapper(Updater, Basic):
 
         handFk.location = (0,0,0)
         self.matchPoseLocRot(handIk, handFk)
-        if elbowPoleA:
-            self.setPoleTarget(handIk, elbowPt, elbowPoleA, forearmFk)
-        else:
-            self.matchPoleTarget(elbowPt, uparmFk, forearmFk)
-        self.setChildofInverse(elbowPt)
+        if elbowPt:
+            if elbowPoleA:
+                self.setPoleTarget(handIk, elbowPt, elbowPoleA, forearmFk)
+            else:
+                self.matchPoleTarget(elbowPt, uparmFk, forearmFk)
+            self.setChildofInverse(elbowPt)
         if uparmIkTwist:
             self.matchPoseTransform(uparmIkTwist, uparmFk)
             self.matchPoseTransform(forearmIkTwist, forearmFk)
@@ -442,11 +444,12 @@ class Snapper(Updater, Basic):
                 self.matchPoseReverse(toeRev, toeFk)
                 self.matchPoseReverse(footRev, footFk)
             self.matchPoseTranslation(ankleIk, footFk)
-        if kneePoleA:
-            self.setPoleTarget(footInvIk, kneePt, kneePoleA, shinFk)
-        else:
-            self.matchPoleTarget(kneePt, thighFk, shinFk)
-        self.setChildofInverse(kneePt)
+        if kneePt:
+            if kneePoleA:
+                self.setPoleTarget(footInvIk, kneePt, kneePoleA, shinFk)
+            else:
+                self.matchPoleTarget(kneePt, thighFk, shinFk)
+            self.setChildofInverse(kneePt)
         if shinIkTwist:
             self.matchPoseTransform(thighIkTwist, thighFk)
             self.matchPoseTransform(shinIkTwist, shinFk)
