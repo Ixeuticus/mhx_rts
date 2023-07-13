@@ -64,9 +64,6 @@ class MhxPanel(bpy.types.Panel):
         if rig is None:
             return True
         if not rig.data.MhaFeatures & F_IDPROPS:
-            self.layout.operator("mhx.update_mhx_drivers")
-            return True
-        if "MhaGaze_L" in rig.data.keys():
             self.layout.operator("mhx.update_mhx")
             return True
         return False
@@ -199,7 +196,6 @@ class MHX_PT_Properties(MhxPanel):
         self.updateFunction(row, rig, "MhaToeTarsal_R", "mhx.toggle_right_toe_tarsal")
 
         self.layout.separator()
-        self.layout.operator("mhx.update_mhx_drivers")
         self.layout.operator("mhx.update_mhx")
 
 

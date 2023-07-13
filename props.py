@@ -119,26 +119,6 @@ class MHX_OT_DisableAllLayers(MhxOperator):
             rig.data.layers = layers
 
 #-------------------------------------------------------------
-#   Update drivers
-#-------------------------------------------------------------
-
-class MHX_OT_UpdateMhxDrivers(MhxOperator):
-    bl_idname = "mhx.update_mhx_drivers"
-    bl_label = "Update MHX Drivers"
-    bl_description = "Make MHX drivers independent of the MHX API.\nThis is necessary for the MHX rig to work\nalso if the MHX add-on is disabled"
-    bl_options = {'UNDO'}
-
-    def run(self, context):
-        rig = context.object
-        if rig.animation_data:
-            for fcu in rig.animation_data.drivers:
-                for var in fcu.driver.variables:
-                    for trg in var.targets:
-                        if trg.data_path.startswith("Mha"):
-                            trg.data_path = '["%s"]' % trg.data_path
-        rig.data.MhaFeatures |= F_IDPROPS
-
- #-------------------------------------------------------------
 #   Update MHX
 #-------------------------------------------------------------
 
@@ -148,75 +128,93 @@ class MHX_OT_UpdateMhx(MhxOperator):
     bl_options = {'UNDO'}
 
     def run(self, context):
-        def fixFcurve(rig, fcu, channels):
-                channel = fcu.data_path.rsplit(".")[-1]
-                if channel in channels:
-                    for var in list(fcu.driver.variables):
-                        trg = var.targets[0]
-                        if trg.id == rig.data and trg.data_path[0:5] == '["Mha':
-                            prop = baseRef(trg.data_path)
-                            if hasattr(rig, prop):
-                                print("DRV", fcu.data_path, prop)
-                                nvar = fcu.driver.variables.new()
-                                varname = var.name
-                                ntrg = nvar.targets[0]
-                                ntrg.id_type == 'OBJECT'
-                                ntrg.id = rig
-                                ntrg.data_path = prop
-                                fcu.driver.variables.remove(var)
-                                nvar.name = varname
+        def fixFcurve(fcu, rig):
+            for var in list(fcu.driver.variables):
+                trg = var.targets[0]
+                prop = baseRef(trg.data_path)
+                if trg.id == rig.data and prop[0:3] == "Mha":
+                    value = getValue(prop, rig.data[prop])
+                    if hasattr(rig, prop):
+                        setattr(rig, prop, value)
+                        nvar = fcu.driver.variables.new()
+                        varname = var.name
+                        ntrg = nvar.targets[0]
+                        ntrg.id_type == 'OBJECT'
+                        ntrg.id = rig
+                        ntrg.data_path = propRef(prop)
+                        fcu.driver.variables.remove(var)
+                        nvar.name = varname
+                    else:
+                        rig[prop] = value
+                elif trg.id == rig and prop[0:3] == "Mha":
+                    value = getValue(prop, getattr(rig, prop))
+                    if hasattr(rig, prop):
+                        for trg in var.targets:
+                            trg.data_path = propRef(prop)
+                    else:
+                        rig[prop] = value
+
+        def getValue(key, value):
+            if key.startswith("MhaElbowParent") and isinstance(value, int):
+                return {0: 'HAND', 1: 'SHOULDER', 2: 'MASTER'}[value]
+            elif key.startswith("MhaKneeParent") and isinstance(value, int):
+                return {0: 'FOOT', 1: 'HIP', 2: 'MASTER'}[value]
+            elif isinstance(value, bool):
+                return bool(value)
+            else:
+                return value
 
         rig = context.object
         for key in list(rig.data.keys()):
-            if key[0:3] == "Mha" and hasattr(rig, key):
-                value = rig.data[key]
-                if key.startswith("MhaElbowParent") and isinstance(value, int):
-                    value = {0: 'HAND', 1: 'SHOULDER', 2: 'MASTER'}[value]
-                elif key.startswith("MhaKneeParent") and isinstance(value, int):
-                    value = {0: 'FOOT', 1: 'HIP', 2: 'MASTER'}[value]
-                #elif key.startswith("MhaFingerIk") and isinstance(value, float):
-                    value = bool(value)
-                #elif key.startswith("MhaTongueIk") and isinstance(value, float):
-                #    value = bool(value)
-                print("FIX", key, value)
-                setattr(rig, key, value)
-                del rig.data[key]
-
+            if key[0:3] == "Mha":
+                value = getValue(key, rig.data[key])
+                if hasattr(rig, key):
+                    setattr(rig, key, value)
+                else:
+                    rig[key] = value
         if rig.animation_data:
             for fcu in rig.animation_data.drivers:
-                fixFcurve(rig, fcu, ["influence", "mute"])
+                fixFcurve(fcu, rig)
         if rig.data.animation_data:
             for fcu in rig.data.animation_data.drivers:
-                fixFcurve(rig, fcu, ["hide"])
+                fixFcurve(fcu, rig)
+        for key in list(rig.data.keys()):
+            if key[0:3] == "Mha" and hasattr(rig, key):
+                del rig.data[key]
 
-        from import_daz.mhx import addDriver, copyLocation
-        for suffix in ["L", "R"]:
-            for bname,prop in [
-                ("shin", "MhaLegStretch"),
-                ("shin.bend", "MhaLegStretch"),
-                ("shin.twist", "MhaLegStretch"),
-                ("forearm.bend", "MhaArmStretch"),
-                ("forearm.twist", "MhaArmStretch"),
-            ]:
-                pb = rig.pose.bones.get("%s.%s" % (bname, suffix))
-                prop2 = "%s_%s" % (prop, suffix)
-                if pb:
-                    cns = getConstraint(pb, 'STRETCH_TO')
+        def addStretchDrivers():
+            from import_daz.mhx import addDriver, copyLocation
+            for suffix in ["L", "R"]:
+                useStretch = False
+                for bname,prop in [
+                    ("shin", "MhaLegStretch"),
+                    ("shin.bend", "MhaLegStretch"),
+                    ("shin.twist", "MhaLegStretch"),
+                    ("forearm.bend", "MhaArmStretch"),
+                    ("forearm.twist", "MhaArmStretch"),
+                ]:
+                    pb = rig.pose.bones.get("%s.%s" % (bname, suffix))
+                    prop2 = "%s_%s" % (prop, suffix)
+                    if pb:
+                        cns = getConstraint(pb, 'STRETCH_TO')
+                        if cns:
+                            cns.driver_remove("influence")
+                            addDriver(cns, "influence", rig, propRef(prop2), "x")
+                for bname,prop in [
+                    ("foot.fk", "MhaLegStretch"),
+                    ("hand.fk", "MhaArmStretch"),
+                ]:
+                    pb = rig.pose.bones["%s.%s" % (bname, suffix)]
+                    prop2 = "%s_%s" % (prop, suffix)
+                    cns = getConstraint(pb, 'COPY_LOCATION')
                     if cns:
                         cns.driver_remove("influence")
-                        addDriver(cns, "influence", rig, prop2, "x")
-            for bname,prop in [
-                ("foot", "MhaLegStretch"),
-                ("foot.fk", "MhaLegStretch"),
-                ("hand", "MhaArmStretch"),
-                ("hand.fk", "MhaArmStretch"),
-            ]:
-                pb = rig.pose.bones["%s.%s" % (bname, suffix)]
-                prop2 = "%s_%s" % (prop, suffix)
-                if not getConstraint(pb, 'COPY_LOCATION'):
-                    cns = copyLocation(pb, pb.parent, rig, prop2, "1-x")
-                    cns.head_tail = 1.0
+                        addDriver(cns, "influence", rig, propRef(prop2), "1-x")
+                    else:
+                        cns = copyLocation(pb, pb.parent, rig, prop2, "1-x")
+                        cns.head_tail = 1.0
 
+        addStretchDrivers()
         setMode('EDIT')
         for suffix in ["L", "R"]:
             for bname,conn in [
@@ -227,10 +225,11 @@ class MHX_OT_UpdateMhx(MhxOperator):
                 ("toe", True),
                 ("toe.fk", True),
             ]:
-                eb = rig.data.edit_bones["%s.%s" % (bname, suffix)]
-                eb.use_connect = conn
+                eb = rig.data.edit_bones.get("%s.%s" % (bname, suffix))
+                if eb:
+                    eb.use_connect = conn
         setMode('POSE')
-
+        rig.data.MhaFeatures |= F_IDPROPS
 
 
 def getConstraint(pb, ctype):
@@ -548,7 +547,6 @@ classes = [
     MHX_OT_DisableAllLayers,
     MHX_OT_ConvertMhxActions,
     MHX_OT_UpdateMhx,
-    MHX_OT_UpdateMhxDrivers,
     MHX_OT_BakeMhx,
     MHX_OT_UnbakeMhx,
 ]
