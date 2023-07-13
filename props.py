@@ -119,6 +119,26 @@ class MHX_OT_DisableAllLayers(MhxOperator):
             rig.data.layers = layers
 
 #-------------------------------------------------------------
+#   Update drivers
+#-------------------------------------------------------------
+
+class MHX_OT_UpdateMhxDrivers(MhxOperator):
+    bl_idname = "mhx.update_mhx_drivers"
+    bl_label = "Update MHX Drivers"
+    bl_description = "Make MHX drivers independent of the MHX API.\nThis is necessary for the MHX rig to work\nalso if the MHX add-on is disabled"
+    bl_options = {'UNDO'}
+
+    def run(self, context):
+        rig = context.object
+        if rig.animation_data:
+            for fcu in rig.animation_data.drivers:
+                for var in fcu.driver.variables:
+                    for trg in var.targets:
+                        if trg.data_path.startswith("Mha"):
+                            trg.data_path = '["%s"]' % trg.data_path
+        rig.data.MhaFeatures |= F_IDPROPS
+
+ #-------------------------------------------------------------
 #   Update MHX
 #-------------------------------------------------------------
 
@@ -528,6 +548,7 @@ classes = [
     MHX_OT_DisableAllLayers,
     MHX_OT_ConvertMhxActions,
     MHX_OT_UpdateMhx,
+    MHX_OT_UpdateMhxDrivers,
     MHX_OT_BakeMhx,
     MHX_OT_UnbakeMhx,
 ]

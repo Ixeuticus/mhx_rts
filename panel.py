@@ -30,9 +30,6 @@ from .utils import *
 from .layers import *
 from .buildnumber import BUILD
 
-F_TONGUE = 1
-F_FINGER = 2
-
 #------------------------------------------------------------------------
 #    Mhx Layers Panel
 #------------------------------------------------------------------------
@@ -65,6 +62,9 @@ class MhxPanel(bpy.types.Panel):
 
     def needsMhxUpdate(self, rig):
         if rig is None:
+            return True
+        if not rig.data.MhaFeatures & F_IDPROPS:
+            self.layout.operator("mhx.update_mhx_drivers")
             return True
         if "MhaGaze_L" in rig.data.keys():
             self.layout.operator("mhx.update_mhx")
@@ -199,6 +199,7 @@ class MHX_PT_Properties(MhxPanel):
         self.updateFunction(row, rig, "MhaToeTarsal_R", "mhx.toggle_right_toe_tarsal")
 
         self.layout.separator()
+        self.layout.operator("mhx.update_mhx_drivers")
         self.layout.operator("mhx.update_mhx")
 
 
