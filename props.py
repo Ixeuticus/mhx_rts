@@ -340,8 +340,6 @@ else:
 
 
 def initMhxProps():
-    from . import fkik
-
     bpy.types.Object.MhxRig = BoolProperty(default = False)
     bpy.types.Armature.MhaFeatures = IntProperty(default = 0)
     bpy.types.Object.MhxChildOfConstraints = BoolProperty(default = False)
@@ -355,12 +353,12 @@ def initMhxProps():
     bpy.types.Object.MhaGaze_L = FloatPropOVR(0.0,
         name = "Gaze Left",
         min = 0, max = 1,
-        description = "eye tracking the left gaze bone amount")
+        description = "Eye tracking the left gaze bone amount")
 
     bpy.types.Object.MhaGaze_R = FloatPropOVR(0.0,
         name = "Gaze Right",
         min = 0, max = 1,
-        description = "eye tracking the right gaze bone amount")
+        description = "Eye tracking the right gaze bone amount")
 
     bpy.types.Object.MhaTongueIk = FloatPropOVR(0.0,
         name = "Tongue IK",
@@ -371,22 +369,22 @@ def initMhxProps():
     bpy.types.Object.MhaArmHinge_L = FloatPropOVR(0.0,
         name = "Arm Hinge Left",
         min = 0, max = 1,
-        description = "arm decoupled from the spine rotation")
+        description = "Arm decoupled from the spine rotation")
 
     bpy.types.Object.MhaArmHinge_R = FloatPropOVR(0.0,
         name = "Arm Hinge Right",
         min = 0, max = 1,
-        description = "arm decoupled from the spine rotation")
+        description = "Arm decoupled from the spine rotation")
 
     bpy.types.Object.MhaLegHinge_L = FloatPropOVR(0.0,
         name = "Leg Hinge Left",
         min = 0, max = 1,
-        description = "leg decoupled from the pelvis rotation")
+        description = "Leg decoupled from the pelvis rotation")
 
     bpy.types.Object.MhaLegHinge_R = FloatPropOVR(0.0,
         name = "Leg Hinge Right",
         min = 0, max = 1,
-        description = "leg decoupled from the pelvis rotation")
+        description = "Leg decoupled from the pelvis rotation")
 
     # Hands and fingers
     bpy.types.Object.MhaForearmFollow_L = BoolPropOVR(True,
@@ -399,21 +397,21 @@ def initMhxProps():
 
     bpy.types.Object.MhaFingerControl_L = BoolPropOVR(False,
         name = "Long Fingers Left",
-        description = "finger links controlled by the long finger bones")
+        description = "Finger links controlled by the long finger bones")
 
     bpy.types.Object.MhaFingerControl_R = BoolPropOVR(False,
         name = "Long Fingers Right",
-        description = "finger links controlled by the long finger bones")
+        description = "Finger links controlled by the long finger bones")
 
     bpy.types.Object.MhaFingerIk_L = FloatPropOVR(0.0,
         name = "Finger IK Left",
         min = 0, max = 1,
-        description = "finger links controlled by IK")
+        description = "Finger links controlled by IK")
 
     bpy.types.Object.MhaFingerIk_R = FloatPropOVR(0.0,
         name = "Finger IK Right",
         min = 0, max = 1,
-        description = "finger links controlled by IK")
+        description = "Finger links controlled by IK")
 
     # IK
     bpy.types.Object.MhaLimitsOn = BoolPropOVR(True, name = "Rotation Limits")
