@@ -42,144 +42,183 @@
 import bpy
 from bpy.props import *
 
-def initProps():
+#-------------------------------------------------------------
+#   Overridable properties
+#-------------------------------------------------------------
+
+if bpy.app.version < (2,90,0):
+    def BoolPropOVR(default, name="", description=""):
+        return bpy.props.BoolProperty(
+            name=name,
+            default=default,
+            description=description)
+
+    def FloatPropOVR(default, name="", description="", precision=2, min=0, max=1):
+        return bpy.props.FloatProperty(
+            name=name,
+            default=default,
+            description=description,
+            precision=precision,
+            min=min, max=max)
+else:
+    def BoolPropOVR(default, name="", description=""):
+        return bpy.props.BoolProperty(
+            name=name,
+            default=default,
+            description=description,
+            override={'LIBRARY_OVERRIDABLE'})
+
+    def FloatPropOVR(default, name="", description="", precision=2, min=0, max=1):
+        return bpy.props.FloatProperty(
+            name=name,
+            default=default,
+            description=description,
+            precision=precision,
+            min=min, max=max,
+            override={'LIBRARY_OVERRIDABLE'})
+
+#----------------------------------------------------------
+#   Init MHX Properties
+#----------------------------------------------------------
+
+def initMhxProps():
     bpy.types.Object.MhxRig = BoolProperty(default = False)
     bpy.types.Armature.MhaFeatures = IntProperty(default = 0)
     bpy.types.Object.MhxChildOfConstraints = BoolProperty(default = False)
 
     # Gaze
-    bpy.types.Object.MhaGazeFollowsHead = FloatProperty(default = 0.0,
+    bpy.types.Object.MhaGazeFollowsHead = FloatPropOVR(0.0,
         name = "Gaze Follows Head",
         min = 0, max = 1,
         description = "The gaze bone follows the head bone rotations")
 
-    bpy.types.Object.MhaGaze_L = FloatProperty(default = 0.0,
+    bpy.types.Object.MhaGaze_L = FloatPropOVR(0.0,
         name = "Gaze Left",
         min = 0, max = 1,
         description = "Eye tracking the left gaze bone amount")
 
-    bpy.types.Object.MhaGaze_R = FloatProperty(default = 0.0,
+    bpy.types.Object.MhaGaze_R = FloatPropOVR(0.0,
         name = "Gaze Right",
         min = 0, max = 1,
         description = "Eye tracking the right gaze bone amount")
 
-    bpy.types.Object.MhaTongueIk = FloatProperty(default = 0.0,
+    bpy.types.Object.MhaTongueIk = FloatPropOVR(0.0,
         name = "Tongue IK",
         min = 0, max = 1,
         description = "Tongue bones controlled by IK")
 
     # Hinge
-    bpy.types.Object.MhaArmHinge_L = FloatProperty(default = 0.0,
+    bpy.types.Object.MhaArmHinge_L = FloatPropOVR(0.0,
         name = "Arm Hinge Left",
         min = 0, max = 1,
         description = "Arm decoupled from the spine rotation")
 
-    bpy.types.Object.MhaArmHinge_R = FloatProperty(default = 0.0,
+    bpy.types.Object.MhaArmHinge_R = FloatPropOVR(0.0,
         name = "Arm Hinge Right",
         min = 0, max = 1,
         description = "Arm decoupled from the spine rotation")
 
-    bpy.types.Object.MhaLegHinge_L = FloatProperty(default = 0.0,
+    bpy.types.Object.MhaLegHinge_L = FloatPropOVR(0.0,
         name = "Leg Hinge Left",
         min = 0, max = 1,
         description = "Leg decoupled from the pelvis rotation")
 
-    bpy.types.Object.MhaLegHinge_R = FloatProperty(default = 0.0,
+    bpy.types.Object.MhaLegHinge_R = FloatPropOVR(0.0,
         name = "Leg Hinge Right",
         min = 0, max = 1,
         description = "Leg decoupled from the pelvis rotation")
 
     # Hands and fingers
-    bpy.types.Object.MhaForearmFollow_L = BoolProperty(default = True,
+    bpy.types.Object.MhaForearmFollow_L = BoolPropOVR(True,
         name = "Forearm Follows Hand Left",
         description = "Control left forearm twist with left hand twist.\nIt may be necessary to turn this off for correct FK->IK snapping.")
 
-    bpy.types.Object.MhaForearmFollow_R = BoolProperty(default = True,
+    bpy.types.Object.MhaForearmFollow_R = BoolPropOVR(True,
         name = "Forearm Follows Hand Right",
         description = "Control right forearm twist with right hand twist.\nIt may be necessary to turn this off for correct FK->IK snapping.")
 
-    bpy.types.Object.MhaFingerControl_L = BoolProperty(default = False,
+    bpy.types.Object.MhaFingerControl_L = BoolPropOVR(False,
         name = "Long Fingers Left",
         description = "Finger links controlled by the long finger bones")
 
-    bpy.types.Object.MhaFingerControl_R = BoolProperty(default = False,
+    bpy.types.Object.MhaFingerControl_R = BoolPropOVR(False,
         name = "Long Fingers Right",
         description = "Finger links controlled by the long finger bones")
 
-    bpy.types.Object.MhaFingerIk_L = FloatProperty(default = 0.0,
+    bpy.types.Object.MhaFingerIk_L = FloatPropOVR(0.0,
         name = "Finger IK Left",
         min = 0, max = 1,
         description = "Finger links controlled by IK")
 
-    bpy.types.Object.MhaFingerIk_R = FloatProperty(default = 0.0,
+    bpy.types.Object.MhaFingerIk_R = FloatPropOVR(0.0,
         name = "Finger IK Right",
         min = 0, max = 1,
         description = "Finger links controlled by IK")
 
     # IK
-    bpy.types.Object.MhaLimitsOn = BoolProperty(default = True, name = "Rotation Limits")
+    bpy.types.Object.MhaLimitsOn = BoolPropOVR(True, name = "Rotation Limits")
 
-    bpy.types.Object.MhaLegIkToAnkle_L = FloatProperty(default = 0.0, precision=3,
+    bpy.types.Object.MhaLegIkToAnkle_L = FloatPropOVR(0.0, precision=3,
         name = "Ankle IK Left",
         min = 0, max = 1,
         description = "Use ankle bone as IK target for left leg")
 
-    bpy.types.Object.MhaLegIkToAnkle_R = FloatProperty(default = 0.0, precision=3,
+    bpy.types.Object.MhaLegIkToAnkle_R = FloatPropOVR(0.0, precision=3,
         name = "Ankle IK Right",
         min = 0, max = 1,
         description = "Use ankle bone as IK target for right leg")
 
-    bpy.types.Object.MhaArmIk_L = FloatProperty(default = 0.0, precision=3,
+    bpy.types.Object.MhaArmIk_L = FloatPropOVR(0.0, precision=3,
         name = "Arm IK Left",
         min = 0, max = 1,
         description = "Left arm IK influence")
 
-    bpy.types.Object.MhaArmIk_R = FloatProperty(default = 0.0, precision=3,
+    bpy.types.Object.MhaArmIk_R = FloatPropOVR(0.0, precision=3,
         name = "Arm IK Right",
         min = 0, max = 1,
         description = "Right arm IK influence")
 
-    bpy.types.Object.MhaLegIk_L = FloatProperty(default = 0.0, precision=3,
+    bpy.types.Object.MhaLegIk_L = FloatPropOVR(0.0, precision=3,
         name = "Leg IK Left",
         min = 0, max = 1,
         description = "Left leg IK influence")
 
-    bpy.types.Object.MhaLegIk_R = FloatProperty(default = 0.0, precision=3,
+    bpy.types.Object.MhaLegIk_R = FloatPropOVR(0.0, precision=3,
         name = "Leg IK Right",
         min = 0, max = 1,
         description = "Right leg IK influence")
 
     # Elbow and Knee parents
-    bpy.types.Object.MhaElbowHand_L = FloatProperty(default = 0.0,
+    bpy.types.Object.MhaElbowHand_L = FloatPropOVR(0.0,
         name = "Hand>Elbow Left",
         min = 0, max = 1,
         description = "Parent left elbow pole to hand")
-    bpy.types.Object.MhaElbowShoulder_L = FloatProperty(default = 0.0,
+    bpy.types.Object.MhaElbowShoulder_L = FloatPropOVR(0.0,
         name = "Shoulder>Elbow Left",
         min = 0, max = 1,
         description = "Parent left elbow pole to shoulder")
-    bpy.types.Object.MhaElbowHand_R = FloatProperty(default = 0.0,
+    bpy.types.Object.MhaElbowHand_R = FloatPropOVR(0.0,
         name = "Hand>Elbow Right",
         min = 0, max = 1,
         description = "Parent right elbow pole to hand")
-    bpy.types.Object.MhaElbowShoulder_R = FloatProperty(default = 0.0,
+    bpy.types.Object.MhaElbowShoulder_R = FloatPropOVR(0.0,
         name = "Shoulder>Elbow Right",
         min = 0, max = 1,
         description = "Parent right elbow pole to shoulder")
 
-    bpy.types.Object.MhaKneeFoot_L = FloatProperty(default = 0.0,
+    bpy.types.Object.MhaKneeFoot_L = FloatPropOVR(0.0,
         name = "Foot>Knee Left",
         min = 0, max = 1,
         description = "Parent left knee pole to foot")
-    bpy.types.Object.MhaKneeHip_L = FloatProperty(default = 0.0,
+    bpy.types.Object.MhaKneeHip_L = FloatPropOVR(0.0,
         name = "Hip>Knee Left",
         min = 0, max = 1,
         description = "Parent left knee pole to hip")
-    bpy.types.Object.MhaKneeFoot_R = FloatProperty(default = 0.0,
+    bpy.types.Object.MhaKneeFoot_R = FloatPropOVR(0.0,
         name = "Foot>Knee Right",
         min = 0, max = 1,
         description = "Parent right knee pole to foot")
-    bpy.types.Object.MhaKneeHip_R = FloatProperty(default = 0.0,
+    bpy.types.Object.MhaKneeHip_R = FloatPropOVR(0.0,
         name = "Hip>Knee Right",
         min = 0, max = 1,
         description = "Parent right knee pole to hip")
@@ -212,22 +251,22 @@ def initProps():
         description = "Parent of right knee pole target")
 
     # Stretchiness
-    bpy.types.Object.MhaArmStretch_L = FloatProperty(default = 0.0,
+    bpy.types.Object.MhaArmStretch_L = FloatPropOVR(0.0,
         name = "Arm Stretch Left",
         min = 0, max = 1,
         description = "Toggle left arm stretchiness")
 
-    bpy.types.Object.MhaLegStretch_L = FloatProperty(default = 0.0,
+    bpy.types.Object.MhaLegStretch_L = FloatPropOVR(0.0,
         name = "Leg Stretch Left",
         min = 0, max = 1,
         description = "Toggle left leg stretchiness")
 
-    bpy.types.Object.MhaArmStretch_R = FloatProperty(default = 0.0,
+    bpy.types.Object.MhaArmStretch_R = FloatPropOVR(0.0,
         name = "Arm Stretch Right",
         min = 0, max = 1,
         description = "Toggle right arm stretchiness")
 
-    bpy.types.Object.MhaLegStretch_R = FloatProperty(default = 0.0,
+    bpy.types.Object.MhaLegStretch_R = FloatPropOVR(0.0,
         name = "Leg Stretch Right",
         min = 0, max = 1,
         description = "Toggle right leg stretchiness")
@@ -242,4 +281,9 @@ def initProps():
         description = "Toggle right toes tarsal parent",
         default = False)
 
-initProps()
+#----------------------------------------------------------
+#
+#----------------------------------------------------------
+
+if __name__ == "__main__":
+    initMhxProps()
