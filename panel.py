@@ -349,7 +349,7 @@ class MHX_PT_Animation(MhxPanel):
         self.layout.operator("mhx.remove_frame_zero")
         self.layout.operator("mhx.remove_unused_fcurves")
         self.layout.operator("mhx.clear_animation")
-        self.layout.operator("mhx.set_constraints")
+        self.layout.operator("mhx.constrain_feet")
         self.layout.operator("mhx.enforce_all_limits")
         self.layout.separator()
         self.layout.operator("mhx.limbs_bend_positive")

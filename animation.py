@@ -601,24 +601,12 @@ class Footer(Basic):
             return None
 
 
-    def getRigAndPlane(self, context):
-        rig = None
-        plane = None
+    def getPlane(self, context):
+        self.plane = None
         for ob in context.view_layer.objects:
-            if ob.select_get():
-                if ob.type == 'ARMATURE':
-                    if rig:
-                        raise MhxError("Two armatures selected: %s and %s" % (rig.name, ob.name))
-                    else:
-                        rig = ob
-                elif ob.type == 'MESH':
-                    if plane:
-                        raise MhxError("Two meshes selected: %s and %s" % (plane.name, ob.name))
-                    else:
-                        plane = ob
-        if rig is None:
-            raise MhxError("No rig selected")
-        return rig,plane
+            if ob.select_get() and ob.type == 'MESH' and ob.visible_get():
+                self.plane = ob
+                return
 
 
     def getPlaneInfo(self):
@@ -645,9 +633,9 @@ class Footer(Basic):
 #   Offset toes
 #-------------------------------------------------------------
 
-class MHX_OT_SetConstraints(MhxOperator):
-    bl_idname = "mhx.set_constraints"
-    bl_label = "Set Constraints"
+class MHX_OT_ConstrainFeet(MhxOperator):
+    bl_idname = "mhx.constrain_feet"
+    bl_label = "Constrain Feet"
     bl_description = "Add aggressive constraints to the feet"
     bl_options = {'UNDO'}
 
@@ -820,8 +808,10 @@ class MHX_OT_FloorFkFoot(Footer, FrameRange):
         startProgress("Keep feet above floor")
         self.auto = True
         scn = context.scene
-        self.rig, self.plane = self.getRigAndPlane(context)
+        self.rig = context.object
         checkVisible(self.rig)
+        self.getPlane(context)
+        print("KK", self.plane)
         frames = range(self.startFrame, self.endFrame+1)
         self.floorFkFoot(scn, frames)
         displayMessage("FK Feet kept above floor")
@@ -837,6 +827,7 @@ class MHX_OT_FloorFkFoot(Footer, FrameRange):
         else:
             lMarkers = rMarkers = None
         ez,origin,rot = self.getPlaneInfo()
+        print("PP", self.plane, ez, origin, rot)
 
         nFrames = len(frames)
         for n,frame in enumerate(frames):
@@ -909,8 +900,9 @@ class MHX_OT_FloorIkFoot(Footer, FrameRange):
         startProgress("Keep feet above floor")
         self.auto = True
         scn = context.scene
-        self.rig, self.plane = self.getRigAndPlane(context)
+        self.rig = context.object
         checkVisible(self.rig)
+        self.getPlane(context)
         frames = range(self.startFrame, self.endFrame+1)
         self.floorIkFoot(scn, frames)
         displayMessage("FK Feet kept above floor")
@@ -1055,7 +1047,7 @@ class MHX_OT_FloorIkFoot(Footer, FrameRange):
 classes = [
     MHX_OT_RemoveFrameZero,
     MHX_OT_RemoveUnusedFcurves,
-    MHX_OT_SetConstraints,
+    MHX_OT_ConstrainFeet,
     MHX_OT_EnforceLimits,
     MHX_OT_EnforceAllLimits,
     MHX_OT_LimbsBendPositive,
