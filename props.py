@@ -183,7 +183,6 @@ class MHX_OT_UpdateMhx(MhxOperator):
                 del rig.data[key]
 
         def addStretchDrivers():
-            from import_daz.mhx import addDriver, copyLocation
             for suffix in ["L", "R"]:
                 useStretch = False
                 for bname,prop in [
@@ -237,6 +236,60 @@ def getConstraint(pb, ctype):
         if cns.type == ctype:
             return cns
     return None
+
+#-------------------------------------------------------------
+#   Utilities from import_daz, to avoid addon interdependence
+#-------------------------------------------------------------
+
+def addDriver(rna, channel, rig, prop, expr, index=-1):
+    fcu = rna.driver_add(channel, index)
+    fcu.driver.type = 'SCRIPTED'
+    if isinstance(prop, str):
+        fcu.driver.expression = expr
+        addDriverVar(fcu, "x", prop, rig)
+    else:
+        prop1,prop2 = prop
+        fcu.driver.expression = expr
+        addDriverVar(fcu, "x1", prop1, rig)
+        addDriverVar(fcu, "x2", prop2, rig)
+
+
+def addDriverVar(fcu, vname, path, rna, vartype='SINGLE_PROP'):
+    var = fcu.driver.variables.get(vname)
+    if var is None:
+        var = fcu.driver.variables.new()
+    var.name = vname
+    var.type = vartype
+    trg = var.targets[0]
+    trg.id_type = getIdType(rna)
+    trg.id = rna
+    trg.data_path = path
+    return trg
+
+
+def getIdType(rna):
+    if isinstance(rna, bpy.types.Armature):
+        return 'ARMATURE'
+    elif isinstance(rna, bpy.types.Object):
+        return 'OBJECT'
+    elif isinstance(rna, bpy.types.Mesh):
+        return 'MESH'
+    elif isinstance(rna, bpy.types.Key):
+        return 'KEY'
+    else:
+        raise RuntimeError("BUG addDriverVar", rna)
+
+
+def copyLocation(bone, target, rig, prop=None, expr="x", space='WORLD'):
+    cns = bone.constraints.new('COPY_LOCATION')
+    cns.name = "Copy Location %s" % target.name
+    cns.target = rig
+    cns.subtarget = target.name
+    if prop is not None:
+        addDriver(cns, "influence", rig, mhxProp(prop), expr)
+    cns.owner_space = space
+    cns.target_space = space
+    return cns
 
 #-------------------------------------------------------------
 #   Bake MHX
