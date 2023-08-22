@@ -158,6 +158,11 @@ def initMhxProps():
     # IK
     bpy.types.Object.MhaLimitsOn = BoolPropOVR(True, name = "Rotation Limits")
 
+    bpy.types.Object.MhaSpineIk = FloatPropOVR(0.0, precision=3,
+        name = "Spine IK",
+        min = 0, max = 1,
+        description = "Spine IK influence")
+
     bpy.types.Object.MhaLegIkToAnkle_L = FloatPropOVR(0.0, precision=3,
         name = "Ankle IK Left",
         min = 0, max = 1,

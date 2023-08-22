@@ -143,6 +143,7 @@ class MHX_PT_Properties(MhxPanel):
         row = self.layout.row()
         self.updateFunction(row, rig, "MhaLimitsOn", "mhx.toggle_limits")
         row.operator("mhx.enforce_limits")
+        self.layout.prop(rig, "MhaSpineIk")
         row = self.layout.row()
         row.prop(rig, "MhaArmIk_L")
         row.prop(rig, "MhaArmIk_R")
