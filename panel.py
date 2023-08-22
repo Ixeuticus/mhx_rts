@@ -282,7 +282,7 @@ def toggleFKIK(row, value, op):
 
 
 class MHX_PT_FKIKFingers(MhxPanel):
-    bl_label = "FK/IK Fingers Tongue"
+    bl_label = "FK/IK Spine Fingers Tongue"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_category = "MHX"
@@ -328,6 +328,22 @@ class MHX_PT_FKIKFingers(MhxPanel):
             self.layout.operator("mhx.snap_ik_tongue")
             self.layout.separator()
 
+        self.layout.label(text = "Snap Back")
+        if rig.data.MhaFeatures & F_SPINE:
+            row = self.layout.row()
+            op = row.operator("mhx.snap_reverse", text="Snap FK")
+            op.prop = "MhaSpineIk"
+            op.value = 0.0
+            op.fkname = "back"
+            op.ikname = "rev_ik_back"
+            op.fk = op.ik = L_MAIN
+            op = row.operator("mhx.snap_reverse", text="Snap IK")
+            op.prop = "MhaSpineIk"
+            op.value = 1.0
+            op.fkname = "ik_back"
+            op.ikname = "rev_back"
+            op.fk = op.ik = L_MAIN
+            self.layout.prop(rig, "MhaSpineIk")
         self.layout.operator("mhx.snap_spine")
         self.layout.operator("mhx.snap_neck_head")
 

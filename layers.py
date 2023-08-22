@@ -90,4 +90,5 @@ MhxLayers = [
 F_TONGUE = 1
 F_FINGER = 2
 F_IDPROPS = 4
+F_SPINE = 8
 

@@ -26,7 +26,7 @@
 # either expressed or implied, of the FreeBSD Project.
 
 import bpy
-from bpy.props import StringProperty, BoolProperty
+from bpy.props import *
 from mathutils import *
 from .utils import *
 from .layers import *
@@ -344,22 +344,24 @@ class Snapper(Updater, Basic):
         return tuple(pbones),constraints
 
 
+    Fingers = ["thumb", "index", "middle", "ring", "pinky"]
+    F_Fingers = ["thumb", "f_index", "f_middle", "f_ring", "f_pinky"]
+
     def getFingers(self, suffix):
+        pbones = []
         fkbones = []
         ikbones = []
         for n in range(1,4):
-            fklinks = []
-            iklinks = []
-            for fing in ["thumb", "f_index", "f_middle", "f_ring", "f_pinky"]:
-                fkname = "%s.0%d.%s" % (fing, n, suffix)
-                fklinks.append(self.rig.pose.bones.get(fkname))
-                ikname = "ik_%s" % fkname
-                iklinks.append(self.rig.pose.bones.get(ikname))
-            fkbones.append(fklinks)
-            ikbones.append(iklinks)
-        longnames = ["%s.%s" % (fing, suffix) for fing in ["thumb", "index", "middle", "ring", "pinky"]]
-        longbones = [self.rig.pose.bones.get(bname) for bname in longnames]
-        return longbones, fkbones, ikbones
+            finger = []
+            for fing in self.F_Fingers:
+                bname = "%s.0%d.%s" % (fing, n, suffix)
+                finger.append(self.rig.pose.bones.get(bname))
+            pbones.append(finger)
+        fknames = ["%s.%s" % (fing, suffix) for fing in self.Fingers]
+        fkbones = [self.rig.pose.bones.get(bname) for bname in fknames]
+        iknames = ["ik_%s.%s" % (fing, suffix) for fing in self.Fingers]
+        ikbones = [self.rig.pose.bones.get(bname) for bname in iknames]
+        return pbones, fkbones, ikbones
 
 
     def getTongue(self):
@@ -455,21 +457,21 @@ class Snapper(Updater, Basic):
             self.matchPoseTransform(shinIkTwist, shinFk)
 
 
-    def snapFkFingers(self, longbones, fkbones):
+    def snapLinks(self, winders, pbones):
         mats = []
-        for fklinks in fkbones:
-            matlinks = [pb.matrix.copy() for pb in fklinks]
+        for links in pbones:
+            matlinks = [pb.matrix.copy() for pb in links]
             mats.append(matlinks)
-        for pb in longbones:
+        for pb in winders:
             pb.rotation_euler = (0,0,0)
         self.updatePose()
-        for pb in longbones:
+        for pb in winders:
             self.insertRotation(pb)
-        for fklinks,matlinks in zip(fkbones, mats):
-            for pb,mat in zip(fklinks, matlinks):
+        for links,matlinks in zip(pbones, mats):
+            for pb,mat in zip(links, matlinks):
                 pb.matrix = mat
             self.updatePose()
-            for pb in fklinks:
+            for pb in links:
                 self.imposeLocks(pb)
                 self.insertRotation(pb)
                 self.insertScale(pb)
@@ -735,41 +737,41 @@ class MHX_OT_MhxSnapIkAll(FootSnapper, HideOperator):
 #  Snap fingers
 #-------------------------------------------------------------
 
-class MHX_OT_MhxSnapFkLeftFingers(Snapper, HideOperator):
-    bl_idname = "mhx.snap_fk_left_fingers"
+class MHX_OT_MhxSnapLeftFingers(Snapper, HideOperator):
+    bl_idname = "mhx.snap_left_fingers"
     bl_label = "Snap Left"
-    bl_description = "Snap the left FK finger bones"
+    bl_description = "Snap the left finger bones"
     bl_options = {'UNDO'}
 
     suffix = "L"
-    prop = "MhaFingerIk_L"
+    prop = "MhaFingerControl_L"
     fk = L_LFINGER
     ik = L_LHAND
 
     def run(self, context):
-        print("Snap Left FK Fingers")
+        print("Snap Left Fingers")
         self.setup(context, 1.0, change=False)
-        longbones, fkbones,ikbones = self.getFingers("L")
-        self.snapFkFingers(longbones, fkbones)
+        links,fkbones,ikbones = self.getFingers("L")
+        self.snapLinks(fkbones, links)
         self.restore(context, 0.0, True, True)
 
 
-class MHX_OT_MhxSnapFkRightFingers(Snapper, HideOperator):
-    bl_idname = "mhx.snap_fk_right_fingers"
+class MHX_OT_MhxSnapRightFingers(Snapper, HideOperator):
+    bl_idname = "mhx.snap_right_fingers"
     bl_label = "Snap Right"
     bl_description = "Snap the right FK finger bones"
     bl_options = {'UNDO'}
 
     suffix = "R"
-    prop = "MhaFingerIk_R"
+    prop = "MhaFingerControl_R"
     fk = L_RFINGER
     ik = L_RHAND
 
     def run(self, context):
         print("Snap Right FK Fingers")
         self.setup(context, 1.0, change=False)
-        longbones, fkbones,ikbones = self.getFingers("R")
-        self.snapFkFingers(longbones, fkbones)
+        fingers,fkbones,ikbones = self.getFingers("R")
+        self.snapFkFingers(fkbones, fingers)
         self.restore(context, 0.0, True, True)
 
 
@@ -829,7 +831,7 @@ class MHX_OT_MhxSnapFkTongue(Snapper, HideOperator):
         print("Snap Tongue Bones")
         self.setup(context, 1.0, change=False)
         fkbones,ikbones = self.getTongue()
-        self.snapFkFingers([], fkbones)
+        self.snapLinks([], fkbones)
         self.restore(context, 0.0, True, True)
 
 
@@ -855,6 +857,8 @@ class MHX_OT_MhxSnapIkTongue(Snapper, HideOperator):
 #  Snap back and neck-head
 #-------------------------------------------------------------
 
+Spine = ["spine", "spine-1", "chest", "chest-1"]
+
 class MHX_OT_MhxSnapSpine(Snapper, HideOperator):
     bl_idname = "mhx.snap_spine"
     bl_label = "Snap Spine"
@@ -862,19 +866,44 @@ class MHX_OT_MhxSnapSpine(Snapper, HideOperator):
     bl_options = {'UNDO'}
 
     suffix = ""
-    prop = ""
+    prop = "MhaSpineIk"
     fk = L_SPINE
     ik = L_MAIN
 
     def run(self, context):
         print("Snap spine")
         self.setup(context, 1.0, change=False)
-        bnames = ["spine", "spine-1", "chest", "chest-1"]
-        bones = [self.rig.pose.bones.get(bname) for bname in bnames]
-        bones = [[bone] for bone in bones if bone]
+        pbones = [self.rig.pose.bones.get(bname) for bname in Spine]
+        pbones = [pb for pb in pbones if pb]
         back = self.rig.pose.bones["back"]
-        self.snapFkFingers([back], bones)
+        self.snapLinks([back], [pbones])
         self.restore(context, 0.0, True, True)
+
+
+class MHX_OT_MhxSnapReverse(Snapper, HideOperator):
+    bl_idname = "mhx.snap_reverse"
+    bl_label = "Snap Reverse"
+    bl_description = "Snap bone to reversed bone"
+    bl_options = {'UNDO'}
+
+    prop : StringProperty()
+    value : FloatProperty()
+    bonename : StringProperty()
+    revname : StringProperty()
+    fk : IntProperty()
+    ik : IntProperty()
+
+    def run(self, context):
+        print("Snap %s to %s" % (self.bonename, self.revname))
+        self.setup(context, 1-self.value, change=False)
+        bone = self.rig.pose.bones[self.bonename]
+        revbone = self.rig.pose.bones[self.revname]
+        bone.matrix = revbone.matrix
+        self.insertLocation(bone)
+        self.insertRotation(bone)
+        self.insertScale(bone)
+        self.restore(context, self.value, True, True)
+
 
 
 class MHX_OT_MhxSnapNeckHead(Snapper, HideOperator):
@@ -895,7 +924,7 @@ class MHX_OT_MhxSnapNeckHead(Snapper, HideOperator):
         bones = [self.rig.pose.bones.get(bname) for bname in bnames]
         bones = [[bone] for bone in bones if bone]
         neckhead = self.rig.pose.bones["neckhead"]
-        self.snapFkFingers([neckhead], bones)
+        self.snapLinks([neckhead], bones)
         self.restore(context, 0.0, True, True)
 
 #----------------------------------------------------------
@@ -1127,6 +1156,7 @@ classes = [
     MHX_OT_MhxSnapFkTongue,
     MHX_OT_MhxSnapIkTongue,
     MHX_OT_MhxSnapSpine,
+    MHX_OT_MhxSnapReverse,
     MHX_OT_MhxSnapNeckHead,
     MHX_OT_MhxToggleFkIkLeftArm,
     MHX_OT_MhxToggleFkIkRightArm,
