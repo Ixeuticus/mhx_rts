@@ -323,29 +323,42 @@ class MHX_PT_FKIKFingers(MhxPanel):
             self.layout.separator()
 
         if rig.data.MhaFeatures & F_TONGUE:
-            self.layout.prop(rig, "MhaTongueIk")
-            self.layout.operator("mhx.snap_fk_tongue")
-            self.layout.operator("mhx.snap_ik_tongue")
-            self.layout.separator()
+            box = self.layout.box()
+            box.label(text = "Snap Tongue")
+            box.prop(rig, "MhaTongueIk")
+            row = box.row()
+            op = row.operator("mhx.snap_reverse", text="Snap FK")
+            op.prop = "MhaTongueIk"
+            op.value = 0.0
+            op.bonename = "tongue"
+            op.revname = "rev_ik_tongue"
+            op.fk = op.ik = L_HEAD
+            op = row.operator("mhx.snap_reverse", text="Snap IK")
+            op.prop = "MhaTongueIk"
+            op.value = 1.0
+            op.bonename = "ik_tongue"
+            op.revname = "rev_tongue"
+            op.fk = op.ik = L_HEAD
 
-        self.layout.label(text = "Snap Back")
+        box = self.layout.box()
+        box.label(text = "Snap Back")
         if rig.data.MhaFeatures & F_SPINE:
-            row = self.layout.row()
+            row = box.row()
             op = row.operator("mhx.snap_reverse", text="Snap FK")
             op.prop = "MhaSpineIk"
             op.value = 0.0
-            op.fkname = "back"
-            op.ikname = "rev_ik_back"
+            op.bonename = "back"
+            op.revname = "rev_ik_back"
             op.fk = op.ik = L_MAIN
             op = row.operator("mhx.snap_reverse", text="Snap IK")
             op.prop = "MhaSpineIk"
             op.value = 1.0
-            op.fkname = "ik_back"
-            op.ikname = "rev_back"
+            op.bonename = "ik_back"
+            op.revname = "rev_back"
             op.fk = op.ik = L_MAIN
-            self.layout.prop(rig, "MhaSpineIk")
-        self.layout.operator("mhx.snap_spine")
-        self.layout.operator("mhx.snap_neck_head")
+            box.prop(rig, "MhaSpineIk")
+        box.operator("mhx.snap_spine")
+        box.operator("mhx.snap_neck_head")
 
 #------------------------------------------------------------------------
 #    Mhx Animation Panel
