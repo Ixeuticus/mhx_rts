@@ -294,22 +294,6 @@ class MHX_PT_FKIKFingers(MhxPanel):
         if self.needsMhxUpdate(rig):
             return
 
-        if rig.data.MhaFeatures & F_FINGER:
-            row = self.layout.row()
-            row.label(text = "Fingers")
-            row.label(text = "Left")
-            row.label(text = "Right")
-
-            row = self.layout.row()
-            row.label(text = "FK/IK switch")
-            toggleFKIK(row, rig.MhaFingerIk_L, "mhx.toggle_fkik_left_fingers")
-            toggleFKIK(row, rig.MhaFingerIk_R, "mhx.toggle_fkik_right_fingers")
-
-            row = self.layout.row()
-            row.label(text = "IK Influence")
-            row.prop(rig, "MhaFingerIk_L", text="")
-            row.prop(rig, "MhaFingerIk_R", text="")
-
         box = self.layout.box()
         box.label(text = "Spine")
         if rig.data.MhaFeatures & F_SPINE:
@@ -333,14 +317,30 @@ class MHX_PT_FKIKFingers(MhxPanel):
         box = self.layout.box()
         box.label(text = "Fingers")
         row = box.row()
-        row.label(text = "Bones")
-        row.operator("mhx.snap_left_fingers")
-        row.operator("mhx.snap_right_fingers")
+        row.label(text = "Left")
+        row.label(text = "Right")
         if rig.data.MhaFeatures & F_FINGER:
             row = box.row()
-            row.label(text = "Joints")
-            row.operator("mhx.snap_ik_left_fingers")
-            row.operator("mhx.snap_ik_right_fingers")
+            row.prop(rig, "MhaFingerIk_L", text="IK Influence")
+            row.prop(rig, "MhaFingerIk_R", text="IK Influence")
+            row = box.row()
+            for suffix in ["L", "R"]:
+                op = row.operator("mhx.snap_reverse_fingers", text="Snap FK")
+                op.suffix = suffix
+                op.value = 0.0
+                op.prefix = ""
+                op.revprefix = "rev_ik_"
+            row = box.row()
+            for suffix in ["L", "R"]:
+                op = row.operator("mhx.snap_reverse_fingers", text="Snap IK")
+                op.suffix = suffix
+                op.value = 1.0
+                op.prefix = "ik_"
+                op.revprefix = "rev_"
+        row = box.row()
+        for suffix in ["L", "R"]:
+            op = row.operator("mhx.snap_fingers")
+            op.suffix = suffix
 
         if rig.data.MhaFeatures & F_TONGUE:
             box = self.layout.box()

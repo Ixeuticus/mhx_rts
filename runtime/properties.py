@@ -145,15 +145,15 @@ def initMhxProps():
         name = "Long Fingers Right",
         description = "Finger links controlled by the long finger bones")
 
-    bpy.types.Object.MhaFingerIk_L = FloatPropOVR(0.0,
+    bpy.types.Object.MhaFingerIk_L = FloatPropOVR(0.0, precision=3,
         name = "Finger IK Left",
         min = 0, max = 1,
-        description = "Finger links controlled by IK")
+        description = "Finger IK influence")
 
-    bpy.types.Object.MhaFingerIk_R = FloatPropOVR(0.0,
+    bpy.types.Object.MhaFingerIk_R = FloatPropOVR(0.0, precision=3,
         name = "Finger IK Right",
         min = 0, max = 1,
-        description = "Finger links controlled by IK")
+        description = "Finger IK influence")
 
     # IK
     bpy.types.Object.MhaLimitsOn = BoolPropOVR(True, name = "Rotation Limits")
