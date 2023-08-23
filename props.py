@@ -286,7 +286,7 @@ def copyLocation(bone, target, rig, prop=None, expr="x", space='WORLD'):
     cns.target = rig
     cns.subtarget = target.name
     if prop is not None:
-        addDriver(cns, "influence", rig, mhxProp(prop), expr)
+        addDriver(cns, "influence", rig, propRef(prop), expr)
     cns.owner_space = space
     cns.target_space = space
     return cns
