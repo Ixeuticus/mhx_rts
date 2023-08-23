@@ -51,7 +51,9 @@ L_RTOE =    29
 L_FACE =    8
 L_TWEAK =   9
 L_HEAD =    10
+L_UNUSED =  11
 L_CUSTOM =  16
+L_CUSTOM2 = 17
 
 L_HELP =    14
 L_HELP2 =   15
@@ -65,8 +67,10 @@ MhxLayers = [
      (L_SPINE ,     'Spine', 'MhxFKSpine')),
     ((L_HEAD,       'Head', 'MhxHead'),
      (L_FACE,       'Face', 'MhxFace')),
+    ((L_CUSTOM,     'Custom', 'MhxCustom'),
+     (L_CUSTOM2,    'Custom 2', 'MhxCustom2')),
     ((L_TWEAK,      'Tweak', 'MhxTweak'),
-     (L_CUSTOM,     'Custom', 'MhxCustom')),
+     (L_UNUSED,     'Unused', 'MhxUnused')),
     ('Left', 'Right'),
     ((L_LARMIK,     'IK Arm', 'MhxIKArm'),
      (L_RARMIK,     'IK Arm', 'MhxIKArm')),
@@ -91,4 +95,5 @@ F_TONGUE = 1
 F_FINGER = 2
 F_IDPROPS = 4
 F_SPINE = 8
+F_SHAFT = 16
 

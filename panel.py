@@ -282,7 +282,7 @@ def toggleFKIK(row, value, op):
 
 
 class MHX_PT_FKIKFingers(MhxPanel):
-    bl_label = "FK/IK Spine Fingers Tongue"
+    bl_label = "FK/IK Spine Fingers Tongue Shaft"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_category = "MHX"
@@ -310,21 +310,41 @@ class MHX_PT_FKIKFingers(MhxPanel):
             row.prop(rig, "MhaFingerIk_L", text="")
             row.prop(rig, "MhaFingerIk_R", text="")
 
-        self.layout.label(text = "Snap Fingers")
-        row = self.layout.row()
+        box = self.layout.box()
+        box.label(text = "Spine")
+        if rig.data.MhaFeatures & F_SPINE:
+            box.prop(rig, "MhaSpineIk")
+            row = box.row()
+            op = row.operator("mhx.snap_reverse", text="Snap FK")
+            op.prop = "MhaSpineIk"
+            op.value = 0.0
+            op.bonename = "back"
+            op.revname = "rev_ik_back"
+            op.fk = op.ik = L_MAIN
+            op = row.operator("mhx.snap_reverse", text="Snap IK")
+            op.prop = "MhaSpineIk"
+            op.value = 1.0
+            op.bonename = "ik_back"
+            op.revname = "rev_back"
+            op.fk = op.ik = L_MAIN
+        box.operator("mhx.snap_spine")
+        box.operator("mhx.snap_neck_head")
+
+        box = self.layout.box()
+        box.label(text = "Fingers")
+        row = box.row()
         row.label(text = "Bones")
-        row.operator("mhx.snap_fk_left_fingers")
-        row.operator("mhx.snap_fk_right_fingers")
+        row.operator("mhx.snap_left_fingers")
+        row.operator("mhx.snap_right_fingers")
         if rig.data.MhaFeatures & F_FINGER:
-            row = self.layout.row()
+            row = box.row()
             row.label(text = "Joints")
             row.operator("mhx.snap_ik_left_fingers")
             row.operator("mhx.snap_ik_right_fingers")
-            self.layout.separator()
 
         if rig.data.MhaFeatures & F_TONGUE:
             box = self.layout.box()
-            box.label(text = "Snap Tongue")
+            box.label(text = "Tongue")
             box.prop(rig, "MhaTongueIk")
             row = box.row()
             op = row.operator("mhx.snap_reverse", text="Snap FK")
@@ -339,26 +359,26 @@ class MHX_PT_FKIKFingers(MhxPanel):
             op.bonename = "ik_tongue"
             op.revname = "rev_tongue"
             op.fk = op.ik = L_HEAD
+            box.operator("mhx.snap_tongue")
 
-        box = self.layout.box()
-        box.label(text = "Snap Back")
-        if rig.data.MhaFeatures & F_SPINE:
+        if rig.data.MhaFeatures & F_SHAFT:
+            box = self.layout.box()
+            box.label(text = "Shaft")
+            box.prop(rig, "MhaShaftIk")
             row = box.row()
             op = row.operator("mhx.snap_reverse", text="Snap FK")
-            op.prop = "MhaSpineIk"
+            op.prop = "MhaShaftIk"
             op.value = 0.0
-            op.bonename = "back"
-            op.revname = "rev_ik_back"
+            op.bonename = "shaft"
+            op.revname = "rev_ik_shaft"
             op.fk = op.ik = L_MAIN
             op = row.operator("mhx.snap_reverse", text="Snap IK")
-            op.prop = "MhaSpineIk"
+            op.prop = "MhaShaftIk"
             op.value = 1.0
-            op.bonename = "ik_back"
-            op.revname = "rev_back"
+            op.bonename = "ik_shaft"
+            op.revname = "rev_shaft"
             op.fk = op.ik = L_MAIN
-            box.prop(rig, "MhaSpineIk")
-        box.operator("mhx.snap_spine")
-        box.operator("mhx.snap_neck_head")
+            box.operator("mhx.snap_shaft")
 
 #------------------------------------------------------------------------
 #    Mhx Animation Panel

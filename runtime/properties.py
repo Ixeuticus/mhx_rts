@@ -163,6 +163,11 @@ def initMhxProps():
         min = 0, max = 1,
         description = "Spine IK influence")
 
+    bpy.types.Object.MhaShaftIk = FloatPropOVR(0.0, precision=3,
+        name = "Shaft IK",
+        min = 0, max = 1,
+        description = "Shaft IK influence")
+
     bpy.types.Object.MhaLegIkToAnkle_L = FloatPropOVR(0.0, precision=3,
         name = "Ankle IK Left",
         min = 0, max = 1,
