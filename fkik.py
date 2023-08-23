@@ -487,7 +487,7 @@ class FootSnapper(Snapper):
 
 class MHX_OT_MhxSnapFkLeftArm(Snapper, HideOperator):
     bl_idname = "mhx.snap_fk_left_arm"
-    bl_label = "Snap Left"
+    bl_label = "Snap FK"
     bl_description = "Snap the left FK arm to the pose of the left IK arm"
     bl_options = {'UNDO'}
 
@@ -507,7 +507,7 @@ class MHX_OT_MhxSnapFkLeftArm(Snapper, HideOperator):
 
 class MHX_OT_MhxSnapFkRightArm(Snapper, HideOperator):
     bl_idname = "mhx.snap_fk_right_arm"
-    bl_label = "Snap Right"
+    bl_label = "Snap FK"
     bl_description = "Snap the right FK arm to the pose of the right IK arm"
     bl_options = {'UNDO'}
 
@@ -527,7 +527,7 @@ class MHX_OT_MhxSnapFkRightArm(Snapper, HideOperator):
 
 class MHX_OT_MhxSnapFkLeftLeg(Snapper, HideOperator):
     bl_idname = "mhx.snap_fk_left_leg"
-    bl_label = "Snap Left"
+    bl_label = "Snap FK"
     bl_description = "Snap the left FK leg to the pose of the left IK leg"
     bl_options = {'UNDO'}
 
@@ -547,7 +547,7 @@ class MHX_OT_MhxSnapFkLeftLeg(Snapper, HideOperator):
 
 class MHX_OT_MhxSnapFkRightLeg(Snapper, HideOperator):
     bl_idname = "mhx.snap_fk_right_leg"
-    bl_label = "Snap Right"
+    bl_label = "Snap FK"
     bl_description = "Snap the right FK leg to the pose of the right IK leg"
     bl_options = {'UNDO'}
 
@@ -603,7 +603,7 @@ class MHX_OT_MhxSnapFkAll(Snapper, HideOperator):
 
 class MHX_OT_MhxSnapIkLeftArm(Snapper, HideOperator):
     bl_idname = "mhx.snap_ik_left_arm"
-    bl_label = "Snap Left"
+    bl_label = "Snap IK"
     bl_description = "Snap the left IK arm to the pose of the left FK arm"
     bl_options = {'UNDO'}
 
@@ -623,7 +623,7 @@ class MHX_OT_MhxSnapIkLeftArm(Snapper, HideOperator):
 
 class MHX_OT_MhxSnapIkRightArm(Snapper, HideOperator):
     bl_idname = "mhx.snap_ik_right_arm"
-    bl_label = "Snap Right"
+    bl_label = "Snap IK"
     bl_description = "Snap the right IK arm to the pose of the right FK arm"
     bl_options = {'UNDO'}
 
@@ -643,7 +643,7 @@ class MHX_OT_MhxSnapIkRightArm(Snapper, HideOperator):
 
 class MHX_OT_MhxSnapIkLeftLeg(FootSnapper, HideOperator):
     bl_idname = "mhx.snap_ik_left_leg"
-    bl_label = "Snap Left"
+    bl_label = "Snap IK"
     bl_description = "Snap the left IK leg to the pose of the left FK leg"
     bl_options = {'UNDO'}
 
@@ -665,7 +665,7 @@ class MHX_OT_MhxSnapIkLeftLeg(FootSnapper, HideOperator):
 
 class MHX_OT_MhxSnapIkRightLeg(FootSnapper, HideOperator):
     bl_idname = "mhx.snap_ik_right_leg"
-    bl_label = "Snap Right"
+    bl_label = "Snap IK"
     bl_description = "Snap the right IK leg to the pose of the right FK leg"
     bl_options = {'UNDO'}
 
