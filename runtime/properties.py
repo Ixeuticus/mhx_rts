@@ -102,6 +102,10 @@ def initMhxProps():
         min = 0, max = 1,
         description = "Eye tracking the right gaze bone amount")
 
+    bpy.types.Object.MhaTongueControl = BoolPropOVR(True,
+        name = "FK/IK Tongue",
+        description = "Tongue links controlled by the FK/IK tongue bones")
+
     bpy.types.Object.MhaTongueIk = FloatPropOVR(0.0,
         name = "Tongue IK",
         min = 0, max = 1,
@@ -138,12 +142,12 @@ def initMhxProps():
         description = "Control right forearm twist with right hand twist.\nIt may be necessary to turn this off for correct FK->IK snapping.")
 
     bpy.types.Object.MhaFingerControl_L = BoolPropOVR(False,
-        name = "Long Fingers Left",
-        description = "Finger links controlled by the long finger bones")
+        name = "FK/IK Fingers Left",
+        description = "Finger links controlled by the FK/IK finger bones")
 
     bpy.types.Object.MhaFingerControl_R = BoolPropOVR(False,
-        name = "Long Fingers Right",
-        description = "Finger links controlled by the long finger bones")
+        name = "FK/IK Fingers Right",
+        description = "Finger links controlled by the FK/IK finger bones")
 
     bpy.types.Object.MhaFingerIk_L = FloatPropOVR(0.0, precision=3,
         name = "Finger IK Left",
@@ -158,10 +162,18 @@ def initMhxProps():
     # IK
     bpy.types.Object.MhaLimitsOn = BoolPropOVR(True, name = "Rotation Limits")
 
+    bpy.types.Object.MhaSpineControl = BoolPropOVR(True,
+        name = "FK/IK Spine",
+        description = "Spine links controlled by the FK/IK back bones")
+
     bpy.types.Object.MhaSpineIk = FloatPropOVR(0.0, precision=3,
         name = "Spine IK",
         min = 0, max = 1,
         description = "Spine IK influence")
+
+    bpy.types.Object.MhaShaftControl = BoolPropOVR(True,
+        name = "FK/IK Shaft",
+        description = "Shaft links controlled by the FK/IK shaft bones")
 
     bpy.types.Object.MhaShaftIk = FloatPropOVR(0.0, precision=3,
         name = "Shaft IK",

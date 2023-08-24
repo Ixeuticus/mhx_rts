@@ -429,26 +429,30 @@ class Snapper(Updater, Basic):
     Fingers = ["thumb", "index", "middle", "ring", "pinky"]
     F_Fingers = ["thumb", "f_index", "f_middle", "f_ring", "f_pinky"]
 
-    def snapLinks(self, context, fkname, ikname, bnames):
+    def snapLinks(self, context, fkname, ikname, bnames, prop):
         self.setup(context, 0, change=False)
         pbones = [self.rig.pose.bones.get(bname) for bname in bnames]
         pbones = [pb for pb in pbones if pb]
-        mats = [pb.matrix.copy() for pb in pbones]
+        defbones = [self.rig.pose.bones.get("DEF-%s" % pb.name) for pb in pbones]
+        mats = [pb.matrix.copy() for pb in defbones]
         fkbone = self.rig.pose.bones.get(fkname)
         if fkbone is None:
             return
         fkbone.matrix_basis = Matrix()
-        ikbone = self.rig.pose.bones.get(ikname)
-        if ikbone:
-            ikbone.matrix_basis = Matrix()
         self.updatePose()
         self.insertLocation(fkbone)
         self.insertRotation(fkbone)
         self.insertScale(fkbone)
-        if ikbone:
+        ikbone = self.rig.pose.bones.get(ikname)
+        revbone = self.rig.pose.bones.get("rev_%s" % fkname)
+        if ikbone and revbone:
+            ikbone.matrix = revbone.matrix
+            self.updatePose()
             self.insertLocation(ikbone)
             self.insertRotation(ikbone)
             self.insertScale(ikbone)
+        setattr(self.rig, prop, False)
+        self.updatePose()
         for pb,mat in zip(pbones, mats):
             pb.matrix = mat
             self.updatePose()
@@ -771,11 +775,12 @@ class MHX_OT_MhxSnapFingers(Snapper, HideOperator):
     suffix : StringProperty()
 
     def run(self, context):
+        prop = "MhaFingerControl_%s" % self.suffix
         for fing,ffing in zip(self.Fingers, self.F_Fingers):
             fkname = "%s.%s" % (fing, self.suffix)
             ikname = "ik_%s.%s" % (fing, self.suffix)
             links = ["%s.0%d.%s" % (ffing, n, self.suffix) for n in range(1,4)]
-            self.snapLinks(context, fkname, ikname, links)
+            self.snapLinks(context, fkname, ikname, links, prop)
 
 
 class MHX_OT_MhxSnapSpine(Snapper, HideOperator):
@@ -786,7 +791,7 @@ class MHX_OT_MhxSnapSpine(Snapper, HideOperator):
 
     def run(self, context):
         print("Snap spine")
-        self.snapLinks(context, "back", "ik_back", ["spine", "spine-1", "chest", "chest-1"])
+        self.snapLinks(context, "back", "ik_back", ["spine", "spine-1", "chest", "chest-1"], "MhaSpineControl")
 
 
 class MHX_OT_MhxSnapNeckHead(Snapper, HideOperator):
@@ -797,7 +802,7 @@ class MHX_OT_MhxSnapNeckHead(Snapper, HideOperator):
 
     def run(self, context):
         print("Snap neck and head")
-        self.snapLinks(context, "neckhead", "ik_neckhead", ["neck", "neck-1", "head"])
+        self.snapLinks(context, "neckhead", "ik_neckhead", ["neck", "neck-1", "head"], None)
 
 
 class MHX_OT_MhxSnapTongue(Snapper, HideOperator):
@@ -814,7 +819,8 @@ class MHX_OT_MhxSnapTongue(Snapper, HideOperator):
         rig = context.object
         tonguebones = [bone.name for bone in rig.data.bones if isTongue(bone.name)]
         tonguebones.sort()
-        self.snapLinks(context, "tongue", "ik_tongue", tonguebones)
+        self.snapLinks(context, "tongue", "ik_tongue", tonguebones, "MhaTongueControl")
+        setattr(rig, "MhaTongueControl", False)
 
 
 class MHX_OT_MhxSnapShaft(Snapper, HideOperator):
@@ -831,7 +837,8 @@ class MHX_OT_MhxSnapShaft(Snapper, HideOperator):
         rig = context.object
         shaftbones = [bone.name for bone in rig.data.bones if isShaft(bone.name)]
         shaftbones.sort()
-        self.snapLinks(context, "shaft", "ik_shaft", shaftbones)
+        self.snapLinks(context, "shaft", "ik_shaft", shaftbones, "MhaShaftControl")
+        setattr(rig, "MhaShaftControl", False)
 
 #----------------------------------------------------------
 #   Toggle FK - IK

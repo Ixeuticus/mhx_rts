@@ -286,6 +286,7 @@ class MHX_PT_FKIKFingers(MhxPanel):
 
         box = self.layout.box()
         box.label(text = "Spine")
+        box.prop(rig, "MhaSpineControl")
         if rig.data.MhaFeatures & F_SPINE:
             box.prop(rig, "MhaSpineIk")
             row = box.row()
@@ -309,6 +310,9 @@ class MHX_PT_FKIKFingers(MhxPanel):
         row = box.row()
         row.label(text = "Left")
         row.label(text = "Right")
+        row = box.row()
+        row.prop(rig, "MhaFingerControl_L")
+        row.prop(rig, "MhaFingerControl_R")
         if rig.data.MhaFeatures & F_FINGER:
             row = box.row()
             row.prop(rig, "MhaFingerIk_L", text="IK Influence")
@@ -335,6 +339,7 @@ class MHX_PT_FKIKFingers(MhxPanel):
         if rig.data.MhaFeatures & F_TONGUE:
             box = self.layout.box()
             box.label(text = "Tongue")
+            box.prop(rig, "MhaTongueControl")
             box.prop(rig, "MhaTongueIk")
             row = box.row()
             op = row.operator("mhx.snap_reverse", text="Snap FK")
@@ -354,6 +359,7 @@ class MHX_PT_FKIKFingers(MhxPanel):
         if rig.data.MhaFeatures & F_SHAFT:
             box = self.layout.box()
             box.label(text = "Shaft")
+            box.prop(rig, "MhaShaftControl")
             box.prop(rig, "MhaShaftIk")
             row = box.row()
             op = row.operator("mhx.snap_reverse", text="Snap FK")
