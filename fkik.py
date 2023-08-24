@@ -429,38 +429,54 @@ class Snapper(Updater, Basic):
     Fingers = ["thumb", "index", "middle", "ring", "pinky"]
     F_Fingers = ["thumb", "f_index", "f_middle", "f_ring", "f_pinky"]
 
-    def snapLinks(self, context, fkname, ikname, bnames, prop):
+    def snapLinks(self, context, fknames, iknames, bnamess, prop):
         self.setup(context, 0, change=False)
-        pbones = [self.rig.pose.bones.get(bname) for bname in bnames]
-        pbones = [pb for pb in pbones if pb]
-        defbones = [self.rig.pose.bones.get("DEF-%s" % pb.name) for pb in pbones]
-        mats = [pb.matrix.copy() for pb in defbones]
-        fkbone = self.rig.pose.bones.get(fkname)
-        if fkbone is None:
-            return
-        fkbone.matrix_basis = Matrix()
+        pboness = []
+        defboness = []
+        matss = []
+        fkbones = []
+        for fkname,bnames in zip(fknames, bnamess):
+            pbones = [self.rig.pose.bones.get(bname) for bname in bnames]
+            pbones = [pb for pb in pbones if pb]
+            defbones = [self.rig.pose.bones.get("DEF-%s" % pb.name) for pb in pbones]
+            mats = [pb.matrix.copy() for pb in defbones]
+            fkbone = self.rig.pose.bones.get(fkname)
+            if fkbone is None:
+                continue
+            fkbone.matrix_basis = Matrix()
+            pboness.append(pbones)
+            defboness.append(defbones)
+            matss.append(mats)
+            fkbones.append(fkbone)
         self.updatePose()
-        self.insertLocation(fkbone)
-        self.insertRotation(fkbone)
-        self.insertScale(fkbone)
-        ikbone = self.rig.pose.bones.get(ikname)
-        revbone = self.rig.pose.bones.get("rev_%s" % fkname)
-        if ikbone and revbone:
-            ikbone.matrix = revbone.matrix
-            self.updatePose()
+        ikbones = []
+        for fkname,ikname,fkbone in zip(fknames,iknames,fkbones):
+            self.insertLocation(fkbone)
+            self.insertRotation(fkbone)
+            self.insertScale(fkbone)
+            ikbone = self.rig.pose.bones.get(ikname)
+            ikbones.append(ikbone)
+            revbone = self.rig.pose.bones.get("rev_%s" % fkname)
+            if ikbone and revbone:
+                ikbone.matrix = revbone.matrix
+        self.updatePose()
+        for ikbone in ikbones:
             self.insertLocation(ikbone)
             self.insertRotation(ikbone)
             self.insertScale(ikbone)
         setattr(self.rig, prop, False)
         self.updatePose()
-        for pb,mat in zip(pbones, mats):
-            pb.matrix = mat
+        nlinks = len(pboness[0])
+        for n in range(nlinks):
+            for pbones,mats in zip(pboness, matss):
+                pbones[n].matrix = mats[n]
             self.updatePose()
-        for pb in pbones:
-            self.imposeLocks(pb)
-            self.insertLocation(pb)
-            self.insertRotation(pb)
-            self.insertScale(pb)
+        for pbones in pboness:
+            for pb in pbones:
+                self.imposeLocks(pb)
+                self.insertLocation(pb)
+                self.insertRotation(pb)
+                self.insertScale(pb)
 
 
     def snapReverse(self, context):
@@ -776,11 +792,14 @@ class MHX_OT_MhxSnapFingers(Snapper, HideOperator):
 
     def run(self, context):
         prop = "MhaFingerControl_%s" % self.suffix
+        fknames = []
+        iknames = []
+        pboness = []
         for fing,ffing in zip(self.Fingers, self.F_Fingers):
-            fkname = "%s.%s" % (fing, self.suffix)
-            ikname = "ik_%s.%s" % (fing, self.suffix)
-            links = ["%s.0%d.%s" % (ffing, n, self.suffix) for n in range(1,4)]
-            self.snapLinks(context, fkname, ikname, links, prop)
+            fknames.append( "%s.%s" % (fing, self.suffix) )
+            iknames.append( "ik_%s.%s" % (fing, self.suffix))
+            pboness.append( ["%s.0%d.%s" % (ffing, n, self.suffix) for n in range(1,4)] )
+        self.snapLinks(context, fknames, iknames, pboness, prop)
 
 
 class MHX_OT_MhxSnapSpine(Snapper, HideOperator):
@@ -791,7 +810,7 @@ class MHX_OT_MhxSnapSpine(Snapper, HideOperator):
 
     def run(self, context):
         print("Snap spine")
-        self.snapLinks(context, "back", "ik_back", ["spine", "spine-1", "chest", "chest-1"], "MhaSpineControl")
+        self.snapLinks(context, ["back"], ["ik_back"], [["spine", "spine-1", "chest", "chest-1"]], "MhaSpineControl")
 
 
 class MHX_OT_MhxSnapNeckHead(Snapper, HideOperator):
@@ -802,7 +821,7 @@ class MHX_OT_MhxSnapNeckHead(Snapper, HideOperator):
 
     def run(self, context):
         print("Snap neck and head")
-        self.snapLinks(context, "neckhead", "ik_neckhead", ["neck", "neck-1", "head"], None)
+        self.snapLinks(context, ["neckhead"], ["ik_neckhead"], [["neck", "neck-1", "head"]], None)
 
 
 class MHX_OT_MhxSnapTongue(Snapper, HideOperator):
@@ -819,7 +838,7 @@ class MHX_OT_MhxSnapTongue(Snapper, HideOperator):
         rig = context.object
         tonguebones = [bone.name for bone in rig.data.bones if isTongue(bone.name)]
         tonguebones.sort()
-        self.snapLinks(context, "tongue", "ik_tongue", tonguebones, "MhaTongueControl")
+        self.snapLinks(context, ["tongue"], ["ik_tongue"], [tonguebones], "MhaTongueControl")
         setattr(rig, "MhaTongueControl", False)
 
 
@@ -837,7 +856,7 @@ class MHX_OT_MhxSnapShaft(Snapper, HideOperator):
         rig = context.object
         shaftbones = [bone.name for bone in rig.data.bones if isShaft(bone.name)]
         shaftbones.sort()
-        self.snapLinks(context, "shaft", "ik_shaft", shaftbones, "MhaShaftControl")
+        self.snapLinks(context, ["shaft"], ["ik_shaft"], [shaftbones], "MhaShaftControl")
         setattr(rig, "MhaShaftControl", False)
 
 #----------------------------------------------------------
