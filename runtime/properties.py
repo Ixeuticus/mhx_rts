@@ -171,6 +171,15 @@ def initMhxProps():
         min = 0, max = 1,
         description = "Spine IK influence")
 
+    bpy.types.Object.MhaNeckControl = BoolPropOVR(True,
+        name = "FK/IK Neck",
+        description = "Neck links controlled by the FK/IK neckhead bones")
+
+    bpy.types.Object.MhaNeckIk = FloatPropOVR(0.0, precision=3,
+        name = "Neck IK",
+        min = 0, max = 1,
+        description = "Neck IK influence")
+
     bpy.types.Object.MhaShaftControl = BoolPropOVR(True,
         name = "FK/IK Shaft",
         description = "Shaft links controlled by the FK/IK shaft bones")

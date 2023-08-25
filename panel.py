@@ -271,6 +271,23 @@ def toggleFKIK(row, value, op):
         row.operator(op, text="FK")
 
 
+def snapFkIkBox(box, rig, ikprop, bname, layer):
+    box.prop(rig, ikprop)
+    row = box.row()
+    op = row.operator("mhx.snap_reverse", text="Snap FK")
+    op.prop = ikprop
+    op.value = 0.0
+    op.bonename = bname
+    op.revname = "REV-ik_%s" % bname
+    op.fk = op.ik = layer
+    op = row.operator("mhx.snap_reverse", text="Snap IK")
+    op.prop = ikprop
+    op.value = 1.0
+    op.bonename = "ik_%s" % bname
+    op.revname = "REV-%s" % bname
+    op.fk = op.ik = layer
+
+
 class MHX_PT_FKIKFingers(MhxPanel):
     bl_label = "FK/IK Spine Fingers Tongue Shaft"
     bl_space_type = "VIEW_3D"
@@ -288,22 +305,17 @@ class MHX_PT_FKIKFingers(MhxPanel):
         box.label(text = "Spine")
         box.prop(rig, "MhaSpineControl")
         if rig.data.MhaFeatures & F_SPINE:
-            box.prop(rig, "MhaSpineIk")
-            row = box.row()
-            op = row.operator("mhx.snap_reverse", text="Snap FK")
-            op.prop = "MhaSpineIk"
-            op.value = 0.0
-            op.bonename = "back"
-            op.revname = "rev_ik_back"
-            op.fk = op.ik = L_MAIN
-            op = row.operator("mhx.snap_reverse", text="Snap IK")
-            op.prop = "MhaSpineIk"
-            op.value = 1.0
-            op.bonename = "ik_back"
-            op.revname = "rev_back"
-            op.fk = op.ik = L_MAIN
-        box.operator("mhx.snap_spine")
-        box.operator("mhx.snap_neck_head")
+            snapFkIkBox(box, rig, "MhaSpineIk", "back", L_MAIN)
+        row = box.row()
+        row.operator("mhx.snap_spine")
+
+        box = self.layout.box()
+        box.label(text = "Neck")
+        box.prop(rig, "MhaNeckControl")
+        if rig.data.MhaFeatures & F_NECK:
+            snapFkIkBox(box, rig, "MhaNeckIk", "neckhead", L_MAIN)
+        row = box.row()
+        row.operator("mhx.snap_neck_head")
 
         box = self.layout.box()
         box.label(text = "Fingers")
@@ -323,14 +335,14 @@ class MHX_PT_FKIKFingers(MhxPanel):
                 op.suffix = suffix
                 op.value = 0.0
                 op.prefix = ""
-                op.revprefix = "rev_ik_"
+                op.revprefix = "REV-ik_"
             row = box.row()
             for suffix in ["L", "R"]:
                 op = row.operator("mhx.snap_reverse_fingers", text="Snap IK")
                 op.suffix = suffix
                 op.value = 1.0
                 op.prefix = "ik_"
-                op.revprefix = "rev_"
+                op.revprefix = "REV-"
         row = box.row()
         for suffix in ["L", "R"]:
             op = row.operator("mhx.snap_fingers")
@@ -340,40 +352,14 @@ class MHX_PT_FKIKFingers(MhxPanel):
         box.label(text = "Tongue")
         box.prop(rig, "MhaTongueControl")
         if rig.data.MhaFeatures & F_TONGUE:
-            box.prop(rig, "MhaTongueIk")
-            row = box.row()
-            op = row.operator("mhx.snap_reverse", text="Snap FK")
-            op.prop = "MhaTongueIk"
-            op.value = 0.0
-            op.bonename = "tongue"
-            op.revname = "rev_ik_tongue"
-            op.fk = op.ik = L_HEAD
-            op = row.operator("mhx.snap_reverse", text="Snap IK")
-            op.prop = "MhaTongueIk"
-            op.value = 1.0
-            op.bonename = "ik_tongue"
-            op.revname = "rev_tongue"
-            op.fk = op.ik = L_HEAD
+            snapFkIkBox(box, rig, "MhaTongueIk", "tongue", L_HEAD)
         box.operator("mhx.snap_tongue")
 
         box = self.layout.box()
         box.label(text = "Shaft")
         box.prop(rig, "MhaShaftControl")
         if rig.data.MhaFeatures & F_SHAFT:
-            box.prop(rig, "MhaShaftIk")
-            row = box.row()
-            op = row.operator("mhx.snap_reverse", text="Snap FK")
-            op.prop = "MhaShaftIk"
-            op.value = 0.0
-            op.bonename = "shaft"
-            op.revname = "rev_ik_shaft"
-            op.fk = op.ik = L_MAIN
-            op = row.operator("mhx.snap_reverse", text="Snap IK")
-            op.prop = "MhaShaftIk"
-            op.value = 1.0
-            op.bonename = "ik_shaft"
-            op.revname = "rev_shaft"
-            op.fk = op.ik = L_MAIN
+            snapFkIkBox(box, rig, "MhaShaftIk", "shaft", L_CUSTOM)
         box.operator("mhx.snap_shaft")
 
 #------------------------------------------------------------------------

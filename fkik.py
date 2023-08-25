@@ -467,7 +467,7 @@ class Snapper(Updater, Basic):
             self.insertScale(fkbone)
             ikbone = self.rig.pose.bones.get(ikname)
             ikbones.append(ikbone)
-            revbone = self.rig.pose.bones.get("rev_%s" % fkname)
+            revbone = self.rig.pose.bones.get("REV-%s" % fkname)
             if ikbone and revbone:
                 ikbone.matrix = revbone.matrix
         self.updatePose()
@@ -834,7 +834,7 @@ class MHX_OT_MhxSnapNeckHead(Snapper, HideOperator):
 
     def run(self, context):
         print("Snap neck and head")
-        self.snapLinks(context, ["neckhead"], ["ik_neckhead"], [["neck", "neck-1", "head"]], None)
+        self.snapLinks(context, ["neckhead"], ["ik_neckhead"], [["neck", "neck-1", "head"]], "MhaNeckControl")
 
 
 class MHX_OT_MhxSnapTongue(Snapper, HideOperator):
