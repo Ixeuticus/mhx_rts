@@ -336,10 +336,10 @@ class MHX_PT_FKIKFingers(MhxPanel):
             op = row.operator("mhx.snap_fingers")
             op.suffix = suffix
 
+        box = self.layout.box()
+        box.label(text = "Tongue")
+        box.prop(rig, "MhaTongueControl")
         if rig.data.MhaFeatures & F_TONGUE:
-            box = self.layout.box()
-            box.label(text = "Tongue")
-            box.prop(rig, "MhaTongueControl")
             box.prop(rig, "MhaTongueIk")
             row = box.row()
             op = row.operator("mhx.snap_reverse", text="Snap FK")
@@ -354,12 +354,12 @@ class MHX_PT_FKIKFingers(MhxPanel):
             op.bonename = "ik_tongue"
             op.revname = "rev_tongue"
             op.fk = op.ik = L_HEAD
-            box.operator("mhx.snap_tongue")
+        box.operator("mhx.snap_tongue")
 
+        box = self.layout.box()
+        box.label(text = "Shaft")
+        box.prop(rig, "MhaShaftControl")
         if rig.data.MhaFeatures & F_SHAFT:
-            box = self.layout.box()
-            box.label(text = "Shaft")
-            box.prop(rig, "MhaShaftControl")
             box.prop(rig, "MhaShaftIk")
             row = box.row()
             op = row.operator("mhx.snap_reverse", text="Snap FK")
@@ -374,7 +374,7 @@ class MHX_PT_FKIKFingers(MhxPanel):
             op.bonename = "ik_shaft"
             op.revname = "rev_shaft"
             op.fk = op.ik = L_MAIN
-            box.operator("mhx.snap_shaft")
+        box.operator("mhx.snap_shaft")
 
 #------------------------------------------------------------------------
 #    Mhx Animation Panel

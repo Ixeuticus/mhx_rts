@@ -227,6 +227,9 @@ class Snapper(Updater, Basic):
 
     def imposeLocks(self, pb):
         return
+        for idx in range(3):
+            if pb.lock_location[idx]:
+                pb.location[idx] = 0
         if pb.rotation_mode == 'QUATERNION':
             for idx in range(4):
                 if pb.lock_rotation[idx]:
@@ -235,6 +238,9 @@ class Snapper(Updater, Basic):
             for idx in range(3):
                 if pb.lock_rotation[idx]:
                     pb.rotation_euler[idx] = 0
+        for idx in range(3):
+            if pb.lock_scale[idx]:
+                pb.scale[idx] = 1
 
 
     def matchIkLeg(self, legIk, toeFk):
@@ -439,7 +445,12 @@ class Snapper(Updater, Basic):
             pbones = [self.rig.pose.bones.get(bname) for bname in bnames]
             pbones = [pb for pb in pbones if pb]
             defbones = [self.rig.pose.bones.get("DEF-%s" % pb.name) for pb in pbones]
-            mats = [pb.matrix.copy() for pb in defbones]
+            if not defbones:
+                return
+            elif defbones[0]:
+                mats = [pb.matrix.copy() for pb in defbones]
+            else:
+                mats = [pb.matrix.copy() for pb in pbones]
             fkbone = self.rig.pose.bones.get(fkname)
             if fkbone is None:
                 continue
@@ -461,11 +472,13 @@ class Snapper(Updater, Basic):
                 ikbone.matrix = revbone.matrix
         self.updatePose()
         for ikbone in ikbones:
-            self.insertLocation(ikbone)
-            self.insertRotation(ikbone)
-            self.insertScale(ikbone)
-        setattr(self.rig, prop, False)
-        self.updatePose()
+            if ikbone:
+                self.insertLocation(ikbone)
+                self.insertRotation(ikbone)
+                self.insertScale(ikbone)
+        if prop:
+            setattr(self.rig, prop, False)
+            self.updatePose()
         nlinks = len(pboness[0])
         for n in range(nlinks):
             for pbones,mats in zip(pboness, matss):
