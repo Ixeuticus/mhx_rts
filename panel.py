@@ -329,20 +329,6 @@ class MHX_PT_FKIKFingers(MhxPanel):
             row = box.row()
             row.prop(rig, "MhaFingerIk_L", text="IK Influence")
             row.prop(rig, "MhaFingerIk_R", text="IK Influence")
-            row = box.row()
-            for suffix in ["L", "R"]:
-                op = row.operator("mhx.snap_reverse_fingers", text="Snap FK")
-                op.suffix = suffix
-                op.value = 0.0
-                op.prefix = ""
-                op.revprefix = "REV-ik_"
-            row = box.row()
-            for suffix in ["L", "R"]:
-                op = row.operator("mhx.snap_reverse_fingers", text="Snap IK")
-                op.suffix = suffix
-                op.value = 1.0
-                op.prefix = "ik_"
-                op.revprefix = "REV-"
         row = box.row()
         for suffix in ["L", "R"]:
             op = row.operator("mhx.snap_fingers")
