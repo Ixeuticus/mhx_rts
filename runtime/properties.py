@@ -171,6 +171,11 @@ def initMhxProps():
         min = 0, max = 1,
         description = "Spine IK influence")
 
+    bpy.types.Object.MhaSpineFollowsHip = FloatPropOVR(0.0, precision=3,
+        name = "IK Spine Follows Hip",
+        min = 0, max = 1,
+        description = "IK spine follows hip")
+
     bpy.types.Object.MhaNeckControl = BoolPropOVR(True,
         name = "FK/IK Neck",
         description = "Neck links controlled by the FK/IK neckhead bones")

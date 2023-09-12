@@ -271,17 +271,22 @@ def toggleFKIK(row, value, op):
         row.operator(op, text="FK")
 
 
-def snapFkIkBox(box, rig, ikprop, bname, layer):
-    box.prop(rig, ikprop)
+def snapFkIkBox(box, rig, bname, layer, prop1, prop2=None):
+    if prop2:
+        row = box.row()
+        row.prop(rig, prop1)
+        row.prop(rig, prop2)
+    else:
+        box.prop(rig, prop1)
     row = box.row()
     op = row.operator("mhx.snap_reverse", text="Snap FK")
-    op.prop = ikprop
+    op.prop = prop1
     op.value = 0.0
     op.bonename = bname
     op.revname = "REV-ik_%s" % bname
     op.fk = op.ik = layer
     op = row.operator("mhx.snap_reverse", text="Snap IK")
-    op.prop = ikprop
+    op.prop = prop1
     op.value = 1.0
     op.bonename = "ik_%s" % bname
     op.revname = "REV-%s" % bname
@@ -305,17 +310,14 @@ class MHX_PT_FKIKFingers(MhxPanel):
         box.label(text = "Spine")
         box.prop(rig, "MhaSpineControl")
         if rig.data.MhaFeatures & F_SPINE:
-            snapFkIkBox(box, rig, "MhaSpineIk", "back", L_MAIN)
+            snapFkIkBox(box, rig, "back", L_MAIN, "MhaSpineIk")
         row = box.row()
         row.operator("mhx.snap_spine")
 
         box = self.layout.box()
         box.label(text = "Neck")
         box.prop(rig, "MhaNeckControl")
-        if rig.data.MhaFeatures & F_NECK:
-            snapFkIkBox(box, rig, "MhaNeckIk", "neckhead", L_MAIN)
-        row = box.row()
-        row.operator("mhx.snap_neck_head")
+        box.operator("mhx.snap_neck_head")
 
         box = self.layout.box()
         box.label(text = "Fingers")
@@ -338,14 +340,14 @@ class MHX_PT_FKIKFingers(MhxPanel):
         box.label(text = "Tongue")
         box.prop(rig, "MhaTongueControl")
         if rig.data.MhaFeatures & F_TONGUE:
-            snapFkIkBox(box, rig, "MhaTongueIk", "tongue", L_HEAD)
+            snapFkIkBox(box, rig, "tongue", L_HEAD, "MhaTongueIk")
         box.operator("mhx.snap_tongue")
 
         box = self.layout.box()
         box.label(text = "Shaft")
         box.prop(rig, "MhaShaftControl")
         if rig.data.MhaFeatures & F_SHAFT:
-            snapFkIkBox(box, rig, "MhaShaftIk", "shaft", L_CUSTOM)
+            snapFkIkBox(box, rig, "shaft", L_CUSTOM, "MhaShaftIk")
         box.operator("mhx.snap_shaft")
 
 #------------------------------------------------------------------------
