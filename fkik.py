@@ -822,19 +822,10 @@ class MHX_OT_MhxSnapSpine(Snapper, HideOperator):
     bl_options = {'UNDO'}
 
     def run(self, context):
+        print("Snap neck and head")
+        self.snapLinks(context, ["neckhead"], ["ik_neck"], [["neck", "neck-1", "head"]], None)
         print("Snap spine")
         self.snapLinks(context, ["back"], ["ik_back"], [["spine", "spine-1", "chest", "chest-1"]], "MhaSpineControl")
-
-
-class MHX_OT_MhxSnapNeckHead(Snapper, HideOperator):
-    bl_idname = "mhx.snap_neck_head"
-    bl_label = "Snap Neck Head"
-    bl_description = "Snap the neck and head bones and clear the neckhead bone"
-    bl_options = {'UNDO'}
-
-    def run(self, context):
-        print("Snap neck and head")
-        self.snapLinks(context, ["neckhead"], ["ik_neckhead"], [["neck", "neck-1", "head"]], "MhaNeckControl")
 
 
 class MHX_OT_MhxSnapTongue(Snapper, HideOperator):
@@ -1078,7 +1069,6 @@ classes = [
     MHX_OT_MhxSnapReverseFingers,
     MHX_OT_MhxSnapFingers,
     MHX_OT_MhxSnapSpine,
-    MHX_OT_MhxSnapNeckHead,
     MHX_OT_MhxSnapTongue,
     MHX_OT_MhxSnapShaft,
     MHX_OT_MhxToggleFkIkLeftArm,

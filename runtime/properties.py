@@ -176,15 +176,6 @@ def initMhxProps():
         min = 0, max = 1,
         description = "IK spine follows hip")
 
-    bpy.types.Object.MhaNeckControl = BoolPropOVR(True,
-        name = "FK/IK Neck",
-        description = "Neck links controlled by the FK/IK neckhead bones")
-
-    bpy.types.Object.MhaNeckIk = FloatPropOVR(0.0, precision=3,
-        name = "Neck IK",
-        min = 0, max = 1,
-        description = "Neck IK influence")
-
     bpy.types.Object.MhaShaftControl = BoolPropOVR(True,
         name = "FK/IK Shaft",
         description = "Shaft links controlled by the FK/IK shaft bones")
@@ -194,14 +185,12 @@ def initMhxProps():
         min = 0, max = 1,
         description = "Shaft IK influence")
 
-    bpy.types.Object.MhaLegIkToAnkle_L = FloatPropOVR(0.0, precision=3,
+    bpy.types.Object.MhaLegIkToAnkle_L = BoolPropOVR(False,
         name = "Ankle IK Left",
-        min = 0, max = 1,
         description = "Use ankle bone as IK target for left leg")
 
-    bpy.types.Object.MhaLegIkToAnkle_R = FloatPropOVR(0.0, precision=3,
+    bpy.types.Object.MhaLegIkToAnkle_R = BoolPropOVR(False,
         name = "Ankle IK Right",
-        min = 0, max = 1,
         description = "Use ankle bone as IK target for right leg")
 
     bpy.types.Object.MhaArmIk_L = FloatPropOVR(0.0, precision=3,

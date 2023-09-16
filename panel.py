@@ -315,11 +315,6 @@ class MHX_PT_FKIKFingers(MhxPanel):
         row.operator("mhx.snap_spine")
 
         box = self.layout.box()
-        box.label(text = "Neck")
-        box.prop(rig, "MhaNeckControl")
-        box.operator("mhx.snap_neck_head")
-
-        box = self.layout.box()
         box.label(text = "Fingers")
         row = box.row()
         row.label(text = "Left")
@@ -340,7 +335,7 @@ class MHX_PT_FKIKFingers(MhxPanel):
         box.label(text = "Tongue")
         box.prop(rig, "MhaTongueControl")
         if rig.data.MhaFeatures & F_TONGUE:
-            snapFkIkBox(box, rig, "tongue", L_HEAD, "MhaTongueIk")
+            box.prop(rig, "MhaTongueIk")
         box.operator("mhx.snap_tongue")
 
         box = self.layout.box()
