@@ -162,6 +162,10 @@ def initMhxProps():
     # IK
     bpy.types.Object.MhaLimitsOn = BoolPropOVR(True, name = "Rotation Limits")
 
+    bpy.types.Object.MhaNeckControl = BoolPropOVR(True,
+        name = "FK/IK Neck",
+        description = "Neck links controlled by the FK/IK back bones")
+
     bpy.types.Object.MhaSpineControl = BoolPropOVR(True,
         name = "FK/IK Spine",
         description = "Spine links controlled by the FK/IK back bones")

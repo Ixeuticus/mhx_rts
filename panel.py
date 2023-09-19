@@ -308,7 +308,9 @@ class MHX_PT_FKIKFingers(MhxPanel):
 
         box = self.layout.box()
         box.label(text = "Spine")
-        box.prop(rig, "MhaSpineControl")
+        row = box.row()
+        row.prop(rig, "MhaSpineControl")
+        row.prop(rig, "MhaNeckControl")
         if rig.data.MhaFeatures & F_SPINE:
             snapFkIkBox(box, rig, "back", L_MAIN, "MhaSpineIk")
         row = box.row()

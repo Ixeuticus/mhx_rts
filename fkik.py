@@ -504,6 +504,44 @@ class Snapper(Updater, Basic):
         self.restore(context, self.value, True, True)
 
 
+    def getFingerInfo(self, suffix):
+        fknames = []
+        iknames = []
+        pboness = []
+        for fing,ffing in zip(self.Fingers, self.F_Fingers):
+            fknames.append( "%s.%s" % (fing, suffix) )
+            iknames.append( "ik_%s.%s" % (fing, suffix))
+            pboness.append( ["%s.0%d.%s" % (ffing, n, suffix) for n in range(1,4)] )
+        return fknames, iknames, pboness, "MhaFingerControl_%s" % suffix
+
+
+    def getNeckHeadInfo(self):
+        return ["neckhead"], ["ik_neck"], [["neck", "neck-1", "head"]], "MhaNeckControl"
+
+
+    def getSpineInfo(self):
+        return ["back"], ["ik_back"], [["spine", "spine-1", "chest", "chest-1"]], "MhaSpineControl"
+
+
+    def getTongueInfo(self, rig):
+        def isTongue(bname):
+            return (bname.lower()[0:6] == "tongue" and bname[6:].isdigit())
+
+        tonguebones = [bone.name for bone in rig.data.bones if isTongue(bone.name)]
+        tonguebones.sort()
+        return ["tongue"], ["ik_tongue"], [tonguebones], "MhaTongueControl"
+
+
+    def getShaftInfo(self, rig):
+        def isShaft(bname):
+            return (bname.lower()[0:5] == "shaft" and bname[5:].isdigit())
+
+        shaftbones = [bone.name for bone in rig.data.bones if isShaft(bone.name)]
+        shaftbones.sort()
+        return ["shaft"], ["ik_shaft"], [shaftbones], "MhaShaftControl"
+
+
+
 class FootSnapper(Snapper):
     useRotation: BoolProperty(
         name = "Rotate IK Foot",
@@ -804,14 +842,7 @@ class MHX_OT_MhxSnapFingers(Snapper, HideOperator):
     suffix : StringProperty()
 
     def run(self, context):
-        prop = "MhaFingerControl_%s" % self.suffix
-        fknames = []
-        iknames = []
-        pboness = []
-        for fing,ffing in zip(self.Fingers, self.F_Fingers):
-            fknames.append( "%s.%s" % (fing, self.suffix) )
-            iknames.append( "ik_%s.%s" % (fing, self.suffix))
-            pboness.append( ["%s.0%d.%s" % (ffing, n, self.suffix) for n in range(1,4)] )
+        fknames, iknames, pboness, prop = self.getFingerInfo(self.suffix)
         self.snapLinks(context, fknames, iknames, pboness, prop)
 
 
@@ -823,9 +854,11 @@ class MHX_OT_MhxSnapSpine(Snapper, HideOperator):
 
     def run(self, context):
         print("Snap neck and head")
-        self.snapLinks(context, ["neckhead"], ["ik_neck"], [["neck", "neck-1", "head"]], None)
+        fknames, iknames, pboness, prop = self.getNeckHeadInfo()
+        self.snapLinks(context, fknames, iknames, pboness, prop)
         print("Snap spine")
-        self.snapLinks(context, ["back"], ["ik_back"], [["spine", "spine-1", "chest", "chest-1"]], "MhaSpineControl")
+        fknames, iknames, pboness, prop = self.getSpineInfo()
+        self.snapLinks(context, fknames, iknames, pboness, prop)
 
 
 class MHX_OT_MhxSnapTongue(Snapper, HideOperator):
@@ -835,15 +868,9 @@ class MHX_OT_MhxSnapTongue(Snapper, HideOperator):
     bl_options = {'UNDO'}
 
     def run(self, context):
-        def isTongue(bname):
-            return (bname.lower()[0:6] == "tongue" and bname[6:].isdigit())
-
         print("Snap tongue")
-        rig = context.object
-        tonguebones = [bone.name for bone in rig.data.bones if isTongue(bone.name)]
-        tonguebones.sort()
-        self.snapLinks(context, ["tongue"], ["ik_tongue"], [tonguebones], "MhaTongueControl")
-        setattr(rig, "MhaTongueControl", False)
+        fknames, iknames, pboness, prop = self.getTongueInfo(context.object)
+        self.snapLinks(context, fknames, iknames, pboness, prop)
 
 
 class MHX_OT_MhxSnapShaft(Snapper, HideOperator):
@@ -853,15 +880,9 @@ class MHX_OT_MhxSnapShaft(Snapper, HideOperator):
     bl_options = {'UNDO'}
 
     def run(self, context):
-        def isShaft(bname):
-            return (bname.lower()[0:5] == "shaft" and bname[5:].isdigit())
-
         print("Snap shaft")
-        rig = context.object
-        shaftbones = [bone.name for bone in rig.data.bones if isShaft(bone.name)]
-        shaftbones.sort()
-        self.snapLinks(context, ["shaft"], ["ik_shaft"], [shaftbones], "MhaShaftControl")
-        setattr(rig, "MhaShaftControl", False)
+        fknames, iknames, pboness, prop = self.getShaftInfo(context.object)
+        self.snapLinks(context, fknames, iknames, pboness, prop)
 
 #----------------------------------------------------------
 #   Toggle FK - IK
