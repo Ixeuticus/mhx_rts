@@ -375,6 +375,7 @@ class MHX_PT_Animation(MhxPanel):
         self.layout.separator()
         self.layout.operator("mhx.transfer_to_ik")
         self.layout.operator("mhx.transfer_to_fk")
+        self.layout.operator("mhx.transfer_to_links")
         self.layout.operator("mhx.floor_ik_feet")
 
 #-------------------------------------------------------------

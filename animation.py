@@ -376,6 +376,93 @@ class Transferer:
             self.state[n] = self.rig.data.layers[n] = False
 
 #------------------------------------------------------------------------
+#   Transfer to links
+#------------------------------------------------------------------------
+
+class MHX_OT_TransferToLinks(Snapper, FrameRange):
+    bl_idname = "mhx.transfer_to_links"
+    bl_label = "Transfer To Links"
+    bl_description = "Transfer animation to link bones"
+    bl_options = {'UNDO'}
+
+    useSpine : BoolProperty(
+        name="Include Spine",
+        description="Include spine in snapping",
+        default=True)
+
+    useFingers : BoolProperty(
+        name="Include Fingers",
+        description="Include fingers in snapping",
+        default=False)
+
+    useTongue : BoolProperty(
+        name="Include Tongue",
+        description="Include tongue in snapping",
+        default=False)
+
+    def draw(self, context):
+        self.layout.prop(self, "useSpine")
+        self.layout.prop(self, "useFingers")
+        self.layout.prop(self, "useTongue")
+        FrameRange.draw(self, context)
+
+    def run(self, context):
+        checkVisible(context.object)
+        startProgress("Transfer to FK")
+        time1 = time.perf_counter()
+        self.transferToLinks(context)
+        time2 = time.perf_counter()
+        displayMessage("Transfer to FK completed\nin %1f seconds" % (time2-time1))
+
+
+    def transferToLinks(self, context):
+        props = []
+        infos = []
+        if self.useSpine:
+            if self.rig.MhaNeckControl:
+                infos.append(self.getNeckHeadInfo())
+                props.append("MhaNeckControl")
+            if self.rig.MhaSpineControl:
+                infos.append(self.getSpineInfo())
+                props.append("MhaSpineControl")
+        if self.useFingers:
+            if self.rig.MhaFingerControl_L:
+                infos.append(self.getFingerInfo("L"))
+                props.append("MhaFingerControl_L")
+            if self.rig.MhaFingerControl_R:
+                infos.append(self.getFingerInfo("R"))
+                props.append("MhaFingerControl_R")
+        if self.useTongue:
+            if self.rig.MhaTongueControl:
+                infos.append(self.getTongueInfo(self.rig))
+                props.append("MhaTongueControl")
+
+        scn = context.scene
+        self.auto = True
+        frames = range(self.startFrame, self.endFrame+1)
+        nFrames = len(frames)
+        fkboness = []
+        pbonesss = []
+        matsss = []
+        for n,frame in enumerate(frames):
+            self.setFrame(scn, frame)
+            for info in infos:
+                fkbones, pboness, matss = self.getBonesMatrices(info)
+                if n == 0:
+                    fkboness.append(fkbones)
+                    pbonesss.append(pboness)
+                matsss.append(matss)
+            self.updatePose()
+        for prop in props:
+            setattr(self.rig, prop, False)
+        for frame,matss in zip(frames, matsss):
+            self.setFrame(scn, frame)
+            for info,fkbones in zip(infos, fkboness):
+                self.clearFkIkBones(info, fkbones)
+            for pboness,matss in zip(pbonesss, matss):
+                self.setLinkBones(pboness, matss)
+
+#------------------------------------------------------------------------
 #   Transfer to FK
 #------------------------------------------------------------------------
 
@@ -1052,6 +1139,7 @@ classes = [
     MHX_OT_EnforceAllLimits,
     MHX_OT_LimbsBendPositive,
     MHX_OT_ShiftBoneFCurves,
+    MHX_OT_TransferToLinks,
     MHX_OT_TransferToFk,
     MHX_OT_TransferToIk,
     MHX_OT_ClearAnimation,
