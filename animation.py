@@ -419,12 +419,12 @@ class MHX_OT_TransferToLinks(Snapper, FrameRange):
         props = []
         infos = []
         if self.useSpine:
-            if self.rig.MhaNeckControl:
-                infos.append(self.getNeckHeadInfo())
-                props.append("MhaNeckControl")
             if self.rig.MhaSpineControl:
                 infos.append(self.getSpineInfo())
                 props.append("MhaSpineControl")
+            if self.rig.MhaNeckControl:
+                infos.append(self.getNeckHeadInfo())
+                props.append("MhaNeckControl")
         if self.useFingers:
             if self.rig.MhaFingerControl_L:
                 infos.append(self.getFingerInfo("L"))
@@ -443,23 +443,24 @@ class MHX_OT_TransferToLinks(Snapper, FrameRange):
         nFrames = len(frames)
         fkboness = []
         pbonesss = []
-        matsss = []
+        matsss = {}
         for n,frame in enumerate(frames):
             self.setFrame(scn, frame)
+            matsss[n] = []
             for info in infos:
                 fkbones, pboness, matss = self.getBonesMatrices(info)
                 if n == 0:
                     fkboness.append(fkbones)
                     pbonesss.append(pboness)
-                matsss.append(matss)
+                matsss[n].append(matss)
             self.updatePose()
         for prop in props:
             setattr(self.rig, prop, False)
-        for frame,matss in zip(frames, matsss):
+        for n,frame in enumerate(frames):
             self.setFrame(scn, frame)
             for info,fkbones in zip(infos, fkboness):
                 self.clearFkIkBones(info, fkbones)
-            for pboness,matss in zip(pbonesss, matss):
+            for pboness,matss in zip(pbonesss, matsss[n]):
                 self.setLinkBones(pboness, matss)
 
 #------------------------------------------------------------------------
