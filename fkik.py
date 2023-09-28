@@ -496,16 +496,11 @@ class Snapper(Updater, Basic):
                 self.insertScale(pb)
 
 
-    def snapReverse(self, context):
-        print("Snap %s to %s" % (self.bonename, self.revname))
-        self.setup(context, 1-self.value, change=False)
-        bone = self.rig.pose.bones[self.bonename]
-        revbone = self.rig.pose.bones[self.revname]
+    def snapReverse(self, bone, revbone):
         bone.matrix = revbone.matrix
         self.insertLocation(bone)
         self.insertRotation(bone)
         self.insertScale(bone)
-        self.restore(context, self.value, True, True)
 
 
     def getFingerInfo(self, suffix):
@@ -811,7 +806,12 @@ class MHX_OT_MhxSnapReverse(Snapper, HideOperator):
     ik : IntProperty()
 
     def run(self, context):
-        self.snapReverse(context)
+        print("Snap %s to %s" % (self.bonename, self.revname))
+        self.setup(context, 1-self.value, change=False)
+        bone = self.rig.pose.bones[self.bonename]
+        revbone = self.rig.pose.bones[self.revname]
+        self.snapReverse(bone, revbone)
+        self.restore(context, self.value, True, True)
 
 
 class MHX_OT_MhxSnapFingers(Snapper, HideOperator):

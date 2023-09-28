@@ -271,28 +271,6 @@ def toggleFKIK(row, value, op):
         row.operator(op, text="FK")
 
 
-def snapFkIkBox(box, rig, bname, layer, prop1, prop2=None):
-    if prop2:
-        row = box.row()
-        row.prop(rig, prop1)
-        row.prop(rig, prop2)
-    else:
-        box.prop(rig, prop1)
-    row = box.row()
-    op = row.operator("mhx.snap_reverse", text="Snap FK")
-    op.prop = prop1
-    op.value = 0.0
-    op.bonename = bname
-    op.revname = "REV-ik_%s" % bname
-    op.fk = op.ik = layer
-    op = row.operator("mhx.snap_reverse", text="Snap IK")
-    op.prop = prop1
-    op.value = 1.0
-    op.bonename = "ik_%s" % bname
-    op.revname = "REV-%s" % bname
-    op.fk = op.ik = layer
-
-
 class MHX_PT_FKIKFingers(MhxPanel):
     bl_label = "FK/IK Spine Fingers Tongue Shaft"
     bl_space_type = "VIEW_3D"
@@ -312,7 +290,24 @@ class MHX_PT_FKIKFingers(MhxPanel):
         row.prop(rig, "MhaSpineControl")
         row.prop(rig, "MhaNeckControl")
         if rig.data.MhaFeatures & F_SPINE:
-            snapFkIkBox(box, rig, "back", L_MAIN, "MhaSpineIk")
+            box.prop(rig, "MhaSpineIk")
+            row = box.row()
+            op = row.operator("mhx.snap_reverse", text="Snap FK")
+            op.prop = "MhaSpineIk"
+            op.value = 0.0
+            op.bonename = "back"
+            op.revname = "REV-ik_back"
+            op.fk = op.ik = L_MAIN
+            op = row.operator("mhx.snap_reverse", text="Snap IK")
+            op.prop = "MhaSpineIk"
+            op.value = 1.0
+            op.bonename = "ik_back"
+            op.revname = "REV-back"
+            op.fk = op.ik = L_MAIN
+
+
+
+
         row = box.row()
         row.operator("mhx.snap_spine")
 
@@ -344,7 +339,7 @@ class MHX_PT_FKIKFingers(MhxPanel):
         box.label(text = "Shaft")
         box.prop(rig, "MhaShaftControl")
         if rig.data.MhaFeatures & F_SHAFT:
-            snapFkIkBox(box, rig, "shaft", L_CUSTOM, "MhaShaftIk")
+            box.prop(rig, "MhaShaftIk")
         box.operator("mhx.snap_shaft")
 
 #------------------------------------------------------------------------
