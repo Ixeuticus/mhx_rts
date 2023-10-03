@@ -61,35 +61,40 @@ L_FIN =     30
 L_DEF =     31
 
 
+MhxLayers = {
+    L_MAIN :    "Root",
+    L_SPINE :   "Spine",
 
-MhxLayers = [
-    ((L_MAIN,       'Root', 'MhxRoot'),
-     (L_SPINE ,     'Spine', 'MhxFKSpine')),
-    ((L_HEAD,       'Head', 'MhxHead'),
-     (L_FACE,       'Face', 'MhxFace')),
-    ((L_CUSTOM,     'Custom', 'MhxCustom'),
-     (L_CUSTOM2,    'Custom 2', 'MhxCustom2')),
-    ((L_TWEAK,      'Tweak', 'MhxTweak'),
-     (L_UNUSED,     'Unused', 'MhxUnused')),
-    ('Left', 'Right'),
-    ((L_LARMIK,     'IK Arm', 'MhxIKArm'),
-     (L_RARMIK,     'IK Arm', 'MhxIKArm')),
-    ((L_LARMFK,     'FK Arm', 'MhxFKArm'),
-     (L_RARMFK,     'FK Arm', 'MhxFKArm')),
-    ((L_LLEGIK,     'IK Leg', 'MhxIKLeg'),
-     (L_RLEGIK,     'IK Leg', 'MhxIKLeg')),
-    ((L_LLEGFK,     'FK Leg', 'MhxFKLeg'),
-     (L_RLEGFK,     'FK Leg', 'MhxFKLeg')),
-    ((L_LEXTRA,     'Extra', 'MhxExtra'),
-     (L_REXTRA,     'Extra', 'MhxExtra')),
-    ((L_LHAND,      'Hand', 'MhxHand'),
-     (L_RHAND,      'Hand', 'MhxHand')),
-    ((L_LFINGER,    'Fingers', 'MhxFingers'),
-     (L_RFINGER,    'Fingers', 'MhxFingers')),
-    ((L_LTOE,       'Toes', 'MhxToe'),
-     (L_RTOE,       'Toes', 'MhxToe')),
-]
+    L_LARMIK :  "IK Arm Left",
+    L_LARMFK :  "FK Arm Left",
+    L_LLEGIK :  "IK Leg Left",
+    L_LLEGFK :  "FK Leg Left",
+    L_LHAND :   "Hand Left",
+    L_LFINGER : "Fingers Left",
+    L_LEXTRA :  "Extra Left",
+    L_LTOE :    "Toes Left",
 
+    L_RARMIK :  "IK Arm Right",
+    L_RARMFK :  "FK Arm Right",
+    L_RLEGIK :  "IK Leg Right",
+    L_RLEGFK :  "FK Leg Right",
+    L_RHAND :   "Hand Right",
+    L_RFINGER : "Fingers Right",
+    L_REXTRA :  "Extra Right",
+    L_RTOE :    "Toes Right",
+
+    L_FACE :    "Face",
+    L_TWEAK :   "Tweak",
+    L_HEAD :    "Head",
+    L_UNUSED :  "Unused",
+    L_CUSTOM :  "Custom",
+    L_CUSTOM2 : "Custom 2",
+
+    L_HELP :    "Help",
+    L_HELP2 :   "Help 2",
+    L_FIN :     "Final",
+    L_DEF :     "Deform",
+}
 
 F_TONGUE = 1
 F_FINGER = 2

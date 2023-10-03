@@ -93,10 +93,9 @@ class MHX_OT_EnableAllLayers(MhxOperator):
 
     def run(self, context):
         rig = context.object
-        for (left,right) in MhxLayers:
-            if type(left) != str:
-                for (n, name, prop) in [left,right]:
-                    rig.data.layers[n] = True
+        for layer in MhxLayers.keys():
+            if layer not in [L_HELP, L_HELP2, L_FIN, L_DEF]:
+                rig.data.layers[layer] = True
 
 
 class MHX_OT_DisableAllLayers(MhxOperator):
