@@ -378,11 +378,19 @@ class Transferer:
         else:
             onLayers = fkLayers
             offLayers = ikLayers
-        for n in onLayers:
-            self.state[n] = self.rig.data.layers[n] = True
-        for n in offLayers:
-            self.state[n] = self.rig.data.layers[n] = False
-
+        if bpy.app.version < (4,0,0):
+            for n in onLayers:
+                self.state[n] = self.rig.data.layers[n] = True
+            for n in offLayers:
+                self.state[n] = self.rig.data.layers[n] = False
+        else:
+            for n in onLayers:
+                self.state[n] = True
+                self.rig.data.collections[MhxLayers[n]].is_visible = True
+            for n in offLayers:
+                self.state[n] = False
+                self.rig.data.collections[MhxLayers[n]].is_visible = False
+        
 #------------------------------------------------------------------------
 #   Transfer to links
 #------------------------------------------------------------------------

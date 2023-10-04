@@ -102,9 +102,17 @@ class MHX_PT_Layers(MhxPanel):
             if type(left) == str:
                 row.label(text=left)
                 row.label(text=right)
-            else:
+            elif bpy.app.version < (4,0,0):
                 row.prop(rig.data, "layers", index=left, toggle=True, text=MhxLayers[left])
                 row.prop(rig.data, "layers", index=right, toggle=True, text=MhxLayers[right])
+            else:
+                cname = MhxLayers[left]
+                coll = rig.data.collections.get(cname)
+                row.prop(coll, "is_visible", toggle=True, text=cname)
+                cname = MhxLayers[right]
+                coll = rig.data.collections.get(cname)
+                row.prop(coll, "is_visible", toggle=True, text=cname)
+
 
 #------------------------------------------------------------------------
 #    Mhx Properties Panel

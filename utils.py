@@ -26,6 +26,19 @@
 # either expressed or implied, of the FreeBSD Project.
 
 import bpy
+from .layers import MhxLayers
+
+#-------------------------------------------------------------
+#   Blender 4
+#-------------------------------------------------------------
+
+def setRigLayer(rig, idx, value):
+    if bpy.app.version < (4,0,0):
+        rig.data.layers[idx] = value
+    else:
+        coll = rig.data.collections.get(MhxLayers[idx])
+        if coll:
+            coll.is_visible = value
 
 #-------------------------------------------------------------
 #   Utility functions
@@ -238,15 +251,27 @@ class HideOperator(MhxOperator):
         self.rig = context.object
         scn = context.scene
         self.frame = scn.frame_current
-        self.state = list(self.rig.data.layers)
-        self.rig.data.layers = 32*[True]
+        if bpy.app.version < (4,0,0):
+            self.state = list(self.rig.data.layers)
+            self.rig.data.layers = 32*[True]
+        else:
+            self.state = 32*[False]
+            for idx,cname in MhxLayers.items():
+                coll = self.rig.data.collections[cname]
+                self.state[idx] = coll.is_visible
+                coll.is_visible = True
         self.hideStatus = []
         self.layerColls = []
         self.hideLayerColls(context.view_layer.layer_collection)
 
 
     def sequel(self, context):
-        self.rig.data.layers = self.state
+        if bpy.app.version < (4,0,0):
+            self.rig.data.layers = self.state
+        else:
+            for idx,cname in MhxLayers.items():
+                coll = self.rig.data.collections[cname]
+                coll.is_visible = self.state[idx]
         for layer in self.layerColls:
             layer.exclude = False
         for ob,hide,viewport,render in self.hideStatus:

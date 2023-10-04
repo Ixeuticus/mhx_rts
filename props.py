@@ -86,6 +86,15 @@ class MHX_OT_ConvertMhxActions(MhxOperator):
 #   Enable and disable layers
 #-------------------------------------------------------------
 
+def setRigLayer(rig, idx, value):
+    if bpy.app.version < (4,0,0):
+        rig.data.layers[idx] = value
+    else:
+        coll = rig.data.collections.get(MhxLayers[idx])
+        if coll:
+            coll.is_visible = value
+
+
 class MHX_OT_EnableAllLayers(MhxOperator):
     bl_idname = "mhx.enable_all_layers"
     bl_label = "Enable all layers"
@@ -93,9 +102,10 @@ class MHX_OT_EnableAllLayers(MhxOperator):
 
     def run(self, context):
         rig = context.object
-        for layer in MhxLayers.keys():
-            if layer not in [L_HELP, L_HELP2, L_FIN, L_DEF]:
-                rig.data.layers[layer] = True
+        for idx in MhxLayers.keys():
+            if idx not in [L_HELP, L_HELP2, L_FIN, L_DEF]:
+                setRigLayer(rig, idx, True)
+                
 
 
 class MHX_OT_DisableAllLayers(MhxOperator):
@@ -105,18 +115,21 @@ class MHX_OT_DisableAllLayers(MhxOperator):
 
     def run(self, context):
         rig = context.object
-        layers = 32*[False]
-        pb = context.active_pose_bone
-        if pb:
-            for n in range(32):
-                if pb.bone.layers[n]:
-                    layers[n] = True
-                    break
-        else:
-            layers[0] = True
-        if rig:
+        if bpy.app.version < (4,0,0):
+            layers = 32*[False]
+            pb = context.active_pose_bone
+            if pb:
+                for n in range(32):
+                    if pb.bone.layers[n]:
+                        layers[n] = True
+                        break
+            else:
+                layers[0] = True
             rig.data.layers = layers
-
+        else:
+            for coll in rig.data.collections:
+                coll.is_visible = False
+        
 #-------------------------------------------------------------
 #   Update MHX
 #-------------------------------------------------------------
