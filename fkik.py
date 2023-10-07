@@ -509,7 +509,7 @@ class Snapper(Updater, Basic):
         pboness = []
         for fing,ffing in zip(self.Fingers, self.F_Fingers):
             fknames.append( "%s.%s" % (fing, suffix) )
-            iknames.append( "ik_%s.%s" % (fing, suffix))
+            iknames.append( "%s.ik.%s" % (fing, suffix))
             pboness.append( ["%s.0%d.%s" % (ffing, n, suffix) for n in range(1,4)] )
         return fknames, iknames, pboness
 
