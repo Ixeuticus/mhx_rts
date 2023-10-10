@@ -81,6 +81,14 @@ class MHX_PT_Layers(MhxPanel):
         if self.needsMhxUpdate(rig):
             return
 
+        def showCollection(layout, key):
+            cname = MhxLayers[key]
+            coll = rig.data.collections.get(cname)
+            if coll:
+                layout.prop(coll, "is_visible", toggle=True, text=cname)
+            else:
+                layout.label(text=cname)
+
         self.layout.operator("mhx.enable_all_layers")
         self.layout.operator("mhx.disable_all_layers")
         layers = [
@@ -106,13 +114,8 @@ class MHX_PT_Layers(MhxPanel):
                 row.prop(rig.data, "layers", index=left, toggle=True, text=MhxLayers[left])
                 row.prop(rig.data, "layers", index=right, toggle=True, text=MhxLayers[right])
             else:
-                cname = MhxLayers[left]
-                coll = rig.data.collections.get(cname)
-                row.prop(coll, "is_visible", toggle=True, text=cname)
-                cname = MhxLayers[right]
-                coll = rig.data.collections.get(cname)
-                row.prop(coll, "is_visible", toggle=True, text=cname)
-
+                showCollection(row, left)
+                showCollection(row, right)
 
 #------------------------------------------------------------------------
 #    Mhx Properties Panel

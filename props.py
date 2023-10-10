@@ -105,7 +105,7 @@ class MHX_OT_EnableAllLayers(MhxOperator):
         for idx in MhxLayers.keys():
             if idx not in [L_HELP, L_HELP2, L_FIN, L_DEF]:
                 setRigLayer(rig, idx, True)
-                
+
 
 
 class MHX_OT_DisableAllLayers(MhxOperator):
@@ -129,7 +129,7 @@ class MHX_OT_DisableAllLayers(MhxOperator):
         else:
             for coll in rig.data.collections:
                 coll.is_visible = False
-        
+
 #-------------------------------------------------------------
 #   Update MHX
 #-------------------------------------------------------------
@@ -144,7 +144,7 @@ class MHX_OT_UpdateMhx(MhxOperator):
             for var in list(fcu.driver.variables):
                 trg = var.targets[0]
                 prop = baseRef(trg.data_path)
-                if trg.id == rig.data and prop[0:3] == "Mha":
+                if trg.id == rig.data and prop[0:3] == "Mha" and prop in rig.data.keys():
                     value = getValue(prop, rig.data[prop])
                     if hasattr(rig, prop):
                         setattr(rig, prop, value)
@@ -158,7 +158,7 @@ class MHX_OT_UpdateMhx(MhxOperator):
                         nvar.name = varname
                     else:
                         rig[prop] = value
-                elif trg.id == rig and prop[0:3] == "Mha":
+                elif trg.id == rig and prop[0:3] == "Mha" and hasattr(rig, prop):
                     value = getValue(prop, getattr(rig, prop))
                     if hasattr(rig, prop):
                         for trg in var.targets:
@@ -175,6 +175,22 @@ class MHX_OT_UpdateMhx(MhxOperator):
                 return bool(value)
             else:
                 return value
+
+        def updateCollections(rig):
+            if "Layer 1" not in rig.data.collections.keys():
+                if (cname in MhxLayers.values() and
+                    cname not in rig.data.collections.keys()):
+                    rig.data.collections.new(cname)
+                return
+            for coll in list(rig.data.collections):
+                if not coll.name.startswith("Layer "):
+                    rig.data.collections.remove(coll)
+            for idx,cname in MhxLayers.items():
+                coll = rig.data.collections.get("Layer %d" % (idx+1))
+                if coll:
+                    coll.name = cname
+                else:
+                    rig.data.collections.new(cname)
 
         rig = context.object
         for key in list(rig.data.keys()):
@@ -239,7 +255,10 @@ class MHX_OT_UpdateMhx(MhxOperator):
                 eb = rig.data.edit_bones.get("%s.%s" % (bname, suffix))
                 if eb:
                     eb.use_connect = conn
+
         setMode('POSE')
+        if bpy.app.version >= (4,0,0):
+            updateCollections(rig)
         rig.data.MhaFeatures |= F_IDPROPS
 
 
