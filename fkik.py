@@ -226,15 +226,10 @@ class Snapper(Updater, Basic):
 
 
     def imposeLocks(self, pb):
-        return
         for idx in range(3):
             if pb.lock_location[idx]:
                 pb.location[idx] = 0
-        if pb.rotation_mode == 'QUATERNION':
-            for idx in range(4):
-                if pb.lock_rotation[idx]:
-                    pb.rotation_quaternion[idx] = 0
-        else:
+        if pb.rotation_mode != 'QUATERNION':
             for idx in range(3):
                 if pb.lock_rotation[idx]:
                     pb.rotation_euler[idx] = 0
@@ -356,9 +351,11 @@ class Snapper(Updater, Basic):
 
         if uparmIkTwist:
             self.matchPoseTransform(uparmFk, uparmIkTwist)
-            self.matchPoseTransform(forearmFk, forearmIkTwist)
         else:
             self.matchPoseTransform(uparmFk, uparmIk)
+        if forearmIkTwist:
+            self.matchPoseTransform(forearmFk, forearmIkTwist)
+        else:
             self.matchPoseTransform(forearmFk, forearmIk)
         self.matchPoseTransform(handFk, handIk)
 
@@ -377,7 +374,12 @@ class Snapper(Updater, Basic):
             self.setChildofInverse(elbowPt)
         if uparmIkTwist:
             self.matchPoseTransform(uparmIkTwist, uparmFk)
+        else:
+            self.matchPoseTransform(uparmIk, uparmFk)
+        if forearmIkTwist:
             self.matchPoseTransform(forearmIkTwist, forearmFk)
+        else:
+            self.matchPoseTransform(forearmIk, forearmFk)
 
 
     def setChildofInverse(self, pb):
@@ -393,11 +395,13 @@ class Snapper(Updater, Basic):
         (thighFk, shinFk, footFk, toeFk) = snapFk
         (thighIk, shinIk, thighIkTwist, shinIkTwist, kneePt, kneePoleA, foot2, ankleIk, legIk, footRev, toeRev, footInvFk, toeInvFk, footInvIk, toeInvIk) = snapIk
 
-        if shinIkTwist:
+        if thighIkTwist:
             self.matchPoseTransform(thighFk, thighIkTwist)
-            self.matchPoseTransform(shinFk, shinIkTwist)
         else:
             self.matchPoseTransform(thighFk, thighIk)
+        if shinIkTwist:
+            self.matchPoseTransform(shinFk, shinIkTwist)
+        else:
             self.matchPoseTransform(shinFk, shinIk)
         if not legIkToAnkle:
             self.matchPoseTransform(footFk, footInvIk)
@@ -427,9 +431,14 @@ class Snapper(Updater, Basic):
             else:
                 self.matchPoleTarget(kneePt, thighFk, shinFk)
             self.setChildofInverse(kneePt)
-        if shinIkTwist:
+        if thighIkTwist:
             self.matchPoseTransform(thighIkTwist, thighFk)
+        else:
+            self.matchPoseTransform(thighIk, thighFk)
+        if shinIkTwist:
             self.matchPoseTransform(shinIkTwist, shinFk)
+        else:
+            self.matchPoseTransform(shinIk, shinFk)
 
 
     Fingers = ["thumb", "index", "middle", "ring", "pinky"]
