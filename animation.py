@@ -33,11 +33,17 @@ from .utils import *
 from .layers import *
 from .fkik import Snapper, Basic, Updater, FootSnapper
 
+class HasAction:
+    @classmethod
+    def poll(cls, context):
+        rig = context.object
+        return (rig.animation_data and rig.animation_data.action)
+
 #-------------------------------------------------------------
 #   Frame range
 #-------------------------------------------------------------
 
-class FrameRange(HidePropsOperator, Updater):
+class FrameRange(HidePropsOperator, Updater, HasAction):
     startFrame : IntProperty(
         name = "Start Frame",
         description = "Starting frame for the animation",
@@ -182,7 +188,7 @@ class MHX_OT_LimbsBendPositive(FrameRange, Bender):
 #   Remove keyframes from frame 0
 #-------------------------------------------------------------
 
-class MHX_OT_RemoveFrameZero(MhxOperator):
+class MHX_OT_RemoveFrameZero(MhxOperator, HasAction):
     bl_idname = "mhx.remove_frame_zero"
     bl_label = "Remove Frame Zero"
     bl_description = "Remove all keys from frame 0"
@@ -191,11 +197,7 @@ class MHX_OT_RemoveFrameZero(MhxOperator):
     def run(self, context):
         rig = context.object
         checkVisible(rig)
-        if rig.animation_data is None:
-            return None
         act = rig.animation_data.action
-        if act is None:
-            return None
         for fcu in act.fcurves:
             kps = [kp for kp in fcu.keyframe_points if kp.co[0] == 0.0]
             for kp in kps:
@@ -205,7 +207,7 @@ class MHX_OT_RemoveFrameZero(MhxOperator):
 #   Remove unused F-curves
 #-------------------------------------------------------------
 
-class MHX_OT_RemoveUnusedFcurves(MhxOperator):
+class MHX_OT_RemoveUnusedFcurves(MhxOperator, HasAction):
     bl_idname = "mhx.remove_unused_fcurves"
     bl_label = "Remove Unused F-curves"
     bl_description = "Remove unused f-curves"
@@ -214,11 +216,7 @@ class MHX_OT_RemoveUnusedFcurves(MhxOperator):
     def run(self, context):
         rig = context.object
         checkVisible(rig)
-        if rig.animation_data is None:
-            return None
         act = rig.animation_data.action
-        if act is None:
-            return None
         deletes = []
         for fcu in act.fcurves:
             channel = fcu.data_path.rsplit(".")[-1]
@@ -390,7 +388,7 @@ class Transferer:
             for n in offLayers:
                 self.state[n] = False
                 self.rig.data.collections[MhxLayers[n]].is_visible = False
-        
+
 #------------------------------------------------------------------------
 #   Transfer to links
 #------------------------------------------------------------------------
@@ -600,7 +598,7 @@ class MHX_OT_TransferToIk(Transferer, FootSnapper, FrameRange):
 #   Clear animation
 #------------------------------------------------------------------------
 
-class MHX_OT_ClearAnimation(HidePropsOperator):
+class MHX_OT_ClearAnimation(FrameRange):
     bl_idname = "mhx.clear_animation"
     bl_label = "Clear Animation"
     bl_description = "Clear Animation For FK or IK Bones"
@@ -636,6 +634,11 @@ class MHX_OT_ClearAnimation(HidePropsOperator):
         description = "Clear Spine IK animation",
         default = False)
 
+    useEntireAnimation : BoolProperty(
+        name = "Entire Animation",
+        description = "Remove entire animation rather than a frame range",
+        default = True)
+
     def draw(self, context):
         row = self.layout.row()
         row.prop(self, "clearArmFK")
@@ -646,13 +649,16 @@ class MHX_OT_ClearAnimation(HidePropsOperator):
         row = self.layout.row()
         row.prop(self, "clearSpineFK")
         row.prop(self, "clearSpineIK")
+        self.layout.prop(self, "useEntireAnimation")
+        if not self.useEntireAnimation:
+            FrameRange.draw(self, context)
 
     def run(self, context):
+        startProgress("Clear animation")
         from .fkik import SnapBones
         rig = context.object
         checkVisible(rig)
-        startProgress("Clear animation")
-        act = self.getCurrentAction(rig)
+        act = rig.animation_data.action
         bnames = []
         if self.clearArmFK:
             bnames += SnapBones["ArmFK"]
@@ -669,32 +675,32 @@ class MHX_OT_ClearAnimation(HidePropsOperator):
             bnames += ["back"]
         if self.clearSpineIK:
             bnames += ["ik_back"]
-        nfcus = self.removeFcurves(act, lBnames+rBnames+bnames)
-        if nfcus:
+
+        def getFcurves(act, bnames):
+            fcus = []
+            for fcu in act.fcurves:
+                words = fcu.data_path.split('"')
+                if (words[0] == "pose.bones[" and
+                    words[1] in bnames):
+                    fcus.append(fcu)
+            return fcus
+
+        fcus = getFcurves(act, lBnames+rBnames+bnames)
+        if self.useEntireAnimation:
+            for fcu in fcus:
+                act.fcurves.remove(fcu)
+        else:
+            for fcu in fcus:
+                fcu.keyframe_points.sort()
+                kps = [(kp.co[0],kp) for kp in fcu.keyframe_points if kp.co[0] >= self.startFrame and kp.co[0] <= self.endFrame]
+                kps.reverse()
+                for x,kp in kps:
+                    fcu.keyframe_points.remove(kp, fast=True)
+        if fcus:
             msg = "Animation cleared"
         else:
-            msg = "No F-curves removed"
+            msg = "No F-curves found"
         displayMessage(msg)
-
-    def getCurrentAction(self, rig):
-        if not rig.animation_data:
-            raise MhxError("Rig has no animation data")
-        act = rig.animation_data.action
-        if not act:
-            raise MhxError("Rig has no action")
-        return act
-
-    def removeFcurves(self, act, bnames):
-        fcus = []
-        for fcu in act.fcurves:
-            words = fcu.data_path.split('"')
-            if (words[0] == "pose.bones[" and
-                words[1] in bnames):
-                fcus.append(fcu)
-        ncurves = len(fcus)
-        for fcu in fcus:
-            act.fcurves.remove(fcu)
-        return ncurves
 
 #-------------------------------------------------------------
 #   Feet operations
@@ -949,7 +955,6 @@ class MHX_OT_FloorFkFoot(Footer, FrameRange):
         self.rig = context.object
         checkVisible(self.rig)
         self.getPlane(context)
-        print("KK", self.plane)
         frames = range(self.startFrame, self.endFrame+1)
         self.floorFkFoot(scn, frames)
         displayMessage("FK Feet kept above floor")
