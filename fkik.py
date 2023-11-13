@@ -463,7 +463,9 @@ class Snapper(Updater, Basic):
             pbones = [self.rig.pose.bones.get(bname) for bname in bnames]
             pbones = [pb for pb in pbones if pb]
             defbones = [self.rig.pose.bones.get("DEF-%s" % pb.name) for pb in pbones]
-            if defbones[0]:
+            if not defbones:
+                continue
+            elif defbones[0]:
                 mats = [pb.matrix.copy() for pb in defbones]
             else:
                 mats = [pb.matrix.copy() for pb in pbones]
@@ -492,6 +494,8 @@ class Snapper(Updater, Basic):
 
 
     def setLinkBones(self, pboness, matss):
+        if not pboness:
+            return
         nlinks = len(pboness[0])
         for n in range(nlinks):
             for pbones,mats in zip(pboness, matss):

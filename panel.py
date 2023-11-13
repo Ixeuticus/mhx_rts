@@ -63,6 +63,9 @@ class MhxPanel(bpy.types.Panel):
     def needsMhxUpdate(self, rig):
         if rig is None:
             return True
+        if bpy.app.version >= (4,0,0) and "Layer 1" in rig.data.collections.keys():
+            self.layout.operator("mhx.update_mhx_blender4")
+            return True
         if not rig.data.MhaFeatures & F_IDPROPS:
             self.layout.operator("mhx.update_mhx")
             return True

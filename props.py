@@ -35,6 +35,28 @@ from .runtime.properties import initMhxProps
 #   Convert MHX actions from legacy to modern
 # ---------------------------------------------------------------------
 
+class MHX_OT_UpdateMhxBlender4(MhxOperator):
+    bl_idname = "mhx.update_mhx_blender4"
+    bl_label = "Update MHX To Blender 4"
+    bl_options = {'UNDO'}
+
+    def run(self, context):
+        rig = context.object
+        for coll in list(rig.data.collections):
+            if not coll.name.startswith("Layer "):
+                rig.data.collections.remove(coll)
+        for idx,cname in MhxLayers.items():
+            coll = rig.data.collections.get("Layer %d" % (idx+1))
+            if coll:
+                coll.name = cname
+        for cname in MhxLayers.values():
+            if cname not in rig.data.collections.keys():
+                coll = rig.data.collections.new(cname)
+
+# ---------------------------------------------------------------------
+#   Convert MHX actions from legacy to modern
+# ---------------------------------------------------------------------
+
 class MHX_OT_ConvertMhxActions(MhxOperator):
     bl_idname = "mhx.convert_mhx_actions"
     bl_label = "Convert MHX Actions"
@@ -395,6 +417,7 @@ classes = [
     MHX_OT_EnableAllLayers,
     MHX_OT_DisableAllLayers,
     MHX_OT_ConvertMhxActions,
+    MHX_OT_UpdateMhxBlender4,
     MHX_OT_UpdateMhx,
     MHX_OT_BakeMhx,
     MHX_OT_UnbakeMhx,
