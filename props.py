@@ -200,9 +200,9 @@ class MHX_OT_UpdateMhx(MhxOperator):
 
         def updateCollections(rig):
             if "Layer 1" not in rig.data.collections.keys():
-                if (cname in MhxLayers.values() and
-                    cname not in rig.data.collections.keys()):
-                    rig.data.collections.new(cname)
+                for cname in MhxLayers.values():
+                    if cname not in rig.data.collections.keys():
+                        rig.data.collections.new(cname)
                 return
             for coll in list(rig.data.collections):
                 if not coll.name.startswith("Layer "):
