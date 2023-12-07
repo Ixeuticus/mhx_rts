@@ -959,9 +959,12 @@ class MHX_OT_MhxUpdateElbowKneeParents(MhxOperator, Updater):
 
     def toggle(self, context, prop, bname, polep, limbpar):
         rig = context.object
-        pb = rig.pose.bones[bname]
+        pb = rig.pose.bones.get(bname)
+        msg = "Cannot set elbow and knee parents for this armature"
+        if pb is None:
+            raise MhxError(msg)
         wmat = pb.matrix.copy()
-        setMode('EDIT', "Cannot set elbow and knee parents for this armature")
+        setMode('EDIT', msg)
         partype = getattr(rig, prop)
         if partype in ['HAND', 'FOOT']:
             parname = polep
