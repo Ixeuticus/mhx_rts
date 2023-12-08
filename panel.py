@@ -35,7 +35,7 @@ from .buildnumber import BUILD
 #------------------------------------------------------------------------
 
 class MHX_PT_Main(bpy.types.Panel):
-    bl_label = "MHX (version 1.7.2.%04d)" % BUILD
+    bl_label = "MHX (version 1.7.3.%04d)" % BUILD
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_category = "MHX"
