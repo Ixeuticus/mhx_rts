@@ -57,7 +57,7 @@ L_CUSTOM2 = 17
 
 L_HELP =    14
 L_HELP2 =   15
-L_FIN =     30
+L_HIDDEN =  30
 L_DEF =     31
 
 
@@ -92,7 +92,7 @@ MhxLayers = {
 
     L_HELP :    "Help",
     L_HELP2 :   "Help 2",
-    L_FIN :     "Final",
+    L_HIDDEN :  "Hidden",
     L_DEF :     "Deform",
 }
 

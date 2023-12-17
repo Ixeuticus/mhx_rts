@@ -125,7 +125,7 @@ class MHX_OT_EnableAllLayers(MhxOperator):
     def run(self, context):
         rig = context.object
         for idx in MhxLayers.keys():
-            if idx not in [L_HELP, L_HELP2, L_FIN, L_DEF]:
+            if idx not in [L_HELP, L_HELP2, L_HIDDEN, L_DEF]:
                 setRigLayer(rig, idx, True)
 
 

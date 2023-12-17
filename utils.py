@@ -257,9 +257,10 @@ class HideOperator(MhxOperator):
         else:
             self.state = 32*[False]
             for idx,cname in MhxLayers.items():
-                coll = self.rig.data.collections[cname]
-                self.state[idx] = coll.is_visible
-                coll.is_visible = True
+                coll = self.rig.data.collections.get(cname)
+                if coll:
+                    self.state[idx] = coll.is_visible
+                    coll.is_visible = True
         self.hideStatus = []
         self.layerColls = []
         self.hideLayerColls(context.view_layer.layer_collection)
@@ -270,8 +271,9 @@ class HideOperator(MhxOperator):
             self.rig.data.layers = self.state
         else:
             for idx,cname in MhxLayers.items():
-                coll = self.rig.data.collections[cname]
-                coll.is_visible = self.state[idx]
+                coll = self.rig.data.collections.get(cname)
+                if coll:
+                    coll.is_visible = self.state[idx]
         for layer in self.layerColls:
             layer.exclude = False
         for ob,hide,viewport,render in self.hideStatus:
