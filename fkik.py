@@ -152,7 +152,7 @@ class Snapper(Updater, Basic):
 
     def setup(self, context, value, change=True):
         checkVisible(context.object)
-        setMode('POSE')
+        setMode('OBJECT')
         self.oldvalue = value
         self.auto = context.scene.tool_settings.use_keyframe_insert_auto
         if change:
@@ -164,7 +164,7 @@ class Snapper(Updater, Basic):
 
     def setupAll(self, context, value):
         checkVisible(context.object)
-        setMode('POSE')
+        setMode('OBJECT')
         self.oldvalues = [self.rig.MhaArmIk_L, self.rig.MhaArmIk_R, self.rig.MhaLegIk_L, self.rig.MhaLegIk_R]
         self.rig.MhaArmIk_L = self.rig.MhaArmIk_R = self.rig.MhaLegIk_L = self.rig.MhaLegIk_R = value
         self.auto = context.scene.tool_settings.use_keyframe_insert_auto
@@ -974,7 +974,7 @@ class MHX_OT_MhxUpdateElbowKneeParents(MhxOperator, Updater):
             parname = 'master'
         eb = rig.data.edit_bones[bname]
         eb.parent = rig.data.edit_bones[parname]
-        bpy.ops.object.mode_set(mode='POSE')
+        bpy.ops.object.mode_set(mode='OBJECT')
         pb = rig.pose.bones[bname]
         pb.matrix = wmat
 
@@ -1021,7 +1021,7 @@ class ToggleToeTarsal:
         tarsal = rig.data.edit_bones[tarsalname]
         for smallname in ["big_toe", "small_toe_1", "small_toe_2", "small_toe_3", "small_toe_4"]:
             setParent(rig, "%s.01.%s" % (smallname, suffix), toe, tarsal, wason)
-        setMode('POSE')
+        setMode('OBJECT')
         setattr(rig, prop, (not wason))
 
 

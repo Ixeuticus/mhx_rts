@@ -245,10 +245,20 @@ class MhxPropsOperator(MhxOperator):
 #   HideOperator class
 #-------------------------------------------------------------
 
+def getSelectedObjects(context):
+    return [ob for ob in context.view_layer.objects
+        if ob.select_get() and not (ob.hide_get() or ob.hide_viewport)]
+
+
 class HideOperator(MhxOperator):
 
     def prequel(self, context):
         self.rig = context.object
+        self.mode = self.rig.mode
+        try:
+            bpy.ops.object.mode_set(mode='OBJECT')
+        except RuntimeError:
+            pass
         scn = context.scene
         self.frame = scn.frame_current
         if bpy.app.version < (4,0,0):
@@ -276,10 +286,15 @@ class HideOperator(MhxOperator):
                     coll.is_visible = self.state[idx]
         for layer in self.layerColls:
             layer.exclude = False
-        for ob,hide,viewport,render in self.hideStatus:
+        for ob,select,hide,viewport,render in self.hideStatus:
             ob.hide_set(hide)
             ob.hide_viewport = viewport
             ob.hide_render = render
+            ob.select_set(select)
+        try:
+            bpy.ops.object.mode_set(mode=self.mode)
+        except RuntimeError:
+            pass
 
 
     def hideLayerColls(self, layer):
@@ -290,7 +305,7 @@ class HideOperator(MhxOperator):
             if ob == self.rig:
                 ok = False
             else:
-                self.hideStatus.append((ob, ob.hide_get(), ob.hide_viewport, ob.hide_render))
+                self.hideStatus.append((ob, ob.select_get(), ob.hide_get(), ob.hide_viewport, ob.hide_render))
                 ob.hide_set(True)
                 ob.hide_viewport = True
                 ob.hide_render = True

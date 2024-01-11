@@ -278,7 +278,7 @@ class MHX_OT_UpdateMhx(MhxOperator):
                 if eb:
                     eb.use_connect = conn
 
-        setMode('POSE')
+        setMode('OBJECT')
         if bpy.app.version >= (4,0,0):
             updateCollections(rig)
         rig.data.MhaFeatures |= F_IDPROPS
