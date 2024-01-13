@@ -875,15 +875,10 @@ class MHX_OT_MhxSnapShaft(Snapper, HideOperator):
         self.snapLinks(context, self.getShaftInfo(context.object), "MhaShaftControl")
 
 #----------------------------------------------------------
-#   Clear Feet
+#   Clear Fingers and Feet
 #----------------------------------------------------------
 
-class MHX_OT_MhxClearFeet(HideOperator):
-    bl_idname = "mhx.clear_feet"
-    bl_label = "Clear Feet"
-    bl_description = "Clear pose for feet and toes"
-    bl_options = {'UNDO'}
-
+class FootClearer:
     def run(self, context):
         rig = context.object
         scn = context.scene
@@ -891,7 +886,9 @@ class MHX_OT_MhxClearFeet(HideOperator):
         frame = scn.frame_current
         unit = Matrix()
         for pb in rig.pose.bones:
-            if pb.name.startswith(("foot", "toe", "tarsal", "big_toe", "small_toe")):
+            if (pb.name.startswith(self.clearBones) and
+                not pb.name.startswith(self.skipBones)):
+                print("CLR", pb.name)
                 pb.matrix_basis = unit
                 if auto or isKeyed(rig, pb, "location"):
                     pb.keyframe_insert("location", frame=frame, group=pb.name)
@@ -903,6 +900,27 @@ class MHX_OT_MhxClearFeet(HideOperator):
                 else:
                     if auto or isKeyed(rig, pb, "rotation_euler"):
                        pb.keyframe_insert("rotation_euler", frame=frame, group=pb.name)
+
+
+class MHX_OT_MhxClearFeet(FootClearer, HideOperator):
+    bl_idname = "mhx.clear_feet"
+    bl_label = "Clear Feet"
+    bl_description = "Clear pose for feet and toes"
+    bl_options = {'UNDO'}
+
+    clearBones = ("foot", "toe", "tarsal", "big_toe", "small_toe", "reverse")
+    skipBones = ("foot.ik")
+
+
+class MHX_OT_MhxClearFingers(FootClearer, HideOperator):
+    bl_idname = "mhx.clear_fingers"
+    bl_label = "Clear Fingers"
+    bl_description = "Clear pose for fingers"
+    bl_options = {'UNDO'}
+
+    clearBones = ("fingers", "thumb", "index", "middle", "ring", "pinky",
+                  "f_index", "f_middle", "f_ring", "f_pinky")
+    skipBones = ("hand.ik")
 
 #----------------------------------------------------------
 #   Toggle FK - IK
@@ -1115,6 +1133,7 @@ classes = [
     MHX_OT_MhxSnapTongue,
     MHX_OT_MhxSnapShaft,
     MHX_OT_MhxClearFeet,
+    MHX_OT_MhxClearFingers,
     MHX_OT_MhxToggleFkIkLeftArm,
     MHX_OT_MhxToggleFkIkRightArm,
     MHX_OT_MhxToggleFkIkLeftLeg,
