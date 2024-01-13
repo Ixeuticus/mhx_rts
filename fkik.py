@@ -875,6 +875,36 @@ class MHX_OT_MhxSnapShaft(Snapper, HideOperator):
         self.snapLinks(context, self.getShaftInfo(context.object), "MhaShaftControl")
 
 #----------------------------------------------------------
+#   Clear Feet
+#----------------------------------------------------------
+
+class MHX_OT_MhxClearFeet(HideOperator):
+    bl_idname = "mhx.clear_feet"
+    bl_label = "Clear Feet"
+    bl_description = "Clear pose for feet and toes"
+    bl_options = {'UNDO'}
+
+    def run(self, context):
+        rig = context.object
+        scn = context.scene
+        auto = scn.tool_settings.use_keyframe_insert_auto
+        frame = scn.frame_current
+        unit = Matrix()
+        for pb in rig.pose.bones:
+            if pb.name.startswith(("foot", "toe", "tarsal", "big_toe", "small_toe")):
+                pb.matrix_basis = unit
+                if auto or isKeyed(rig, pb, "location"):
+                    pb.keyframe_insert("location", frame=frame, group=pb.name)
+                if auto or isKeyed(rig, pb, "scale"):
+                    pb.keyframe_insert("scale", frame=frame, group=pb.name)
+                if pb.rotation_mode == 'QUATERNION':
+                    if auto or isKeyed(rig, pb, "rotation_quaternion"):
+                        pb.keyframe_insert("rotation_quaternion", frame=frame, group=pb.name)
+                else:
+                    if auto or isKeyed(rig, pb, "rotation_euler"):
+                       pb.keyframe_insert("rotation_euler", frame=frame, group=pb.name)
+
+#----------------------------------------------------------
 #   Toggle FK - IK
 #----------------------------------------------------------
 
@@ -1084,6 +1114,7 @@ classes = [
     MHX_OT_MhxSnapSpine,
     MHX_OT_MhxSnapTongue,
     MHX_OT_MhxSnapShaft,
+    MHX_OT_MhxClearFeet,
     MHX_OT_MhxToggleFkIkLeftArm,
     MHX_OT_MhxToggleFkIkRightArm,
     MHX_OT_MhxToggleFkIkLeftLeg,
