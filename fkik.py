@@ -888,7 +888,6 @@ class FootClearer:
         for pb in rig.pose.bones:
             if (pb.name.startswith(self.clearBones) and
                 not pb.name.startswith(self.skipBones)):
-                print("CLR", pb.name)
                 pb.matrix_basis = unit
                 if auto or isKeyed(rig, pb, "location"):
                     pb.keyframe_insert("location", frame=frame, group=pb.name)

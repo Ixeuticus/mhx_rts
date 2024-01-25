@@ -280,22 +280,22 @@ def initMhxProps():
         description = "Parent of right knee pole target")
 
     # Stretchiness
-    bpy.types.Object.MhaArmStretch_L = FloatPropOVR(0.0,
+    bpy.types.Object.MhaArmStretch_L = FloatPropOVR(1.0,
         name = "Arm Stretch Left",
         min = 0, max = 1,
         description = "Toggle left arm stretchiness")
 
-    bpy.types.Object.MhaLegStretch_L = FloatPropOVR(0.0,
+    bpy.types.Object.MhaLegStretch_L = FloatPropOVR(1.0,
         name = "Leg Stretch Left",
         min = 0, max = 1,
         description = "Toggle left leg stretchiness")
 
-    bpy.types.Object.MhaArmStretch_R = FloatPropOVR(0.0,
+    bpy.types.Object.MhaArmStretch_R = FloatPropOVR(1.0,
         name = "Arm Stretch Right",
         min = 0, max = 1,
         description = "Toggle right arm stretchiness")
 
-    bpy.types.Object.MhaLegStretch_R = FloatPropOVR(0.0,
+    bpy.types.Object.MhaLegStretch_R = FloatPropOVR(1.0,
         name = "Leg Stretch Right",
         min = 0, max = 1,
         description = "Toggle right leg stretchiness")
