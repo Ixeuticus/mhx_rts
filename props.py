@@ -27,6 +27,7 @@
 
 
 import bpy
+from bpy.props import *
 from .utils import *
 from .layers import *
 from .runtime.properties import initMhxProps
@@ -63,7 +64,7 @@ class MHX_OT_ConvertMhxActions(MhxOperator):
     bl_description = "Convert actions between legacy MHX (root/hips) and modern MHX (hip/pelvis)"
     bl_options = {'UNDO'}
 
-    direction : bpy.props.EnumProperty(
+    direction : EnumProperty(
         items = [
             ('MODERN', "Legacy => Modern", "Convert from legacy MHX (root/hips) to modern MHX (hip/pelvis)"),
             ('LEGACY', "Modern => Legacy", "Convert from modern MHX (hip/pelvis) to legacy MHX (root/hips)"),
@@ -409,6 +410,36 @@ class MHX_OT_UnbakeMhx(MhxBaker, MhxOperator):
                     if prop and prop in props:
                         trg.data_path = prop
 
+#-------------------------------------------------------------
+#   Unhinge
+#-------------------------------------------------------------
+
+class MHX_OT_Unhinge(MhxOperator):
+    bl_idname = "mhx.unhinge"
+    bl_label = "Unhinge"
+    bl_description = "Remove hinges"
+    bl_options = {'UNDO'}
+
+    prop : StringProperty()
+    bone : StringProperty()
+
+    def run(self, context):
+        print("PB", self.prop, self.bone)
+        rig = context.object
+        base,suffix = self.bone.rsplit(".", 2)
+        for bname in ["%s.fk.%s" % (base, suffix), "%s.ik.%s" % (base, suffix)]:
+            pb = rig.pose.bones.get(bname)
+            print("KK", bname, pb)
+            if pb:
+                wmat = pb.matrix.copy()
+                rig[self.prop] = 0.0
+                bpy.context.view_layer.update()
+                deps = bpy.context.evaluated_depsgraph_get()
+                deps.update()
+                pb.matrix = wmat
+                print("WM", wmat)
+                print("PB", pb.matrix)
+
 #----------------------------------------------------------
 #
 #----------------------------------------------------------
@@ -421,12 +452,13 @@ classes = [
     MHX_OT_UpdateMhx,
     MHX_OT_BakeMhx,
     MHX_OT_UnbakeMhx,
+    MHX_OT_Unhinge,
 ]
 
 def register():
-    bpy.types.Object.MhxLegacy = bpy.props.BoolProperty(default = True)
-    bpy.types.Object.MhxRig = bpy.props.BoolProperty(default = False)
-    bpy.types.Object.DazRig = bpy.props.StringProperty(
+    bpy.types.Object.MhxLegacy = BoolProperty(default = True)
+    bpy.types.Object.MhxRig = BoolProperty(default = False)
+    bpy.types.Object.DazRig = StringProperty(
         name = "Rig Type",
         default = "")
     initMhxProps()
