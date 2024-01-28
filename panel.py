@@ -136,6 +136,11 @@ class MHX_PT_Properties(MhxPanel):
         if self.needsMhxUpdate(rig):
             return
 
+        from .fkik import theSlowUpdate
+        icon = ('CHECKBOX_DEHLT' if theSlowUpdate else 'CHECKBOX_HLT')
+        self.layout.operator("mhx.fast_update", icon=icon)
+        self.layout.separator()
+
         self.layout.label(text = "Gaze")
         self.layout.prop(rig, "MhaGazeFollowsHead")
         row = self.layout.row()
@@ -156,16 +161,20 @@ class MHX_PT_Properties(MhxPanel):
         op = row.operator("mhx.unhinge", text="Unhinge Left Arm")
         op.prop = "MhaArmHinge_L"
         op.bone = "upper_arm.L"
+        op.parent = "clavicle.L"
         op = row.operator("mhx.unhinge", text="Unhinge Right Arm")
         op.prop = "MhaArmHinge_R"
         op.bone = "upper_arm.R"
+        op.parent = "clavicle.R"
         row = self.layout.row()
         op = row.operator("mhx.unhinge", text="Unhinge Left Leg")
         op.prop = "MhaLegHinge_L"
         op.bone = "thigh.L"
+        op.parent = "hip"
         op = row.operator("mhx.unhinge", text="Unhinge Right Leg")
         op.prop = "MhaLegHinge_R"
         op.bone = "thigh.R"
+        op.parent = "hip"
 
         self.layout.separator()
         self.layout.label(text = "Hands And Fingers")
@@ -245,7 +254,6 @@ class MHX_PT_Properties(MhxPanel):
     def updateFunction(self, layout, rig, prop, opname):
         icon = ('CHECKBOX_HLT' if getattr(rig, prop) else 'CHECKBOX_DEHLT')
         layout.operator(opname, icon=icon)
-
 
 #------------------------------------------------------------------------
 #    Mhx FK/IK switch panel
@@ -348,9 +356,6 @@ class MHX_PT_FKIKFingers(MhxPanel):
             op.bonename = "ik_back"
             op.revname = "REV-back"
             op.fk = op.ik = L_MAIN
-
-
-
 
         row = box.row()
         row.operator("mhx.snap_spine")

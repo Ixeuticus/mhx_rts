@@ -422,23 +422,23 @@ class MHX_OT_Unhinge(MhxOperator):
 
     prop : StringProperty()
     bone : StringProperty()
+    parent : StringProperty()
 
     def run(self, context):
         print("PB", self.prop, self.bone)
         rig = context.object
         base,suffix = self.bone.rsplit(".", 2)
-        for bname in ["%s.fk.%s" % (base, suffix), "%s.ik.%s" % (base, suffix)]:
-            pb = rig.pose.bones.get(bname)
-            print("KK", bname, pb)
-            if pb:
-                wmat = pb.matrix.copy()
-                rig[self.prop] = 0.0
-                bpy.context.view_layer.update()
-                deps = bpy.context.evaluated_depsgraph_get()
-                deps.update()
-                pb.matrix = wmat
-                print("WM", wmat)
-                print("PB", pb.matrix)
+        for mid in ["fk", "ik"]:
+            bname = "%s.%s.%s" % (base, mid, suffix)
+            pb = rig.pose.bones[bname]
+            par = rig.pose.bones[self.parent]
+            R1 = pb.bone.matrix_local
+            M0 = par.matrix
+            M1 = pb.matrix
+            mat = R1.inverted() @ M1 @ M0.inverted() @ R1
+            pb.matrix_basis = mat.to_quaternion().to_matrix().to_4x4()
+            print("FF", pb.matrix_basis)
+        rig[self.prop] = 0.0
 
 #----------------------------------------------------------
 #
