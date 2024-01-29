@@ -30,6 +30,7 @@ import bpy
 from bpy.props import *
 from .utils import *
 from .layers import *
+from .fkik import Updater
 from .runtime.properties import initMhxProps
 
 # ---------------------------------------------------------------------
@@ -414,31 +415,42 @@ class MHX_OT_UnbakeMhx(MhxBaker, MhxOperator):
 #   Unhinge
 #-------------------------------------------------------------
 
-class MHX_OT_Unhinge(MhxOperator):
+class MHX_OT_Unhinge(MhxOperator, Updater):
     bl_idname = "mhx.unhinge"
     bl_label = "Unhinge"
     bl_description = "Remove hinges"
     bl_options = {'UNDO'}
 
-    prop : StringProperty()
-    bone : StringProperty()
-    parent : StringProperty()
+    limb : StringProperty()
+    suffix : StringProperty()
+
+    Bones = {
+        "Arm" : ["upper_arm.fk", "upper_arm.ik"],
+        "Leg" : ["thigh.fk", "thigh.ik"]
+    }
+
+    Sockets = {
+        "Arm" : ["armSocket", "arm_parent"],
+        "Leg" : ["legSocket", "leg_parent"]
+    }
 
     def run(self, context):
-        print("PB", self.prop, self.bone)
+        from mathutils import Matrix
         rig = context.object
-        base,suffix = self.bone.rsplit(".", 2)
-        for mid in ["fk", "ik"]:
-            bname = "%s.%s.%s" % (base, mid, suffix)
-            pb = rig.pose.bones[bname]
-            par = rig.pose.bones[self.parent]
-            R1 = pb.bone.matrix_local
-            M0 = par.matrix
-            M1 = pb.matrix
-            mat = R1.inverted() @ M1 @ M0.inverted() @ R1
-            pb.matrix_basis = mat.to_quaternion().to_matrix().to_4x4()
-            print("FF", pb.matrix_basis)
-        rig[self.prop] = 0.0
+        prop = "Mha%sHinge_%s" % (self.limb, self.suffix)
+        mats = []
+        for bname in self.Bones[self.limb]:
+            pb = rig.pose.bones.get("%s.%s" % (bname, self.suffix))
+            mats.append((pb, pb.matrix.copy()))
+        rig[prop] = 0.0
+        self.updatePose()
+        for bname in self.Sockets[self.limb]:
+            pb = rig.pose.bones.get("%s.%s" % (bname, self.suffix))
+            pb.matrix_basis = Matrix()
+        self.updatePose()
+        for pb,mat in mats:
+            pb.matrix = mat
+            self.updatePose()
 
 #----------------------------------------------------------
 #

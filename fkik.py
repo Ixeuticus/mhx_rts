@@ -49,8 +49,8 @@ class MHX_OT_MhxFastUpdate(MhxOperator):
 
 class Updater:
     def updatePose(self):
-        if theSlowUpdate:
-            bpy.context.view_layer.update()
+        #if theSlowUpdate:
+        bpy.context.view_layer.update()
 
     def updateScene(self):
         deps = bpy.context.evaluated_depsgraph_get()

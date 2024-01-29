@@ -159,22 +159,18 @@ class MHX_PT_Properties(MhxPanel):
         row.prop(rig, "MhaLegHinge_R")
         row = self.layout.row()
         op = row.operator("mhx.unhinge", text="Unhinge Left Arm")
-        op.prop = "MhaArmHinge_L"
-        op.bone = "upper_arm.L"
-        op.parent = "clavicle.L"
+        op.limb = "Arm"
+        op.suffix = "L"
         op = row.operator("mhx.unhinge", text="Unhinge Right Arm")
-        op.prop = "MhaArmHinge_R"
-        op.bone = "upper_arm.R"
-        op.parent = "clavicle.R"
+        op.limb = "Arm"
+        op.suffix = "R"
         row = self.layout.row()
         op = row.operator("mhx.unhinge", text="Unhinge Left Leg")
-        op.prop = "MhaLegHinge_L"
-        op.bone = "thigh.L"
-        op.parent = "hip"
+        op.limb = "Leg"
+        op.suffix = "L"
         op = row.operator("mhx.unhinge", text="Unhinge Right Leg")
-        op.prop = "MhaLegHinge_R"
-        op.bone = "thigh.R"
-        op.parent = "hip"
+        op.limb = "Leg"
+        op.suffix = "R"
 
         self.layout.separator()
         self.layout.label(text = "Hands And Fingers")
