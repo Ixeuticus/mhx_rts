@@ -35,21 +35,8 @@ from .layers import *
 #   Updater
 #------------------------------------------------------------------
 
-theSlowUpdate = True
-
-class MHX_OT_MhxFastUpdate(MhxOperator):
-    bl_idname = "mhx.fast_update"
-    bl_label = "Fast Update"
-    bl_description = "Use fast update. Possibly inaccurate"
-
-    def run(self, context):
-        global theSlowUpdate
-        theSlowUpdate = (not theSlowUpdate)
-
-
 class Updater:
     def updatePose(self):
-        #if theSlowUpdate:
         bpy.context.view_layer.update()
 
     def updateScene(self):
@@ -234,7 +221,7 @@ class Snapper(Updater, Basic):
     def matchPoseTransform(self, pb, src):
         pb.matrix = src.matrix
         self.updatePose()
-        self.imposeLocks(pb)
+        #self.imposeLocks(pb)
         self.insertRotation(pb)
 
 
@@ -1129,7 +1116,6 @@ class MHX_OT_MhxToggleLimits(MhxOperator):
 #----------------------------------------------------------
 
 classes = [
-    MHX_OT_MhxFastUpdate,
     MHX_OT_MhxSnapFkLeftArm,
     MHX_OT_MhxSnapFkRightArm,
     MHX_OT_MhxSnapFkLeftLeg,

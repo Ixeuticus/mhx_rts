@@ -136,11 +136,6 @@ class MHX_PT_Properties(MhxPanel):
         if self.needsMhxUpdate(rig):
             return
 
-        from .fkik import theSlowUpdate
-        icon = ('CHECKBOX_DEHLT' if theSlowUpdate else 'CHECKBOX_HLT')
-        self.layout.operator("mhx.fast_update", icon=icon)
-        self.layout.separator()
-
         self.layout.label(text = "Gaze")
         self.layout.prop(rig, "MhaGazeFollowsHead")
         row = self.layout.row()

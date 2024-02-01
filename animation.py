@@ -54,9 +54,20 @@ class FrameRange(HidePropsOperator, Updater, HasAction):
         description = "Last frame for the animation",
         default = 250)
 
+    useFastUpdate : BoolProperty(
+        name = "Fast Update",
+        description = "Faster but possibly inaccurate snapping",
+        default = False)
+
     def draw(self, context):
         self.layout.prop(self, "startFrame")
         self.layout.prop(self, "endFrame")
+        self.layout.prop(self, "useFastUpdate")
+
+
+    def updatePose(self):
+        if not self.useFastUpdate:
+            bpy.context.view_layer.update()
 
 
     def getActiveFrames(self):
