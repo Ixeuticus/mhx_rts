@@ -29,8 +29,8 @@
 bl_info = {
     "name": "MHX Runtime System",
     "author": "Thomas Larsson",
-    "version": (1,7,3),
-    "blender": (3,6,0),
+    "version": (1,7,4),
+    "blender": (4,0,0),
     "location": "UI > MHX",
     "description": "MHX runtime system",
     "warning": "",
@@ -49,11 +49,11 @@ def importModules():
         theModules = []
 
     if theModules:
-        print("\nReloading MHX RTS")
+        print("\nReloading MHX RTS v %d.%d.%d" % bl_info["version"])
         for mod in theModules:
             importlib.reload(mod)
     else:
-        print("\nLoading MHX RTS")
+        print("\nLoading MHX RTS v %d.%d.%d" % bl_info["version"])
         modnames = ["utils", "layers", "fkik",
                     "props", "animation", "panel"]
         anchor = os.path.basename(__file__[0:-12])
