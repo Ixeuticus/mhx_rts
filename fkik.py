@@ -221,11 +221,16 @@ class Snapper(Updater, Basic):
     def matchPoseTransform(self, pb, src):
         pb.matrix = src.matrix
         self.updatePose()
-        #self.imposeLocks(pb)
+        self.imposeLocks(pb)
         self.insertRotation(pb)
+        #print("TT", src.name, Vector(src.matrix.to_euler())*D)
+        #print("  ", pb.name, Vector(pb.matrix.to_euler())*D)
+        #print("")
 
 
     def imposeLocks(self, pb):
+        if not self.useLocks:
+            return
         for idx in range(3):
             if pb.lock_location[idx]:
                 pb.location[idx] = 0
@@ -289,6 +294,7 @@ class Snapper(Updater, Basic):
     # https://bitbucket.org/Diffeomorphic/import_daz/issues/528/mhx-snap-ik-to-fk-can-set-pole-more
     #
     def setPoleTarget(self, hand, poleTrg, poleA, forearm):
+        print("PT", hand.name, poleTrg.name, poleTrg.parent, poleA, forearm.name)
         self.insertRotation(poleA, Matrix())
         self.updatePose()
         pf_rot_y = forearm.y_axis.normalized()
@@ -367,11 +373,11 @@ class Snapper(Updater, Basic):
         handFk.location = (0,0,0)
         self.matchPoseLocRot(handIk, handFk)
         if elbowPt:
-            if elbowPoleA:
+            if elbowPt.parent == elbowPoleA:
                 self.setPoleTarget(handIk, elbowPt, elbowPoleA, forearmFk)
             else:
                 self.matchPoleTarget(elbowPt, uparmFk, forearmFk)
-            self.setChildofInverse(elbowPt)
+            return
         if uparmIkTwist:
             self.matchPoseTransform(uparmIkTwist, uparmFk)
         else:
@@ -380,15 +386,6 @@ class Snapper(Updater, Basic):
             self.matchPoseTransform(forearmIkTwist, forearmFk)
         else:
             self.matchPoseTransform(forearmIk, forearmFk)
-
-
-    def setChildofInverse(self, pb):
-        for cns in pb.constraints:
-            if cns.type == 'CHILD_OF':
-                self.rig.data.bones.active = pb.bone
-                print("SET INV", pb.name, self.rig.data.bones.active, cns.name)
-                bpy.ops.constraint.childof_set_inverse(constraint=cns.name, owner='BONE')
-                print("DONE")
 
 
     def snapFkLeg(self, snapFk, snapIk, legIkToAnkle):
@@ -426,11 +423,10 @@ class Snapper(Updater, Basic):
                 self.matchPoseReverse(footRev, footFk)
             self.matchPoseTranslation(ankleIk, footFk)
         if kneePt:
-            if kneePoleA:
+            if kneePt.parent == kneePoleA:
                 self.setPoleTarget(footInvIk, kneePt, kneePoleA, shinFk)
             else:
                 self.matchPoleTarget(kneePt, thighFk, shinFk)
-            self.setChildofInverse(kneePt)
         if thighIkTwist:
             self.matchPoseTransform(thighIkTwist, thighFk)
         else:
@@ -1152,6 +1148,11 @@ def register():
     bpy.types.Scene.MhxUseSnapRotation = BoolProperty(
         name = "Rotate IK Foot",
         description = "Also match IK effector rotation.\nSuitable for hand animation",
+        default = True)
+
+    bpy.types.Scene.MhxUseLocks = BoolProperty(
+        name = "Impose Locks",
+        description = "Impose locks when snapping",
         default = True)
 
     for cls in classes:

@@ -27,6 +27,9 @@
 
 import bpy
 from .layers import MhxLayers
+from math import pi
+
+D = pi/180
 
 #-------------------------------------------------------------
 #   Blender 4
@@ -260,6 +263,7 @@ class HideOperator(MhxOperator):
         except RuntimeError:
             pass
         scn = context.scene
+        self.useLocks = scn.MhxUseLocks
         self.frame = scn.frame_current
         if bpy.app.version < (4,0,0):
             self.state = list(self.rig.data.layers)

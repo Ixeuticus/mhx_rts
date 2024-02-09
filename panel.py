@@ -299,10 +299,12 @@ class MHX_PT_FKIKArmsLegs(MhxPanel):
         row.operator("mhx.snap_ik_left_leg")
         row.operator("mhx.snap_ik_right_leg")
 
+        self.layout.operator("mhx.enforce_limits")
         self.layout.operator("mhx.clear_fingers")
         self.layout.operator("mhx.clear_feet")
         self.layout.operator("mhx.snap_fk_all")
         self.layout.operator("mhx.snap_ik_all")
+        self.layout.prop(scn, "MhxUseLocks")
         self.layout.prop(scn, "MhxUseSwitch")
         self.layout.prop(scn, "MhxUseSnapRotation")
 
