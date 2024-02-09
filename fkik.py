@@ -294,7 +294,6 @@ class Snapper(Updater, Basic):
     # https://bitbucket.org/Diffeomorphic/import_daz/issues/528/mhx-snap-ik-to-fk-can-set-pole-more
     #
     def setPoleTarget(self, hand, poleTrg, poleA, forearm):
-        print("PT", hand.name, poleTrg.name, poleTrg.parent, poleA, forearm.name)
         self.insertRotation(poleA, Matrix())
         self.updatePose()
         pf_rot_y = forearm.y_axis.normalized()
@@ -377,7 +376,6 @@ class Snapper(Updater, Basic):
                 self.setPoleTarget(handIk, elbowPt, elbowPoleA, forearmFk)
             else:
                 self.matchPoleTarget(elbowPt, uparmFk, forearmFk)
-            return
         if uparmIkTwist:
             self.matchPoseTransform(uparmIkTwist, uparmFk)
         else:
