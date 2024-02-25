@@ -220,6 +220,8 @@ class Snapper(Updater, Basic):
 
 
     def matchPoseTransform(self, pb, src):
+        if pb is None:
+            return
         pb.matrix = src.matrix
         self.updatePose()
         self.imposeLocks(pb)
@@ -373,14 +375,8 @@ class Snapper(Updater, Basic):
                 self.setPoleTarget(handIk, elbowPt, elbowPoleA, forearmFk)
             else:
                 self.matchPoleTarget(elbowPt, uparmFk, forearmFk)
-        if uparmIkTwist:
-            self.matchPoseTransform(uparmIkTwist, uparmFk)
-        else:
-            self.matchPoseTransform(uparmIk, uparmFk)
-        if forearmIkTwist:
-            self.matchPoseTransform(forearmIkTwist, forearmFk)
-        else:
-            self.matchPoseTransform(forearmIk, forearmFk)
+        self.matchPoseTransform(uparmIkTwist, uparmFk)
+        self.matchPoseTransform(forearmIkTwist, forearmFk)
 
 
     def snapFkLeg(self, snapFk, snapIk, legIkToAnkle):
@@ -422,14 +418,8 @@ class Snapper(Updater, Basic):
                 self.setPoleTarget(footInvIk, kneePt, kneePoleA, shinFk)
             else:
                 self.matchPoleTarget(kneePt, thighFk, shinFk)
-        if thighIkTwist:
-            self.matchPoseTransform(thighIkTwist, thighFk)
-        else:
-            self.matchPoseTransform(thighIk, thighFk)
-        if shinIkTwist:
-            self.matchPoseTransform(shinIkTwist, shinFk)
-        else:
-            self.matchPoseTransform(shinIk, shinFk)
+        self.matchPoseTransform(thighIkTwist, thighFk)
+        self.matchPoseTransform(shinIkTwist, shinFk)
 
 
     Fingers = ["thumb", "index", "middle", "ring", "pinky"]
