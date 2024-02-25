@@ -84,46 +84,47 @@ class Basic:
 
     def insertScale(self, pb, mat=None):
         if mat:
-            pb.location = mat.to_scale()
+            pb.scale = mat.to_scale()
         if self.auto or isKeyed(self.rig, pb, "scale"):
             pb.keyframe_insert("scale", frame=self.frame, group=pb.name)
 
 
     def insertRotation(self, pb, mat=None):
         if mat:
-            quat = mat.to_quaternion()
             if pb.rotation_mode == 'QUATERNION':
-                pb.rotation_quaternion = quat
+                pb.rotation_quaternion = mat.to_quaternion()
             else:
-                pb.rotation_euler = quat.to_euler(pb.rotation_mode)
-        if pb.rotation_mode == 'QUATERNION':
-            if self.auto or isKeyed(self.rig, pb, "rotation_quaternion"):
-                pb.keyframe_insert("rotation_quaternion", frame=self.frame, group=pb.name)
-        else:
-            if self.auto or isKeyed(self.rig, pb, "rotation_euler"):
-                pb.keyframe_insert("rotation_euler", frame=self.frame, group=pb.name)
+                pb.rotation_euler = mat.to_euler(pb.rotation_mode)
+        channel = self.getTrueChannel(pb, "rotation")
+        if self.auto or isKeyed(self.rig, pb, channel):
+            pb.keyframe_insert(channel, frame=self.frame, group=pb.name)
 
 
-    def findBoneFCurves(self, pb, mode):
+    def findBoneFCurves(self, pb, channel):
         if self.rig.animation_data is None:
             return []
         act = self.rig.animation_data.action
         if act is None:
             return []
-        if mode == 'rotation':
-            if pb.rotation_mode == 'QUATERNION':
-                mode = "rotation_quaternion"
-            else:
-                mode = "rotation_euler"
-        path = 'pose.bones["%s"].%s' % (pb.name, mode)
+        path = 'pose.bones["%s"].%s' % (pb.name, self.getTrueChannel(pb, channel))
         return [fcu for fcu in act.fcurves if fcu.data_path == path]
 
 
-    def findBoneFCurve(self, pb, idx, mode='rotation'):
-        for fcu in self.findBoneFCurves(pb, mode):
+    def getTrueChannel(self, pb, channel):
+        if channel == "rotation":
+            if pb.rotation_mode == 'QUATERNION':
+                return "rotation_quaternion"
+            else:
+                return "rotation_euler"
+        else:
+            return channel
+
+
+    def findBoneFCurve(self, pb, channel, idx):
+        for fcu in self.findBoneFCurves(pb, channel):
             if fcu.array_index == idx:
                 return fcu
-        print('F-curve %d for "%s" not found.' % (idx, pb.name))
+        #print('F-curve %s[%d] for "%s" not found.' % (channel, idx, pb.name))
         return None
 
 #------------------------------------------------------------------
@@ -223,14 +224,10 @@ class Snapper(Updater, Basic):
         self.updatePose()
         self.imposeLocks(pb)
         self.insertRotation(pb)
-        #print("TT", src.name, Vector(src.matrix.to_euler())*D)
-        #print("  ", pb.name, Vector(pb.matrix.to_euler())*D)
-        #print("")
 
 
     def imposeLocks(self, pb):
-        if not self.useLocks:
-            return
+        return
         for idx in range(3):
             if pb.lock_location[idx]:
                 pb.location[idx] = 0
@@ -1146,11 +1143,6 @@ def register():
     bpy.types.Scene.MhxUseSnapRotation = BoolProperty(
         name = "Rotate IK Foot",
         description = "Also match IK effector rotation.\nSuitable for hand animation",
-        default = True)
-
-    bpy.types.Scene.MhxUseLocks = BoolProperty(
-        name = "Impose Locks",
-        description = "Impose locks when snapping",
         default = True)
 
     for cls in classes:

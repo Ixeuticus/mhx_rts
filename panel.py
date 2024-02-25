@@ -304,7 +304,6 @@ class MHX_PT_FKIKArmsLegs(MhxPanel):
         self.layout.operator("mhx.clear_feet")
         self.layout.operator("mhx.snap_fk_all")
         self.layout.operator("mhx.snap_ik_all")
-        self.layout.prop(scn, "MhxUseLocks")
         self.layout.prop(scn, "MhxUseSwitch")
         self.layout.prop(scn, "MhxUseSnapRotation")
 
@@ -383,6 +382,8 @@ class MHX_PT_FKIKFingers(MhxPanel):
         if rig.data.MhaFeatures & F_SHAFT:
             box.prop(rig, "MhaShaftIk")
         box.operator("mhx.snap_shaft")
+
+        self.layout.operator("mhx.enforce_limits")
 
 #------------------------------------------------------------------------
 #    Mhx Animation Panel

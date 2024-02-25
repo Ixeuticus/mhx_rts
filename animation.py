@@ -152,20 +152,20 @@ class Bender(Basic):
         limbs = {}
         if self.useElbows:
             pb = self.getBone("forearm.fk.L")
-            self.minimizeFCurve(pb, 0, frames)
+            self.minimizeFCurve(pb, "rotation", 0, frames)
             pb = self.getBone("forearm.fk.R")
-            self.minimizeFCurve(pb, 0, frames)
+            self.minimizeFCurve(pb, "rotation", 0, frames)
         if self.useKnees:
             pb = self.getBone("shin.fk.L")
-            self.minimizeFCurve(pb, 0, frames)
+            self.minimizeFCurve(pb, "rotation", 0, frames)
             pb = self.getBone("shin.fk.R")
-            self.minimizeFCurve(pb, 0, frames)
+            self.minimizeFCurve(pb, "rotation", 0, frames)
 
 
-    def minimizeFCurve(self, pb, idx, frames):
+    def minimizeFCurve(self, pb, channel, idx, frames):
         if pb is None:
             return
-        fcu = self.findBoneFCurve(pb, idx)
+        fcu = self.findBoneFCurve(pb, channel, idx)
         if fcu is None:
             return
         y0 = fcu.evaluate(0)
@@ -259,17 +259,23 @@ class LimitEnforcer:
         self.initSettings(context)
         frames = self.getActiveFrames()
         for pb in self.rig.pose.bones:
+            if pb.rotation_mode == 'QUATERNION':
+                continue
             cns = self.getLimitRotConstraint(pb)
-            if cns and pb.rotation_mode != 'QUATERNION':
+            if cns:
                 for idx in range(3):
                     char = chr(ord("x")+idx)
                     if getattr(cns, "use_limit_%s" % char):
                         ymin = getattr(cns, "min_%s" % char)
                         ymax = getattr(cns, "max_%s" % char)
-                        self.constrainFCurve(pb, idx, ymin, ymax, frames)
+                        self.constrainFCurve(pb, "rotation_euler", idx, ymin, ymax, frames)
             for idx in range(3):
                 if pb.lock_rotation[idx]:
-                    self.constrainFCurve(pb, idx, 0.0, 0.0, frames)
+                    self.constrainFCurve(pb, "rotation_euler", idx, 0.0, 0.0, frames)
+                if pb.lock_location[idx]:
+                    self.constrainFCurve(pb, "location", idx, 0.0, 0.0, frames)
+                if pb.lock_scale[idx]:
+                    self.constrainFCurve(pb, "scale", idx, 1.0, 1.0, frames)
         extraLocks = {
             "toe.fk.L" : (1, 2),
             "toe.fk.R" : (1, 2),
@@ -277,7 +283,7 @@ class LimitEnforcer:
         for bname, locks in extraLocks.items():
             pb = self.getBone(bname)
             for idx in locks:
-                self.constrainFCurve(pb, idx, 0.0, 0.0, frames)
+                self.constrainFCurve(pb, "rotation_euler", idx, 0.0, 0.0, frames)
         self.setInterpolation()
         print("Limits enforced")
 
@@ -292,7 +298,7 @@ class LimitEnforcer:
 class MHX_OT_EnforceLimits(LimitEnforcer, HideOperator, Basic):
     bl_idname = "mhx.enforce_limits"
     bl_label = "Enforce Limits"
-    bl_description = "Keep all rotations within limits"
+    bl_description = "Keep all channels within limits"
     bl_options = {'UNDO'}
 
     def getActiveFrames(self):
@@ -303,11 +309,11 @@ class MHX_OT_EnforceLimits(LimitEnforcer, HideOperator, Basic):
         self.auto = scn.tool_settings.use_keyframe_insert_auto
         self.frame = scn.frame_current
 
-    def constrainFCurve(self, pb, idx, ymin, ymax, frames):
-        value = pb.rotation_euler[idx]
-        pb.rotation_euler[idx] = min(ymax, max(ymin, value))
-        if self.auto or isKeyed(self.rig, pb, "rotation_euler"):
-            pb.keyframe_insert("rotation_euler", frame=self.frame, group=pb.name)
+    def constrainFCurve(self, pb, channel, idx, ymin, ymax, frames):
+        vec = getattr(pb, channel)
+        vec[idx] = min(ymax, max(ymin, vec[idx]))
+        if self.auto or isKeyed(self.rig, pb, channel):
+            pb.keyframe_insert(channel, frame=self.frame, group=pb.name)
 
     def setInterpolation(self):
         pass
@@ -316,7 +322,7 @@ class MHX_OT_EnforceLimits(LimitEnforcer, HideOperator, Basic):
 class MHX_OT_EnforceAllLimits(LimitEnforcer, FrameRange, Basic):
     bl_idname = "mhx.enforce_all_limits"
     bl_label = "Enforce All Limits"
-    bl_description = "Keep all rotations within limits for active action"
+    bl_description = "Keep all channels within limits for active action"
     bl_options = {'UNDO'}
 
     def draw(self, context):
@@ -325,8 +331,8 @@ class MHX_OT_EnforceAllLimits(LimitEnforcer, FrameRange, Basic):
     def initSettings(self, context):
         pass
 
-    def constrainFCurve(self, pb, idx, ymin, ymax, frames):
-        fcu = self.findBoneFCurve(pb, idx)
+    def constrainFCurve(self, pb, channel, idx, ymin, ymax, frames):
+        fcu = self.findBoneFCurve(pb, channel, idx)
         if fcu is None:
             return
         t0 = frames[0]
@@ -1110,7 +1116,7 @@ class MHX_OT_FloorIkFoot(Footer, FrameRange):
 
     def fillKeyFrames(self, pb, frames, nIndices, mode='rotation'):
         for idx in range(nIndices):
-            fcu = self.findBoneFCurve(pb, idx, mode)
+            fcu = self.findBoneFCurve(pb, "rotation_euler", idx, mode)
             if fcu is None:
                 return
             for frame in frames:
