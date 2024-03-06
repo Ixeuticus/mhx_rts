@@ -207,7 +207,7 @@ class Snapper(Updater, Basic):
         self.updatePose()
 
 
-    def setWorldMatrix(self, gmat, pb, useLoc=False, useRot=False):
+    def setWorldMatrix(self, pb, gmat, useLoc=False, useRot=False):
         pb.matrix = gmat
         self.updatePose()
         if useLoc:
@@ -228,7 +228,7 @@ class Snapper(Updater, Basic):
     def matchRotation(self, pb, src):
         if pb is None:
             return
-        self.setWorldMatrix(src.matrix, pb, False, True)
+        self.setWorldMatrix(pb, src.matrix, False, True)
 
 
     def imposeLocks(self, pb):
@@ -262,7 +262,7 @@ class Snapper(Updater, Basic):
         head = tTail - y * legIk.bone.length
         gmat = gmat.to_4x4()
         gmat.col[3][:3] = head
-        self.setWorldMatrix(gmat, legIk, True, True)
+        self.setWorldMatrix(legIk, gmat, True, True)
 
 
     def matchPoleTarget(self, pb, above, below):
@@ -282,13 +282,14 @@ class Snapper(Updater, Basic):
             p = p0 + 1*pb.bone.length*d
         else:
             p = p0
-        self.setWorldMatrix(Matrix.Translation(p), pb, True, False)
+        self.setWorldMatrix(pb, Matrix.Translation(p), True, False)
 
     #
     # https://bitbucket.org/Diffeomorphic/import_daz/issues/528/mhx-snap-ik-to-fk-can-set-pole-more
     #
     def setPoleTarget(self, hand, poleTrg, poleA, forearm):
-        self.setLocalMatrix(Matrix(), poleA, False, True)
+        self.insertRotation(poleA, Matrix())
+        self.updatePose()
         pf_rot_y = forearm.y_axis.normalized()
         pf_rot_z = forearm.z_axis.normalized()
         pf_pos = forearm.matrix.to_translation()
@@ -302,8 +303,10 @@ class Snapper(Updater, Basic):
         pole_vec = n_vec * (1.2 * forearm.length)
         #the multipled length should be set with forearm or upperarm)
         pos = Matrix.Translation(pole_vec) @ poleA.matrix
-        self.setWorldMatrix(pos, poleTrg, True, False)
+        poleTrg.matrix = pos
         poleTrg.rotation_euler = (0.0, 0.0, 0.0)
+        self.updatePose()
+        self.insertLocation(poleTrg)
 
 
     def matchPoseReverse(self, pb, src):
@@ -311,7 +314,7 @@ class Snapper(Updater, Basic):
         tail = gmat.col[3] + src.length * gmat.col[1]
         rmat = Matrix((gmat.col[0], -gmat.col[1], -gmat.col[2], tail))
         rmat.transpose()
-        self.setWorldMatrix(rmat, pb, False, True)
+        self.setWorldMatrix(pb, rmat, False, True)
 
 
     def getSnapBones(self, key, suffix):
@@ -358,9 +361,9 @@ class Snapper(Updater, Basic):
         (uparmIk, forearmIk, uparmIkTwist, forearmIkTwist, elbowPt, elbowPoleA, handIk) = snapIk
 
         handFk.location = (0,0,0)
-        self.setWorldMatrix(handFk.matrix, handIk, True, True)
+        self.setWorldMatrix(handIk, handFk.matrix, True, True)
         if elbowPt:
-            if False and elbowPoleA:
+            if elbowPoleA:
                 self.setPoleTarget(handIk, elbowPt, elbowPoleA, forearmFk)
             else:
                 self.matchPoleTarget(elbowPt, uparmFk, forearmFk)
@@ -401,7 +404,7 @@ class Snapper(Updater, Basic):
             else:
                 self.matchPoseReverse(toeRev, toeFk)
                 self.matchPoseReverse(footRev, footFk)
-            self.setWorldMatrix(footFk.matrix, ankleIk, True, False)
+            self.setWorldMatrix(ankleIk, footFk.matrix, True, False)
         if kneePt:
             if kneePoleA:
                 self.setPoleTarget(footInvIk, kneePt, kneePoleA, shinFk)
@@ -469,7 +472,7 @@ class Snapper(Updater, Basic):
         nlinks = len(pboness[0])
         for n in range(nlinks):
             for pbones,mats in zip(pboness, matss):
-                self.setWorldMatrix(mats[n], pbones[n])
+                self.setWorldMatrix(pbones[n], mats[n])
         for pbones in pboness:
             for pb in pbones:
                 self.imposeLocks(pb)
