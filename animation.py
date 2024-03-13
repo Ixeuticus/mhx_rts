@@ -196,25 +196,6 @@ class MHX_OT_LimbsBendPositive(FrameRange, Bender):
         print("Limbs bent positive")
 
 #-------------------------------------------------------------
-#   Remove keyframes from frame 0
-#-------------------------------------------------------------
-
-class MHX_OT_RemoveFrameZero(MhxOperator, HasAction):
-    bl_idname = "mhx.remove_frame_zero"
-    bl_label = "Remove Frame Zero"
-    bl_description = "Remove all keys from frame 0"
-    bl_options = {'UNDO'}
-
-    def run(self, context):
-        rig = context.object
-        checkVisible(rig)
-        act = rig.animation_data.action
-        for fcu in act.fcurves:
-            kps = [kp for kp in fcu.keyframe_points if kp.co[0] == 0.0]
-            for kp in kps:
-                fcu.keyframe_points.remove(kp, fast=True)
-
-#-------------------------------------------------------------
 #   Remove unused F-curves
 #-------------------------------------------------------------
 
@@ -1205,7 +1186,6 @@ class MHX_OT_FloorIkFoot(Footer, FrameRange):
 #----------------------------------------------------------
 
 classes = [
-    MHX_OT_RemoveFrameZero,
     MHX_OT_RemoveUnusedFcurves,
     MHX_OT_ConstrainFeet,
     MHX_OT_EnforceLimits,
