@@ -240,19 +240,19 @@ class LimitEnforcer:
         self.initSettings(context)
         frames = self.getActiveFrames()
         for pb in self.rig.pose.bones:
-            if pb.rotation_mode == 'QUATERNION':
-                continue
-            cns = self.getLimitRotConstraint(pb)
-            if cns:
+            if pb.rotation_mode != 'QUATERNION':
+                cns = self.getLimitRotConstraint(pb)
+                if cns:
+                    for idx in range(3):
+                        char = chr(ord("x")+idx)
+                        if getattr(cns, "use_limit_%s" % char):
+                            ymin = getattr(cns, "min_%s" % char)
+                            ymax = getattr(cns, "max_%s" % char)
+                            self.constrainFCurve(pb, "rotation_euler", idx, ymin, ymax, frames)
                 for idx in range(3):
-                    char = chr(ord("x")+idx)
-                    if getattr(cns, "use_limit_%s" % char):
-                        ymin = getattr(cns, "min_%s" % char)
-                        ymax = getattr(cns, "max_%s" % char)
-                        self.constrainFCurve(pb, "rotation_euler", idx, ymin, ymax, frames)
+                    if pb.lock_rotation[idx]:
+                        self.constrainFCurve(pb, "rotation_euler", idx, 0.0, 0.0, frames)
             for idx in range(3):
-                if pb.lock_rotation[idx]:
-                    self.constrainFCurve(pb, "rotation_euler", idx, 0.0, 0.0, frames)
                 if pb.lock_location[idx]:
                     self.constrainFCurve(pb, "location", idx, 0.0, 0.0, frames)
                 if pb.lock_scale[idx]:
@@ -315,17 +315,23 @@ class MHX_OT_EnforceAllLimits(LimitEnforcer, FrameRange, Basic):
     def constrainFCurve(self, pb, channel, idx, ymin, ymax, frames):
         fcu = self.findBoneFCurve(pb, channel, idx)
         if fcu is None:
-            return
-        t0 = frames[0]
-        t1 = frames[-1]
-        for kp in fcu.keyframe_points:
-            t = kp.co[0]
-            if t >= t0 and t <= t1:
-                y = kp.co[1]
-                if y < ymin:
-                    kp.co[1] = ymin
-                elif y > ymax:
-                    kp.co[1] = ymax
+            vec = getattr(pb, channel)
+            y = vec[idx]
+            if y < ymin:
+                vec[idx] = ymin
+            elif y > ymax:
+                vec[idx] = ymax
+        else:
+            t0 = frames[0]
+            t1 = frames[-1]
+            for kp in fcu.keyframe_points:
+                t = kp.co[0]
+                if t >= t0 and t <= t1:
+                    y = kp.co[1]
+                    if y < ymin:
+                        kp.co[1] = ymin
+                    elif y > ymax:
+                        kp.co[1] = ymax
 
 #-------------------------------------------------------------
 #   Transfer FK - IK

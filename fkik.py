@@ -360,7 +360,6 @@ class Snapper(Updater, Basic):
         (uparmFk, forearmFk, handFk) = snapFk
         (uparmIk, forearmIk, uparmIkTwist, forearmIkTwist, elbowPt, elbowPoleA, handIk) = snapIk
 
-        handFk.location = (0,0,0)
         self.setWorldMatrix(handIk, handFk.matrix, True, True)
         if elbowPt:
             if elbowPoleA:
