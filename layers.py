@@ -62,44 +62,6 @@ if bpy.app.version < (4,0,0):
     L_HELP2 =   15
     L_HIDDEN =  30
     L_DEF =     31
-
-    MhxLayers = {
-        L_MAIN :    "Root",
-        L_SPINE :   "Spine",
-
-        L_LARMIK :  "IK Arm Left",
-        L_LARMFK :  "FK Arm Left",
-        L_LLEGIK :  "IK Leg Left",
-        L_LLEGFK :  "FK Leg Left",
-        L_LHAND :   "Hand Left",
-        L_LFINGER : "Fingers Left",
-        L_LANKLEIK : "IK Ankle Left",
-        L_LEXTRA :  "Extra Left",
-        L_LTOE :    "Toes Left",
-
-        L_RARMIK :  "IK Arm Right",
-        L_RARMFK :  "FK Arm Right",
-        L_RLEGIK :  "IK Leg Right",
-        L_RLEGFK :  "FK Leg Right",
-        L_RHAND :   "Hand Right",
-        L_RFINGER : "Fingers Right",
-        L_RANKLEIK : "IK Ankle Right",
-        L_REXTRA :  "Extra Right",
-        L_RTOE :    "Toes Right",
-
-        L_FACE :    "Face",
-        L_TWEAK :   "Tweak",
-        L_HEAD :    "Head",
-        L_SPINE2 :  "Spine 2",
-        L_CUSTOM :  "Custom",
-        L_CUSTOM2 : "Custom 2",
-
-        L_HELP :    "Help",
-        L_HELP2 :   "Help 2",
-        L_HIDDEN :  "Hidden",
-        L_DEF :     "Deform",
-    }
-
 else:
     L_MAIN =    "Root"
     L_SPINE =   "Spine"
@@ -133,8 +95,44 @@ else:
 
     L_HELP =    "Help"
     L_HELP2 =   "Help 2"
-    L_HIDDEN =   "Hidden"
+    L_HIDDEN =  "Hidden"
     L_DEF =     "Deform"
+
+
+MhxLayers = {
+    0 :     "Root",
+    1 :     "Spine",
+
+    2 :     "IK Arm Left",
+    3 :     "FK Arm Left",
+    4 :     "IK Leg Left",
+    5 :     "FK Leg Left",
+    6 :     "Hand Left",
+    7 :     "Fingers Left",
+    12 :    "Extra Left",
+    13 :    "Toes Left",
+
+    18 :    "IK Arm Right",
+    19 :    "FK Arm Right",
+    20 :    "IK Leg Right",
+    21 :    "FK Leg Right",
+    22 :    "Hand Right",
+    23 :    "Fingers Right",
+    28 :    "Extra Right",
+    29 :    "Toes Right",
+
+    8 :     "Face",
+    9 :     "Tweak",
+    10 :    "Head",
+    11 :    "Spine 2",
+    16 :    "Custom",
+    17 :    "Custom 2",
+
+    14 :    "Help",
+    15 :    "Help 2",
+    30 :    "Hidden",
+    31 :    "Deform",
+}
 
 
 F_TONGUE = 1

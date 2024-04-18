@@ -110,11 +110,11 @@ class MHX_OT_ConvertMhxActions(MhxOperator):
 #   Enable and disable layers
 #-------------------------------------------------------------
 
-def setRigLayer(rig, idx, value):
+def setRigLayer(rig, layer, value):
     if bpy.app.version < (4,0,0):
-        rig.data.layers[idx] = value
+        rig.data.layers[layer] = value
     else:
-        coll = rig.data.collections.get(MhxLayers[idx])
+        coll = rig.data.collections.get(layer)
         if coll:
             coll.is_visible = value
 
@@ -126,10 +126,14 @@ class MHX_OT_EnableAllLayers(MhxOperator):
 
     def run(self, context):
         rig = context.object
-        for idx in MhxLayers.keys():
-            if idx not in [L_HELP, L_HELP2, L_HIDDEN, L_DEF]:
-                setRigLayer(rig, idx, True)
-
+        if bpy.app.version < (4,0,0):
+            for idx in MhxLayers.keys():
+                if idx not in [L_HELP, L_HELP2, L_HIDDEN, L_DEF]:
+                    setRigLayer(rig, idx, True)
+        else:
+            for coll in rig.data.collections:
+                if coll.name not in [L_HELP, L_HELP2, L_HIDDEN, L_DEF]:
+                    setRigLayer(rig, idx, True)
 
 
 class MHX_OT_DisableAllLayers(MhxOperator):
@@ -199,6 +203,7 @@ class MHX_OT_UpdateMhx(MhxOperator):
                 return bool(value)
             else:
                 return value
+
 
         def updateCollections(rig):
             if "Layer 1" not in rig.data.collections.keys():

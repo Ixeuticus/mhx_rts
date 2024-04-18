@@ -115,8 +115,9 @@ class MHX_PT_Layers(MhxPanel):
                 if type(left) == str:
                     row.label(text=left)
                     row.label(text=right)
-                row.prop(rig.data, "layers", index=left, toggle=True, text=MhxLayers[left])
-                row.prop(rig.data, "layers", index=right, toggle=True, text=MhxLayers[right])
+                else:
+                    row.prop(rig.data, "layers", index=left, toggle=True, text=MhxLayers[left])
+                    row.prop(rig.data, "layers", index=right, toggle=True, text=MhxLayers[right])
             else:
                 showCollection(row, left)
                 showCollection(row, right)

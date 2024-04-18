@@ -26,7 +26,6 @@
 # either expressed or implied, of the FreeBSD Project.
 
 import bpy
-from .layers import MhxLayers
 from math import pi
 
 D = pi/180

@@ -104,8 +104,9 @@ class FrameRange(HidePropsOperator, Updater, HasAction):
             tmin = tmax = 1
             for fcu in adata.action.fcurves:
                 times = [kp.co[0] for kp in fcu.keyframe_points]
-                tmin = min(int(min(times)), tmin)
-                tmax = max(int(max(times)), tmax)
+                if times:
+                    tmin = min(int(min(times)), tmin)
+                    tmax = max(int(max(times)), tmax)
             self.startFrame = tmin
             self.endFrame = tmax
         else:
@@ -386,12 +387,12 @@ class Transferer:
             for n in offLayers:
                 self.state[n] = self.rig.data.layers[n] = False
         else:
-            for n in onLayers:
+            for cname in onLayers:
                 self.state[n] = True
-                self.rig.data.collections[MhxLayers[n]].is_visible = True
-            for n in offLayers:
+                self.rig.data.collections[cname].is_visible = True
+            for cname in offLayers:
                 self.state[n] = False
-                self.rig.data.collections[MhxLayers[n]].is_visible = False
+                self.rig.data.collections[cname].is_visible = False
 
 #------------------------------------------------------------------------
 #   Transfer to links
