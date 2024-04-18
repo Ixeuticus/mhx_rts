@@ -84,13 +84,12 @@ class MHX_PT_Layers(MhxPanel):
         if self.needsMhxUpdate(rig):
             return
 
-        def showCollection(layout, key):
-            cname = MhxLayers[key]
+        def showCollection(layout, cname):
             coll = rig.data.collections.get(cname)
             if coll:
                 layout.prop(coll, "is_visible", toggle=True, text=cname)
             else:
-                layout.label(text=cname)
+                layout.label(text = cname)
 
         self.layout.operator("mhx.enable_all_layers")
         self.layout.operator("mhx.disable_all_layers")
@@ -98,22 +97,24 @@ class MHX_PT_Layers(MhxPanel):
             (L_MAIN, L_SPINE),
             (L_HEAD, L_FACE),
             (L_CUSTOM, L_CUSTOM2),
-            (L_TWEAK, L_UNUSED),
+            (L_TWEAK, L_SPINE2),
             ("Left", "Right"),
             (L_LARMIK, L_RARMIK),
             (L_LARMFK, L_RARMFK),
             (L_LLEGIK, L_RLEGIK),
             (L_LLEGFK, L_RLEGFK),
-            (L_LEXTRA, L_REXTRA),
+            (L_LANKLEIK, L_RANKLEIK),
             (L_LHAND, L_RHAND),
             (L_LFINGER, L_RFINGER),
             (L_LTOE, L_RTOE)]
+        if bpy.app.version >= (4,0,0):
+            layers.append((L_LEXTRA, L_REXTRA))
         for (left,right) in layers:
             row = self.layout.row()
-            if type(left) == str:
-                row.label(text=left)
-                row.label(text=right)
-            elif bpy.app.version < (4,0,0):
+            if bpy.app.version < (4,0,0):
+                if type(left) == str:
+                    row.label(text=left)
+                    row.label(text=right)
                 row.prop(rig.data, "layers", index=left, toggle=True, text=MhxLayers[left])
                 row.prop(rig.data, "layers", index=right, toggle=True, text=MhxLayers[right])
             else:

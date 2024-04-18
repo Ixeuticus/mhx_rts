@@ -27,74 +27,115 @@
 
 import bpy
 
-L_MAIN =    0
-L_SPINE =   1
+if bpy.app.version < (4,0,0):
+    L_MAIN =    0
+    L_SPINE =   1
 
-L_LARMIK =  2
-L_LARMFK =  3
-L_LLEGIK =  4
-L_LLEGFK =  5
-L_LHAND =   6
-L_LFINGER = 7
-L_LEXTRA =  12
-L_LTOE =    13
+    L_LARMIK =  2
+    L_LARMFK =  3
+    L_LLEGIK =  4
+    L_LLEGFK =  5
+    L_LHAND =   6
+    L_LFINGER = 7
+    L_LANKLEIK = 12
+    L_LEXTRA =  12
+    L_LTOE =    13
 
-L_RARMIK =  18
-L_RARMFK =  19
-L_RLEGIK =  20
-L_RLEGFK =  21
-L_RHAND =   22
-L_RFINGER = 23
-L_REXTRA =  28
-L_RTOE =    29
+    L_RARMIK =  18
+    L_RARMFK =  19
+    L_RLEGIK =  20
+    L_RLEGFK =  21
+    L_RHAND =   22
+    L_RFINGER = 23
+    L_RANKLEIK = 28
+    L_REXTRA =  28
+    L_RTOE =    29
 
-L_FACE =    8
-L_TWEAK =   9
-L_HEAD =    10
-L_UNUSED =  11
-L_CUSTOM =  16
-L_CUSTOM2 = 17
+    L_FACE =    8
+    L_TWEAK =   9
+    L_HEAD =    10
+    L_SPINE2 =  11
+    L_CUSTOM =  16
+    L_CUSTOM2 = 17
 
-L_HELP =    14
-L_HELP2 =   15
-L_HIDDEN =  30
-L_DEF =     31
+    L_HELP =    14
+    L_HELP2 =   15
+    L_HIDDEN =  30
+    L_DEF =     31
 
+    MhxLayers = {
+        L_MAIN :    "Root",
+        L_SPINE :   "Spine",
 
-MhxLayers = {
-    L_MAIN :    "Root",
-    L_SPINE :   "Spine",
+        L_LARMIK :  "IK Arm Left",
+        L_LARMFK :  "FK Arm Left",
+        L_LLEGIK :  "IK Leg Left",
+        L_LLEGFK :  "FK Leg Left",
+        L_LHAND :   "Hand Left",
+        L_LFINGER : "Fingers Left",
+        L_LANKLEIK : "IK Ankle Left",
+        L_LEXTRA :  "Extra Left",
+        L_LTOE :    "Toes Left",
 
-    L_LARMIK :  "IK Arm Left",
-    L_LARMFK :  "FK Arm Left",
-    L_LLEGIK :  "IK Leg Left",
-    L_LLEGFK :  "FK Leg Left",
-    L_LHAND :   "Hand Left",
-    L_LFINGER : "Fingers Left",
-    L_LEXTRA :  "Extra Left",
-    L_LTOE :    "Toes Left",
+        L_RARMIK :  "IK Arm Right",
+        L_RARMFK :  "FK Arm Right",
+        L_RLEGIK :  "IK Leg Right",
+        L_RLEGFK :  "FK Leg Right",
+        L_RHAND :   "Hand Right",
+        L_RFINGER : "Fingers Right",
+        L_RANKLEIK : "IK Ankle Right",
+        L_REXTRA :  "Extra Right",
+        L_RTOE :    "Toes Right",
 
-    L_RARMIK :  "IK Arm Right",
-    L_RARMFK :  "FK Arm Right",
-    L_RLEGIK :  "IK Leg Right",
-    L_RLEGFK :  "FK Leg Right",
-    L_RHAND :   "Hand Right",
-    L_RFINGER : "Fingers Right",
-    L_REXTRA :  "Extra Right",
-    L_RTOE :    "Toes Right",
+        L_FACE :    "Face",
+        L_TWEAK :   "Tweak",
+        L_HEAD :    "Head",
+        L_SPINE2 :  "Spine 2",
+        L_CUSTOM :  "Custom",
+        L_CUSTOM2 : "Custom 2",
 
-    L_FACE :    "Face",
-    L_TWEAK :   "Tweak",
-    L_HEAD :    "Head",
-    L_UNUSED :  "Unused",
-    L_CUSTOM :  "Custom",
-    L_CUSTOM2 : "Custom 2",
+        L_HELP :    "Help",
+        L_HELP2 :   "Help 2",
+        L_HIDDEN :  "Hidden",
+        L_DEF :     "Deform",
+    }
 
-    L_HELP :    "Help",
-    L_HELP2 :   "Help 2",
-    L_HIDDEN :  "Hidden",
-    L_DEF :     "Deform",
-}
+else:
+    L_MAIN =    "Root"
+    L_SPINE =   "Spine"
+
+    L_LARMIK =  "IK Arm Left"
+    L_LARMFK =  "FK Arm Left"
+    L_LLEGIK =  "IK Leg Left"
+    L_LLEGFK =  "FK Leg Left"
+    L_LHAND =   "Hand Left"
+    L_LFINGER = "Fingers Left"
+    L_LANKLEIK = "IK Ankle Left"
+    L_LEXTRA =  "Extra Left"
+    L_LTOE =    "Toes Left"
+
+    L_RARMIK =  "IK Arm Right"
+    L_RARMFK =  "FK Arm Right"
+    L_RLEGIK =  "IK Leg Right"
+    L_RLEGFK =  "FK Leg Right"
+    L_RHAND =   "Hand Right"
+    L_RFINGER = "Fingers Right"
+    L_RANKLEIK = "IK Ankle Right"
+    L_REXTRA =  "Extra Right"
+    L_RTOE =    "Toes Right"
+
+    L_FACE =    "Face"
+    L_TWEAK =   "Tweak"
+    L_HEAD =    "Head"
+    L_SPINE2 =  "Spine 2"
+    L_CUSTOM =  "Custom"
+    L_CUSTOM2 = "Custom 2"
+
+    L_HELP =    "Help"
+    L_HELP2 =   "Help 2"
+    L_HIDDEN =   "Hidden"
+    L_DEF =     "Deform"
+
 
 F_TONGUE = 1
 F_FINGER = 2
