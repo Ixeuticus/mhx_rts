@@ -37,8 +37,8 @@ if bpy.app.version < (4,0,0):
     L_LLEGFK =  5
     L_LHAND =   6
     L_LFINGER = 7
-    L_LANKLEIK = 12
-    L_LEXTRA =  12
+    L_LARM2IK = 12
+    L_LLEG2IK = 12
     L_LTOE =    13
 
     L_RARMIK =  18
@@ -47,8 +47,8 @@ if bpy.app.version < (4,0,0):
     L_RLEGFK =  21
     L_RHAND =   22
     L_RFINGER = 23
-    L_RANKLEIK = 28
-    L_REXTRA =  28
+    L_RARM2IK = 28
+    L_RLEG2IK = 28
     L_RTOE =    29
 
     L_FACE =    8
@@ -72,8 +72,8 @@ else:
     L_LLEGFK =  "FK Leg Left"
     L_LHAND =   "Hand Left"
     L_LFINGER = "Fingers Left"
-    L_LANKLEIK = "IK Ankle Left"
-    L_LEXTRA =  "Extra Left"
+    L_LARM2IK = "IK Arm 2 Left"
+    L_LLEG2IK = "IK Leg 2 Left"
     L_LTOE =    "Toes Left"
 
     L_RARMIK =  "IK Arm Right"
@@ -82,8 +82,8 @@ else:
     L_RLEGFK =  "FK Leg Right"
     L_RHAND =   "Hand Right"
     L_RFINGER = "Fingers Right"
-    L_RANKLEIK = "IK Ankle Right"
-    L_REXTRA =  "Extra Right"
+    L_RARM2IK = "IK Arm 2 Right"
+    L_RLEG2IK = "IK Leg 2 Right"
     L_RTOE =    "Toes Right"
 
     L_FACE =    "Face"

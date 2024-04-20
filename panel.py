@@ -99,16 +99,15 @@ class MHX_PT_Layers(MhxPanel):
             (L_CUSTOM, L_CUSTOM2),
             (L_TWEAK, L_SPINE2),
             ("Left", "Right"),
-            (L_LARMIK, L_RARMIK),
             (L_LARMFK, L_RARMFK),
-            (L_LLEGIK, L_RLEGIK),
+            (L_LARMIK, L_RARMIK),
+            (L_LARM2IK, L_RARM2IK),
             (L_LLEGFK, L_RLEGFK),
-            (L_LANKLEIK, L_RANKLEIK),
+            (L_LLEGIK, L_RLEGIK),
+            (L_LLEG2IK, L_RLEG2IK),
             (L_LHAND, L_RHAND),
             (L_LFINGER, L_RFINGER),
             (L_LTOE, L_RTOE)]
-        if bpy.app.version >= (4,0,0):
-            layers.append((L_LEXTRA, L_REXTRA))
         for (left,right) in layers:
             row = self.layout.row()
             if bpy.app.version < (4,0,0):
@@ -301,11 +300,19 @@ class MHX_PT_FKIKArmsLegs(MhxPanel):
         row.operator("mhx.snap_ik_left_leg")
         row.operator("mhx.snap_ik_right_leg")
 
-        self.layout.operator("mhx.enforce_limits")
-        self.layout.operator("mhx.clear_fingers")
-        self.layout.operator("mhx.clear_feet")
-        self.layout.operator("mhx.snap_fk_all")
-        self.layout.operator("mhx.snap_ik_all")
+        self.layout.separator()
+        row = self.layout.row()
+        row.operator("mhx.enforce_limits")
+        row.operator("mhx.clear_ik_twist_bones")
+        row = self.layout.row()
+        row.operator("mhx.clear_fingers")
+        row.operator("mhx.clear_feet")
+        row = self.layout.row()
+        row.operator("mhx.set_fk_all")
+        row.operator("mhx.set_ik_all")
+        row = self.layout.row()
+        row.operator("mhx.snap_fk_all")
+        row.operator("mhx.snap_ik_all")
         self.layout.prop(scn, "MhxUseSwitch")
         self.layout.prop(scn, "MhxUseSnapRotation")
 

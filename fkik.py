@@ -196,11 +196,11 @@ class Snapper(Updater, Basic):
             self.state[L_LARMFK] = self.state[L_RARMFK] = self.state[L_LLEGFK] = self.state[L_RLEGFK] = fk
             self.state[L_LARMIK] = self.state[L_RARMIK] = ik
             if self.rig.MhaLegIkToAnkle_L:
-                self.state[L_LANKLEIK] = ik
+                self.state[L_LLEG2IK] = ik
             else:
                 self.state[L_LLEGIK] = ik
             if self.rig.MhaLegIkToAnkle_R:
-                self.state[L_RANKLEIK] = ik
+                self.state[L_RLEG2IK] = ik
             else:
                 self.state[L_RLEGIK] = ik
             if self.auto:
@@ -404,17 +404,18 @@ class Snapper(Updater, Basic):
 
         footFk.location = (0,0,0)
         self.matchIkLeg(legIk, toeFk)
-        if toeInvFk:
-            self.matchRotation(toeRev, toeInvFk)
-            self.matchRotation(footRev, footInvFk)
-        else:
-            self.matchPoseReverse(toeRev, toeFk)
-            self.matchPoseReverse(footRev, footFk)
-        if foot2:
+        if foot2 and legIkToAnkle:
             self.setWorldMatrix(foot2, footFk.matrix, True, True)
             toe2 = foot2.children[0]
             self.matchRotation(toe2, toeFk)
-        self.setWorldMatrix(ankleIk, footFk.matrix, True, False)
+        else:
+            if toeInvFk:
+                self.matchRotation(toeRev, toeInvFk)
+                self.matchRotation(footRev, footInvFk)
+            else:
+                self.matchPoseReverse(toeRev, toeFk)
+                self.matchPoseReverse(footRev, footFk)
+            self.setWorldMatrix(ankleIk, footFk.matrix, True, False)
         if kneePt:
             if kneePoleA:
                 self.setPoleTarget(footInvIk, kneePt, kneePoleA, shinFk)
@@ -605,7 +606,7 @@ class MHX_OT_MhxSnapFkLeftLeg(Snapper, HideOperator):
     prop2 = "MhaLegIkToAnkle_L"
     ik = L_LLEGIK
     fk = L_LLEGFK
-    ik2 = L_LANKLEIK
+    ik2 = L_LLEG2IK
 
     def run(self, context):
         print("Snap Left FK Leg")
@@ -627,7 +628,7 @@ class MHX_OT_MhxSnapFkRightLeg(Snapper, HideOperator):
     prop2 = "MhaLegIkToAnkle_R"
     ik = L_RLEGIK
     fk = L_RLEGFK
-    ik2 = L_RANKLEIK
+    ik2 = L_RLEG2IK
 
     def run(self, context):
         print("Snap Right FK Leg")
@@ -727,7 +728,7 @@ class MHX_OT_MhxSnapIkLeftLeg(FootSnapper, HideOperator):
     prop2 = "MhaLegIkToAnkle_L"
     ik = L_LLEGIK
     fk = L_LLEGFK
-    ik2 = L_LANKLEIK
+    ik2 = L_LLEG2IK
 
     def run(self, context):
         print("Snap Left IK Leg")
@@ -750,7 +751,7 @@ class MHX_OT_MhxSnapIkRightLeg(FootSnapper, HideOperator):
     prop2 = "MhaLegIkToAnkle_R"
     ik = L_RLEGIK
     fk = L_RLEGFK
-    ik2 = L_RANKLEIK
+    ik2 = L_RLEG2IK
 
     def run(self, context):
         print("Snap Right IK Leg")
@@ -922,6 +923,7 @@ class MHX_OT_MhxClearFingers(FootClearer, HideOperator):
 class ToggleFkIk(Updater):
     def toggle(self, context, prop, prop2, fklayer, iklayer, iklayer2):
         rig = context.object
+        scn = context.scene
         checkVisible(rig)
         scn = context.scene
         value = getattr(rig, prop)
@@ -934,15 +936,16 @@ class ToggleFkIk(Updater):
             fk = False
             ik = True
         setattr(rig, prop, value)
-        if fklayer != iklayer:
-            setRigLayer(rig, fklayer, fk)
-            if prop2 and getattr(rig, prop2):
-                setRigLayer(rig, iklayer2, ik)
-            else:
-                setRigLayer(rig, iklayer, ik)
-        if (scn.tool_settings.use_keyframe_insert_auto or
-            isKeyed(rig, None, prop)):
-            rig.keyframe_insert(prop, frame=scn.frame_current)
+        if scn.MhxUseSwitch:
+            if fklayer != iklayer:
+                setRigLayer(rig, fklayer, fk)
+                if prop2 and getattr(rig, prop2):
+                    setRigLayer(rig, iklayer2, ik)
+                else:
+                    setRigLayer(rig, iklayer, ik)
+            if (scn.tool_settings.use_keyframe_insert_auto or
+                isKeyed(rig, None, prop)):
+                rig.keyframe_insert(prop, frame=scn.frame_current)
         self.updatePose()
 
 
@@ -973,7 +976,7 @@ class MHX_OT_MhxToggleFkIkLeftLeg(MhxOperator, ToggleFkIk):
     bl_options = {'UNDO'}
 
     def run(self, context):
-        self.toggle(context, "MhaLegIk_L", "MhaLegIkToAnkle_L", L_LLEGFK, L_LLEGIK, L_LANKLEIK)
+        self.toggle(context, "MhaLegIk_L", "MhaLegIkToAnkle_L", L_LLEGFK, L_LLEGIK, L_LLEG2IK)
 
 
 class MHX_OT_MhxToggleFkIkRightLeg(MhxOperator, ToggleFkIk):
@@ -983,7 +986,49 @@ class MHX_OT_MhxToggleFkIkRightLeg(MhxOperator, ToggleFkIk):
     bl_options = {'UNDO'}
 
     def run(self, context):
-        self.toggle(context, "MhaLegIk_R", "MhaLegIkToAnkle_R", L_RLEGFK, L_RLEGIK, L_RANKLEIK)
+        self.toggle(context, "MhaLegIk_R", "MhaLegIkToAnkle_R", L_RLEGFK, L_RLEGIK, L_RLEG2IK)
+
+#----------------------------------------------------------
+#   Set FK and IK All
+#----------------------------------------------------------
+
+class SetFkIk(Updater):
+    def run(self, context):
+        self.setFkIk(context, "MhaArmIk_L", None, L_LARMFK, L_LARMIK, None)
+        self.setFkIk(context, "MhaArmIk_R", None, L_RARMFK, L_RARMIK, None)
+        self.setFkIk(context, "MhaLegIk_L", "MhaLegIkToAnkle_L", L_LLEGFK, L_LLEGIK, L_LLEG2IK)
+        self.setFkIk(context, "MhaLegIk_R", "MhaLegIkToAnkle_R", L_RLEGFK, L_RLEGIK, L_RLEG2IK)
+
+
+    def setFkIk(self, context, prop, prop2, fklayer, iklayer, iklayer2):
+        rig = context.object
+        scn = context.scene
+        setattr(rig, prop, self.ik)
+        if scn.MhxUseSwitch:
+            setRigLayer(rig, fklayer, (1-self.ik))
+            if prop2 and getattr(rig, prop2):
+                setRigLayer(rig, iklayer2, self.ik)
+            else:
+                setRigLayer(rig, iklayer, self.ik)
+        self.updatePose()
+
+
+class MHX_OT_SetFkAll(SetFkIk, MhxOperator):
+    bl_idname = "mhx.set_fk_all"
+    bl_label = "Set FK All"
+    bl_description = "Set all limbs to FK"
+    bl_options = {'UNDO'}
+
+    ik = 0
+
+
+class MHX_OT_SetIkAll(SetFkIk, MhxOperator):
+    bl_idname = "mhx.set_ik_all"
+    bl_label = "Set IK All"
+    bl_description = "Set all limbs to IK"
+    bl_options = {'UNDO'}
+
+    ik = 1
 
 #----------------------------------------------------------
 #   Toggle elbow and knee parents
@@ -1134,6 +1179,8 @@ classes = [
     MHX_OT_MhxToggleFkIkRightArm,
     MHX_OT_MhxToggleFkIkLeftLeg,
     MHX_OT_MhxToggleFkIkRightLeg,
+    MHX_OT_SetFkAll,
+    MHX_OT_SetIkAll,
     MHX_OT_MhxUpdateElbowKneeParents,
     MHX_OT_MhxToggleLeftToeTarsal,
     MHX_OT_MhxToggleRightToeTarsal,

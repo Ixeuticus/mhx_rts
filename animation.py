@@ -283,13 +283,13 @@ class MHX_OT_EnforceLimits(LimitEnforcer, HideOperator, Basic):
     bl_description = "Keep all channels within limits"
     bl_options = {'UNDO'}
 
-    def getActiveFrames(self):
-        return None
-
     def initSettings(self, context):
         scn = context.scene
         self.auto = scn.tool_settings.use_keyframe_insert_auto
         self.frame = scn.frame_current
+
+    def getActiveFrames(self):
+        return None
 
     def constrainFCurve(self, pb, channel, idx, ymin, ymax, frames):
         vec = getattr(pb, channel)
@@ -299,6 +299,41 @@ class MHX_OT_EnforceLimits(LimitEnforcer, HideOperator, Basic):
 
     def setInterpolation(self):
         pass
+
+
+class MHX_OT_ClearIkTwistBones(HideOperator, Basic):
+    bl_idname = "mhx.clear_ik_twist_bones"
+    bl_label = "Clear IK Twist Bones"
+    bl_description = "Clear IK twist bones"
+    bl_options = {'UNDO'}
+
+    def run(self, context):
+        checkVisible(self.rig)
+        self.initSettings(context)
+        for suffix in ["L", "R"]:
+            for bname in ["upper_arm", "forearm", "thigh", "shin"]:
+                twname = "%s.ik.twist.%s" % (bname, suffix)
+                pb = self.rig.pose.bones.get(twname)
+                if pb:
+                    if pb.rotation_mode != 'QUATERNION':
+                        for idx in range(3):
+                            self.setValue(pb, "rotation_euler", idx, 0.0)
+                    for idx in range(3):
+                        self.setValue(pb, "location", idx, 0.0)
+                        self.setValue(pb, "scale", idx, 1.0)
+
+
+    def initSettings(self, context):
+        scn = context.scene
+        self.auto = scn.tool_settings.use_keyframe_insert_auto
+        self.frame = scn.frame_current
+
+
+    def setValue(self, pb, channel, idx, x):
+        setattr(pb, channel, (x,x,x))
+        if self.auto or isKeyed(self.rig, pb, channel):
+            pb.keyframe_insert(channel, frame=self.frame, group=pb.name)
+
 
 
 class MHX_OT_EnforceAllLimits(LimitEnforcer, FrameRange, Basic):
@@ -1196,6 +1231,7 @@ classes = [
     MHX_OT_RemoveUnusedFcurves,
     MHX_OT_ConstrainFeet,
     MHX_OT_EnforceLimits,
+    MHX_OT_ClearIkTwistBones,
     MHX_OT_EnforceAllLimits,
     MHX_OT_LimbsBendPositive,
     MHX_OT_ShiftBoneFCurves,
