@@ -54,20 +54,9 @@ class FrameRange(HidePropsOperator, Updater, HasAction):
         description = "Last frame for the animation",
         default = 250)
 
-    useFastUpdate : BoolProperty(
-        name = "Fast Update",
-        description = "Faster but possibly inaccurate snapping",
-        default = False)
-
     def draw(self, context):
         self.layout.prop(self, "startFrame")
         self.layout.prop(self, "endFrame")
-        self.layout.prop(self, "useFastUpdate")
-
-
-    def updatePose(self):
-        if not self.useFastUpdate:
-            bpy.context.view_layer.update()
 
 
     def getActiveFrames(self):
@@ -422,12 +411,12 @@ class Transferer:
             for n in offLayers:
                 self.state[n] = self.rig.data.layers[n] = False
         else:
-            for cname in onLayers:
-                self.state[n] = True
-                self.rig.data.collections[cname].is_visible = True
-            for cname in offLayers:
-                self.state[n] = False
-                self.rig.data.collections[cname].is_visible = False
+            for layer in onLayers:
+                self.state[layer] = True
+                self.rig.data.collections[layer].is_visible = True
+            for layer in offLayers:
+                self.state[layer] = False
+                self.rig.data.collections[layer].is_visible = False
 
 #------------------------------------------------------------------------
 #   Transfer to links
@@ -1010,7 +999,6 @@ class MHX_OT_FloorFkFoot(Footer, FrameRange):
         else:
             lMarkers = rMarkers = None
         ez,origin,rot = self.getPlaneInfo()
-        print("PP", self.plane, ez, origin, rot)
 
         nFrames = len(frames)
         for n,frame in enumerate(frames):
@@ -1102,10 +1090,10 @@ class MHX_OT_FloorIkFoot(Footer, FrameRange):
         else:
             lMarkers = rMarkers = None
 
-        self.fillKeyFrames(lleg, frames, 3, mode='location')
-        self.fillKeyFrames(rleg, frames, 3, mode='location')
+        self.fillKeyFrames(lleg, frames, 3, 'location')
+        self.fillKeyFrames(rleg, frames, 3, 'location')
         if self.useHips:
-            self.fillKeyFrames(hip, frames, 3, mode='location')
+            self.fillKeyFrames(hip, frames, 3, 'location')
 
         nFrames = len(frames)
         left = []
@@ -1137,9 +1125,9 @@ class MHX_OT_FloorIkFoot(Footer, FrameRange):
             self.glueFoot(rleg, right)
 
 
-    def fillKeyFrames(self, pb, frames, nIndices, mode='rotation'):
+    def fillKeyFrames(self, pb, frames, nIndices, channel):
         for idx in range(nIndices):
-            fcu = self.findBoneFCurve(pb, "rotation_euler", idx, mode)
+            fcu = self.findBoneFCurve(pb, channel, idx)
             if fcu is None:
                 return
             for frame in frames:
