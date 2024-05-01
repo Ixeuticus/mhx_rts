@@ -810,8 +810,13 @@ class MHX_OT_MhxSnapReverse(Snapper, HideOperator):
     value : FloatProperty()
     bonename : StringProperty()
     revname : StringProperty()
-    fk : IntProperty()
-    ik : IntProperty()
+    if bpy.app.version < (4,0,0):
+        fk : IntProperty()
+        ik : IntProperty()
+    else:
+        fk : StringProperty()
+        ik : StringProperty()
+    ik2 = None
 
     def run(self, context):
         print("Snap %s to %s" % (self.bonename, self.revname))
