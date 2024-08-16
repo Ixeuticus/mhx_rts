@@ -20,11 +20,11 @@ bl_info = {
     "version": (4,2,1),
     "blender": (4,2,0),
     "location": "UI > MHX",
-    "description": "MHX runtime system",
+    "description": "Runtime system for MHX rig (DAZ Importer)",
     "warning": "",
     "doc_url": "https://bitbucket.org/Diffeomorphic/mhx_rts/wiki/Home",
     "tracker_url": "https://bitbucket.org/Diffeomorphic/import_daz/issues?status=new&status=open",
-    "category": "Rigging"}
+    "category": "Animation"}
 
 def importModules():
     import os
