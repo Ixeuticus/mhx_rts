@@ -26,32 +26,18 @@ bl_info = {
     "tracker_url": "https://bitbucket.org/Diffeomorphic/import_daz/issues?status=new&status=open",
     "category": "Animation"}
 
-def importModules():
-    import os
-    import importlib
-    global theModules
+Modules = ["utils", "layers", "fkik", "props", "animation", "panel"]
 
-    try:
-        theModules
-    except NameError:
-        theModules = []
-
-    if theModules:
-        print("\nReloading MHX RTS v %d.%d.%d" % bl_info["version"])
-        for mod in theModules:
-            importlib.reload(mod)
-    else:
-        print("\nLoading MHX RTS v %d.%d.%d" % bl_info["version"])
-        modnames = ["utils", "layers", "fkik",
-                    "props", "animation", "panel"]
-        anchor = os.path.basename(__file__[0:-12])
-        theModules = []
-        for modname in modnames:
-            mod = importlib.import_module("." + modname, anchor)
-            theModules.append(mod)
-
-import bpy
-importModules()
+if "bpy" in locals():
+    print("Reloading MHX RTS v %d.%d.%d" % bl_info["version"])
+    import imp
+    for modname in Modules:
+        exec("imp.reload(%s)" % modname)
+else:
+    print("Loading MHX RTS v %d.%d.%d" % bl_info["version"])
+    import bpy
+    for modname in Modules:
+        exec("from . import %s" % modname)
 
 #----------------------------------------------------------
 #   Register
