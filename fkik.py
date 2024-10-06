@@ -229,6 +229,12 @@ class Snapper(Updater, Basic):
         self.setWorldMatrix(pb, src.matrix, False, True)
 
 
+    def matchTransform(self, pb, src):
+        if pb is None:
+            return
+        self.setWorldMatrix(pb, src.matrix, True, True)
+
+
     def imposeLocks(self, pb):
         return
         for idx in range(3):
@@ -366,8 +372,8 @@ class Snapper(Updater, Basic):
                 self.matchPoleTarget(elbowPt, uparmFk, forearmFk)
         else:
             self.matchRotation(uparmIk, uparmFk)
-        self.matchRotation(uparmIkTwist, uparmFk)
-        self.matchRotation(forearmIkTwist, forearmFk)
+        self.matchTransform(uparmIkTwist, uparmFk)
+        self.matchTransform(forearmIkTwist, forearmFk)
 
 
     def snapFkLeg(self, snapFk, snapIk, legIkToAnkle):
@@ -412,8 +418,8 @@ class Snapper(Updater, Basic):
                 self.matchPoleTarget(kneePt, thighFk, shinFk)
         else:
             self.matchRotation(thighIk, thighFk)
-        self.matchRotation(thighIkTwist, thighFk)
-        self.matchRotation(shinIkTwist, shinFk)
+        self.matchTransform(thighIkTwist, thighFk)
+        self.matchTransform(shinIkTwist, shinFk)
 
 
     Fingers = ["thumb", "index", "middle", "ring", "pinky"]
