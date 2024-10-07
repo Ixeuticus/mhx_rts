@@ -131,6 +131,7 @@ SnapBones = {
 
 class Snapper(Updater, Basic):
     prop2 = None
+    useApproximate = False
 
     def prequel(self, context):
         HideOperator.prequel(self, context)
@@ -372,8 +373,9 @@ class Snapper(Updater, Basic):
                 self.matchPoleTarget(elbowPt, uparmFk, forearmFk)
         else:
             self.matchRotation(uparmIk, uparmFk)
-        self.matchTransform(uparmIkTwist, uparmFk)
-        self.matchTransform(forearmIkTwist, forearmFk)
+        if not self.useApproximate:
+            self.matchTransform(uparmIkTwist, uparmFk)
+            self.matchTransform(forearmIkTwist, forearmFk)
 
 
     def snapFkLeg(self, snapFk, snapIk, legIkToAnkle):
@@ -418,8 +420,9 @@ class Snapper(Updater, Basic):
                 self.matchPoleTarget(kneePt, thighFk, shinFk)
         else:
             self.matchRotation(thighIk, thighFk)
-        self.matchTransform(thighIkTwist, thighFk)
-        self.matchTransform(shinIkTwist, shinFk)
+        if not self.useApproximate:
+            self.matchTransform(thighIkTwist, thighFk)
+            self.matchTransform(shinIkTwist, shinFk)
 
 
     Fingers = ["thumb", "index", "middle", "ring", "pinky"]

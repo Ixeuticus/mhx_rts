@@ -563,9 +563,15 @@ class MHX_OT_TransferToIk(Transferer, FootSnapper, FrameRange):
     bl_description = "Transfer FK animation to IK bones"
     bl_options = {'UNDO'}
 
+    useApproximate : BoolProperty(
+        name = "Approximate Snapping",
+        description = "Approximate snapping which does not involve the IK twist bones",
+        default = True)
+
     def draw(self, context):
         Transferer.draw(self, context)
         FootSnapper.draw(self, context)
+        self.layout.prop(self, "useApproximate")
         FrameRange.draw(self, context)
 
     def run(self, context):
