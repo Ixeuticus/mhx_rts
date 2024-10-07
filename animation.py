@@ -603,6 +603,8 @@ class MHX_OT_TransferToIk(Transferer, FootSnapper, FrameRange):
             revback = self.rig.pose.bones.get("REV-back")
         else:
             back = revback = None
+        if self.useApproximate:
+            self.removeIkTwistFcurves()
         frames = range(self.startFrame, self.endFrame+1)
         nFrames = len(frames)
         for n,frame in enumerate(frames):
@@ -617,6 +619,20 @@ class MHX_OT_TransferToIk(Transferer, FootSnapper, FrameRange):
             if back and revback:
                 self.snapReverse(back, revback)
         self.setMhxIk(1.0)
+
+
+    def removeIkTwistFcurves(self):
+        if self.rig.animation_data:
+            act = self.rig.animation_data.action
+            if act:
+                for fcu in list(act.fcurves):
+                    words = fcu.data_path.split('"')
+                    if (words[0] == "pose.bones[" and
+                        ".ik.twist." in words[1]):
+                        act.fcurves.remove(fcu)
+        for pb in self.rig.pose.bones:
+            if ".ik.twist." in pb.name:
+                pb.location = pb.rotation_euler = (0,0,0)
 
 #------------------------------------------------------------------------
 #   Clear animation
