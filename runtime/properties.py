@@ -71,7 +71,6 @@ else:
 #----------------------------------------------------------
 
 def initMhxProps():
-    bpy.types.Object.MhxRig = BoolProperty(default = False)
     bpy.types.Armature.MhaFeatures = IntProperty(default = 0)
     bpy.types.Object.MhxChildOfConstraints = BoolProperty(default = False)
 

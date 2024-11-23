@@ -447,8 +447,6 @@ classes = [
 ]
 
 def register():
-    bpy.types.Object.MhxLegacy = BoolProperty(default = True)
-    bpy.types.Object.MhxRig = BoolProperty(default = False)
     bpy.types.Object.DazRig = StringProperty(
         name = "Rig Type",
         default = "")

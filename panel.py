@@ -35,7 +35,7 @@ class MhxPanel(bpy.types.Panel):
     @classmethod
     def poll(cls, context):
         ob = context.object
-        return (ob and (ob.DazRig == "mhx" or ob.MhxRig == True))
+        return (ob and (ob.DazRig == "mhx" or ob.get("MhxRig", False)))
 
     def needsMhxUpdate(self, rig):
         if rig is None:
