@@ -72,7 +72,6 @@ else:
 
 def initMhxProps():
     bpy.types.Armature.MhaFeatures = IntProperty(default = 0)
-    bpy.types.Object.MhxChildOfConstraints = BoolProperty(default = False)
 
     # Gaze
     bpy.types.Object.MhaGazeFollowsHead = FloatPropOVR(0.0,
