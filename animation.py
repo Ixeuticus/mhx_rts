@@ -173,29 +173,33 @@ class MHX_OT_RemoveUnusedFcurves(MhxOperator, HasAction):
     bl_options = {'UNDO'}
 
     def run(self, context):
+        def trivial(fcu, default):
+            for kp in fcu.keyframe_points:
+                if abs(kp.co[1] - default) > 1e-4:
+                    return False
+            return True
+
         rig = context.object
         checkVisible(rig)
         act = rig.animation_data.action
-        deletes = []
-        for fcu in act.fcurves:
+        for fcu in list(act.fcurves):
+            if isPropRef(fcu.data_path):
+                if trivial(fcu, 0.0):
+                    act.fcurves.remove(fcu)
+                continue
             channel = fcu.data_path.rsplit(".")[-1]
-            if channel == "rotation_euler":
-                if self.trivial(fcu, 0.0):
-                    deletes.append(fcu)
+            if channel in ["location", "rotation_euler"]:
+                if trivial(fcu, 0.0):
+                    act.fcurves.remove(fcu)
+            elif channel == "scale":
+                if trivial(fcu, 1.0):
+                    act.fcurves.remove(fcu)
             elif channel == "rotation_quaternion":
-                if fcu.array_index == 0 and self.trivial(fcu, 1.0):
-                    deletes.append(fcu)
-                elif self.trivial(fcu, 0.0):
-                    deletes.append(fcu)
-        for fcu in deletes:
-            act.fcurves.remove(fcu)
-
-
-    def trivial(self, fcu, default):
-        for kp in fcu.keyframe_points:
-            if abs(kp.co[1] - default) > 1e-6:
-                return False
-        return True
+                if fcu.array_index == 0:
+                    if trivial(fcu, 1.0):
+                        act.fcurves.remove(fcu)
+                elif trivial(fcu, 0.0):
+                    act.fcurves.remove(fcu)
 
 #-------------------------------------------------------------
 #

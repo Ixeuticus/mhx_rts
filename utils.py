@@ -26,12 +26,14 @@ def setRigLayer(rig, layer, value):
 def propRef(prop):
     return '["%s"]' % prop
 
+def isPropRef(prop):
+    return (prop[0:2] == '["' and prop[-2:] == '"]')
+
 def baseRef(prop):
-    if prop[0:2] == '["':
+    if isPropRef(prop):
         return prop[2:-2]
     else:
         return prop
-
 
 def isKeyed(rig, pb, path):
     if rig.animation_data:
