@@ -756,7 +756,7 @@ class MHX_OT_MhxSnapIkAll(FootSnapper, HideOperator):
     bl_options = {'UNDO'}
 
     def run(self, context):
-        print("Snap IK All")
+        #print("Snap IK All")
         self.setupAll(context, 0.0)
 
         self.prop = "MhaArmIk_L"
