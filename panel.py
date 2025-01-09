@@ -123,6 +123,10 @@ class MHX_PT_Properties(MhxPanel):
             self.layout.prop(rig, "MhaTongueIk")
 
         self.layout.separator()
+        self.layout.prop(rig, "MhaNeckFollows")
+        self.layout.prop(rig, "MhaHeadFollows")
+
+        self.layout.separator()
         self.layout.label(text = "Hinge")
         row = self.layout.row()
         row.prop(rig, "MhaArmHinge_L")
