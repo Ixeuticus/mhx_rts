@@ -122,11 +122,13 @@ class MHX_PT_Properties(MhxPanel):
         if rig.data.MhaFeatures & F_TONGUE:
             self.layout.prop(rig, "MhaTongueIk")
 
-        self.layout.separator()
-        self.layout.prop(rig, "MhaNeckFollows")
-        self.layout.prop(rig, "MhaHeadFollows")
+        self.layout.label(text = "Spine")
+        self.layout.prop(rig, "MhaNeckFollowsSpine")
+        self.layout.prop(rig, "MhaSpineIk")
+        row = self.layout.row()
+        row.prop(rig, "MhaSpineControl")
+        row.prop(rig, "MhaNeckControl")
 
-        self.layout.separator()
         self.layout.label(text = "Hinge")
         row = self.layout.row()
         row.prop(rig, "MhaArmHinge_L")
@@ -149,7 +151,6 @@ class MHX_PT_Properties(MhxPanel):
         op.limb = "Leg"
         op.suffix = "R"
 
-        self.layout.separator()
         self.layout.label(text = "Hands And Fingers")
         row = self.layout.row()
         row.prop(rig, "MhaForearmFollow_L")
@@ -162,12 +163,12 @@ class MHX_PT_Properties(MhxPanel):
             row.prop(rig, "MhaFingerIk_L")
             row.prop(rig, "MhaFingerIk_R")
 
-        self.layout.separator()
-        self.layout.label(text = "IK And Limits")
+        self.layout.label(text = "Limits")
         row = self.layout.row()
         self.updateFunction(row, rig, "MhaLimitsOn", "mhx.toggle_limits")
         row.operator("mhx.enforce_limits")
-        self.layout.prop(rig, "MhaSpineIk")
+
+        self.layout.label(text = "IK")
         row = self.layout.row()
         row.prop(rig, "MhaArmIk_L")
         row.prop(rig, "MhaArmIk_R")
@@ -179,8 +180,6 @@ class MHX_PT_Properties(MhxPanel):
             row.prop(rig, "MhaLegIkToAnkle_L")
             row.prop(rig, "MhaLegIkToAnkle_R")
 
-
-        self.layout.separator()
         self.layout.label(text = "Pole Target Parents")
         row = self.layout.row()
         row.prop(rig, "MhaElbowParent_L")
@@ -190,7 +189,6 @@ class MHX_PT_Properties(MhxPanel):
         row.prop(rig, "MhaKneeParent_R")
         self.layout.operator("mhx.update_elbow_knee_parents")
 
-        self.layout.separator()
         self.layout.label(text = "Stretchiness")
         row = self.layout.row()
         row.prop(rig, "MhaArmStretch_L")
@@ -199,7 +197,6 @@ class MHX_PT_Properties(MhxPanel):
         row.prop(rig, "MhaLegStretch_L")
         row.prop(rig, "MhaLegStretch_R")
 
-        self.layout.separator()
         self.layout.label(text = "Toes Tarsal Parents")
         row = self.layout.row()
         self.updateFunction(row, rig, "MhaToeTarsal_L", "mhx.toggle_left_toe_tarsal")

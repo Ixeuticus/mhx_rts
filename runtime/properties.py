@@ -86,16 +86,11 @@ def initMhxProps():
         min = 0, max = 1,
         description = "Tongue bones controlled by IK")
 
-    # Neck - head follows
-    bpy.types.Object.MhaNeckFollows = FloatPropOVR(1.0,
-        name = "Neck Follows",
+    # Neck follows
+    bpy.types.Object.MhaNeckFollowsSpine = FloatPropOVR(1.0,
+        name = "Neck Follows Spine",
         min = 0, max = 1,
         description = "Neck rotation follows spine")
-
-    bpy.types.Object.MhaHeadFollows = FloatPropOVR(1.0,
-        name = "Head Follows",
-        min = 0, max = 1,
-        description = "Head rotation follows spine")
 
     # Hinge
     bpy.types.Object.MhaArmHinge_L = FloatPropOVR(0.0,
