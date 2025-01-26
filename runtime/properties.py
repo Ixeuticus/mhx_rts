@@ -15,7 +15,6 @@
 # 5. Reload the blend file.
 #
 # ---------------------------------------------------------------------------
-
 import bpy
 from bpy.props import *
 
@@ -59,6 +58,7 @@ else:
 #----------------------------------------------------------
 
 def initMhxProps():
+    return
     bpy.types.Armature.MhaFeatures = IntProperty(default = 0)
 
     # Gaze

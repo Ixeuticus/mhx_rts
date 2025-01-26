@@ -137,15 +137,15 @@ class Snapper(Updater, Basic):
         self.oldvalue = value
         self.auto = scn.tool_settings.use_keyframe_insert_auto
         if change:
-            setattr(self.rig, self.prop, value)
+            self.rig[self.prop] = value
             self.updatePose()
 
 
     def setupAll(self, context, value):
         checkVisible(context.object)
         setMode('OBJECT')
-        self.oldvalues = [self.rig.MhaArmIk_L, self.rig.MhaArmIk_R, self.rig.MhaLegIk_L, self.rig.MhaLegIk_R]
-        self.rig.MhaArmIk_L = self.rig.MhaArmIk_R = self.rig.MhaLegIk_L = self.rig.MhaLegIk_R = value
+        self.oldvalues = [self.rig["MhaArmIk_L"], self.rig["MhaArmIk_R"], self.rig["MhaLegIk_L"], self.rig["MhaLegIk_R"]]
+        self.rig["MhaArmIk_L"] = self.rig["MhaArmIk_R"] = self.rig["MhaLegIk_L"] = self.rig["MhaLegIk_R"] = value
         self.auto = context.scene.tool_settings.use_keyframe_insert_auto
         self.updatePose()
 
@@ -154,12 +154,12 @@ class Snapper(Updater, Basic):
         scn = context.scene
         if scn.MhxUseSwitch:
             self.state[self.fk] = fk
-            if self.ik2 and getattr(self.rig, self.prop2):
+            if self.ik2 and self.rig[self.prop2]:
                 self.state[self.ik2] = ik
             else:
                 self.state[self.ik] = ik
             if self.prop:
-                setattr(self.rig, self.prop, value)
+                self.rig[self.prop] = value
                 if self.auto:
                     self.rig.keyframe_insert(self.prop, frame=scn.frame_current)
         elif self.prop:
@@ -170,14 +170,14 @@ class Snapper(Updater, Basic):
     def restoreAll(self, context, value, fk, ik):
         scn = context.scene
         if scn.MhxUseSwitch:
-            self.rig.MhaArmIk_L = self.rig.MhaArmIk_R = self.rig.MhaLegIk_L = self.rig.MhaLegIk_R = value
+            self.rig["MhaArmIk_L"] = self.rig["MhaArmIk_R"] = self.rig["MhaLegIk_L"] = self.rig["MhaLegIk_R"] = value
             self.state[L_LARMFK] = self.state[L_RARMFK] = self.state[L_LLEGFK] = self.state[L_RLEGFK] = fk
             self.state[L_LARMIK] = self.state[L_RARMIK] = ik
-            if self.rig.MhaLegIkToAnkle_L:
+            if self.rig.get("MhaLegIkToAnkle_L"):
                 self.state[L_LLEG2IK] = ik
             else:
                 self.state[L_LLEGIK] = ik
-            if self.rig.MhaLegIkToAnkle_R:
+            if self.rig.get("MhaLegIkToAnkle_R"):
                 self.state[L_RLEG2IK] = ik
             else:
                 self.state[L_RLEGIK] = ik
@@ -187,10 +187,10 @@ class Snapper(Updater, Basic):
                 self.rig.keyframe_insert("MhaLegIk_L", frame=scn.frame_current)
                 self.rig.keyframe_insert("MhaLegIk_R", frame=scn.frame_current)
         else:
-            self.rig.MhaArmIk_L = self.oldvalues[0]
-            self.rig.MhaArmIk_R = self.oldvalues[1]
-            self.rig.MhaLegIk_L = self.oldvalues[2]
-            self.rig.MhaLegIk_R = self.oldvalues[3]
+            self.rig["MhaArmIk_L"] = self.oldvalues[0]
+            self.rig["MhaArmIk_R"] = self.oldvalues[1]
+            self.rig["MhaLegIk_L"] = self.oldvalues[2]
+            self.rig["MhaLegIk_R"] = self.oldvalues[3]
         self.updatePose()
 
 
@@ -599,7 +599,7 @@ class MHX_OT_MhxSnapFkLeftLeg(Snapper, HideOperator):
         self.setup(context, 1.0)
         snapFk,_cnsFk = self.getSnapBones("LegFK", "L")
         snapIk,_cnsIk = self.getSnapBones("LegIK", "L")
-        self.snapFkLeg(snapFk, snapIk, self.rig.MhaLegIkToAnkle_L)
+        self.snapFkLeg(snapFk, snapIk, self.rig.get("MhaLegIkToAnkle_L", False))
         self.restore(context, 0.0, True, False)
 
 
@@ -621,7 +621,7 @@ class MHX_OT_MhxSnapFkRightLeg(Snapper, HideOperator):
         self.setup(context, 1.0)
         snapFk,_cnsFk = self.getSnapBones("LegFK", "R")
         snapIk,_cnsIk = self.getSnapBones("LegIK", "R")
-        self.snapFkLeg(snapFk, snapIk, self.rig.MhaLegIkToAnkle_R)
+        self.snapFkLeg(snapFk, snapIk, self.rig.get("MhaLegIkToAnkle_R", False))
         self.restore(context, 0.0, True, False)
 
 
@@ -648,12 +648,12 @@ class MHX_OT_MhxSnapFkAll(Snapper, HideOperator):
         self.prop = "MhaLegIk_L"
         snapFk,_cnsFk = self.getSnapBones("LegFK", "L")
         snapIk,_cnsIk = self.getSnapBones("LegIK", "L")
-        self.snapFkLeg(snapFk, snapIk, self.rig.MhaLegIkToAnkle_L)
+        self.snapFkLeg(snapFk, snapIk, self.rig.get("MhaLegIkToAnkle_L", False))
 
         self.prop = "MhaLegIk_R"
         snapFk,_cnsFk = self.getSnapBones("LegFK", "R")
         snapIk,_cnsIk = self.getSnapBones("LegIK", "R")
-        self.snapFkLeg(snapFk, snapIk, self.rig.MhaLegIkToAnkle_R)
+        self.snapFkLeg(snapFk, snapIk, self.rig.get("MhaLegIkToAnkle_R", False))
 
         self.restoreAll(context, 0.0, True, False)
 
@@ -722,7 +722,7 @@ class MHX_OT_MhxSnapIkLeftLeg(FootSnapper, HideOperator):
         self.setup(context, 0.0)
         snapFk,_cnsFk = self.getSnapBones("LegFK", "L")
         snapIk,_cnsIk = self.getSnapBones("LegIK", "L")
-        self.snapIkLeg(snapFk, snapIk, self.rig.MhaLegIkToAnkle_L)
+        self.snapIkLeg(snapFk, snapIk, self.rig.get("MhaLegIkToAnkle_L", False))
         self.restore(context, 1.0, False, True)
 
 
@@ -745,7 +745,7 @@ class MHX_OT_MhxSnapIkRightLeg(FootSnapper, HideOperator):
         self.setup(context, 0.0)
         snapFk,_cnsFk = self.getSnapBones("LegFK", "R")
         snapIk,_cnsIk = self.getSnapBones("LegIK", "R")
-        self.snapIkLeg(snapFk, snapIk, self.rig.MhaLegIkToAnkle_R)
+        self.snapIkLeg(snapFk, snapIk, self.rig.get("MhaLegIkToAnkle_R", False))
         self.restore(context, 1.0, False, True)
 
 
@@ -773,12 +773,12 @@ class MHX_OT_MhxSnapIkAll(FootSnapper, HideOperator):
         self.prop = "MhaLegIk_L"
         snapFk,_cnsFk = self.getSnapBones("LegFK", "L")
         snapIk,_cnsIk = self.getSnapBones("LegIK", "L")
-        self.snapIkLeg(snapFk, snapIk, self.rig.MhaLegIkToAnkle_L)
+        self.snapIkLeg(snapFk, snapIk, self.rig.get("MhaLegIkToAnkle_L", False))
 
         self.prop = "MhaLegIk_R"
         snapFk,_cnsFk = self.getSnapBones("LegFK", "R")
         snapIk,_cnsIk = self.getSnapBones("LegIK", "R")
-        self.snapIkLeg(snapFk, snapIk, self.rig.MhaLegIkToAnkle_R)
+        self.snapIkLeg(snapFk, snapIk, self.rig.get("MhaLegIkToAnkle_R", False))
 
         self.restoreAll(context, 1.0, False, True)
 
@@ -917,7 +917,7 @@ class ToggleFkIk(Updater):
         scn = context.scene
         checkVisible(rig)
         scn = context.scene
-        value = getattr(rig, prop)
+        value = rig[prop]
         if value > 0.5:
             value = 0.0
             fk = True
@@ -926,11 +926,11 @@ class ToggleFkIk(Updater):
             value = 1.0
             fk = False
             ik = True
-        setattr(rig, prop, value)
+        rig[prop] = value
         if scn.MhxUseSwitch:
             if fklayer != iklayer:
                 setRigLayer(rig, fklayer, fk)
-                if prop2 and getattr(rig, prop2):
+                if prop2 and rig.get(prop2):
                     setRigLayer(rig, iklayer2, ik)
                 else:
                     setRigLayer(rig, iklayer, ik)
@@ -994,10 +994,10 @@ class SetFkIk(Updater):
     def setFkIk(self, context, prop, prop2, fklayer, iklayer, iklayer2):
         rig = context.object
         scn = context.scene
-        setattr(rig, prop, self.ik)
+        rig[prop] = self.ik
         if scn.MhxUseSwitch:
             setRigLayer(rig, fklayer, (1-self.ik))
-            if prop2 and getattr(rig, prop2):
+            if prop2 and rig.get(prop2):
                 setRigLayer(rig, iklayer2, self.ik)
             else:
                 setRigLayer(rig, iklayer, self.ik)
@@ -1045,7 +1045,7 @@ class MHX_OT_MhxUpdateElbowKneeParents(MhxOperator, Updater):
             raise MhxError(msg)
         wmat = pb.matrix.copy()
         setMode('EDIT', msg)
-        partype = getattr(rig, prop)
+        partype = rig.get(prop)
         if partype in ['HAND', 'FOOT']:
             parname = polep
         elif partype in ['SHOULDER', 'HIP']:
@@ -1093,7 +1093,7 @@ class ToggleToeTarsal:
             tarsalname not in rig.data.bones.keys()):
             msg = ("Missing bones: %s or %s" % (toename, tarsalname))
             raise MhxError(msg)
-        wason = getattr(rig, prop)
+        wason = rig.get(prop, False)
         for smallname in ["big_toe", "small_toe_1", "small_toe_2", "small_toe_3", "small_toe_4"]:
             setConstraint(rig, "%s.01.%s" % (smallname, suffix), toename, wason)
         setMode('EDIT', "Cannot toggle toe tarsal parents for this armature")
@@ -1102,7 +1102,7 @@ class ToggleToeTarsal:
         for smallname in ["big_toe", "small_toe_1", "small_toe_2", "small_toe_3", "small_toe_4"]:
             setParent(rig, "%s.01.%s" % (smallname, suffix), toe, tarsal, wason)
         setMode('OBJECT')
-        setattr(rig, prop, (not wason))
+        rig[prop] = (not wason)
 
 
 class MHX_OT_MhxToggleLeftToeTarsal(MhxOperator, ToggleToeTarsal):
@@ -1134,15 +1134,15 @@ class MHX_OT_MhxToggleLimits(MhxOperator):
 
     def run(self, context):
         rig = context.object
-        rig.MhaLimitsOn = (not rig.MhaLimitsOn)
+        rig["MhaLimitsOn"] = (not rig["MhaLimitsOn"])
         for pb in rig.pose.bones:
             for cns in pb.constraints:
                 if cns.type[0:6] == 'LIMIT_' and cns.name != "Hint":
-                    cns.mute = (not rig.MhaLimitsOn)
+                    cns.mute = (not rig["MhaLimitsOn"])
         for suffix in ["L", "R"]:
             for bname in ["upper_arm", "forearm", "thigh", "shin"]:
                 pb = rig.pose.bones["%s.ik.%s" % (bname, suffix)]
-                pb.use_ik_limit_x = pb.use_ik_limit_y = pb.use_ik_limit_z = rig.MhaLimitsOn
+                pb.use_ik_limit_x = pb.use_ik_limit_y = pb.use_ik_limit_z = rig["MhaLimitsOn"]
 
 #----------------------------------------------------------
 #   Initialize
