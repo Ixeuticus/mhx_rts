@@ -369,17 +369,17 @@ class Transferer:
         ikLayers = []
         fkLayers = []
         if self.useArms:
-            self.rig["MhaArmIk_L"] = value
-            self.rig["MhaArmIk_R"] = value
+            self.rig.MhaArmIk_L = value
+            self.rig.MhaArmIk_R = value
             ikLayers += [L_LARMIK, L_RARMIK]
             fkLayers += [L_LARMFK, L_RARMFK]
         if self.useLegs:
-            self.rig["MhaLegIk_L"] = value
-            self.rig["MhaLegIk_R"] = value
+            self.rig.MhaLegIk_L = value
+            self.rig.MhaLegIk_R = value
             ikLayers += [L_LLEGIK, L_RLEGIK]
             fkLayers += [L_LLEGFK, L_RLEGFK]
         if self.useSpine:
-            self.rig["MhaSpineIk"] = value
+            self.rig.MhaSpineIk = value
         if value:
             onLayers = ikLayers
             offLayers = fkLayers
@@ -443,21 +443,21 @@ class MHX_OT_TransferToLinks(Snapper, FrameRange):
         props = []
         infos = []
         if self.useSpine:
-            if self.rig["MhaSpineControl"]:
+            if self.rig.MhaSpineControl:
                 infos.append(self.getSpineInfo())
                 props.append("MhaSpineControl")
-            if self.rig["MhaNeckControl"]:
+            if self.rig.MhaNeckControl:
                 infos.append(self.getNeckHeadInfo())
                 props.append("MhaNeckControl")
         if self.useFingers:
-            if self.rig["MhaFingerControl_L"]:
+            if self.rig.MhaFingerControl_L:
                 infos.append(self.getFingerInfo("L"))
                 props.append("MhaFingerControl_L")
-            if self.rig["MhaFingerControl_R"]:
+            if self.rig.MhaFingerControl_R:
                 infos.append(self.getFingerInfo("R"))
                 props.append("MhaFingerControl_R")
         if self.useTongue:
-            if self.rig["MhaTongueControl"]:
+            if self.rig.MhaTongueControl:
                 infos.append(self.getTongueInfo(self.rig))
                 props.append("MhaTongueControl")
 
@@ -523,8 +523,8 @@ class MHX_OT_TransferToFk(Transferer, FootSnapper, FrameRange, Bender):
         scn = context.scene
         self.auto = True
         self.setMhxIk(1.0)
-        lLegIkToAnkle = self.rig.get("MhaLegIkToAnkle_L", False)
-        rLegIkToAnkle = self.rig.get("MhaLegIkToAnkle_R", False)
+        lLegIkToAnkle = self.rig.MhaLegIkToAnkle_L
+        rLegIkToAnkle = self.rig.MhaLegIkToAnkle_R
         if self.useSpine:
             back = self.rig.pose.bones.get("back")
             revback = self.rig.pose.bones.get("REV-ik_back")
@@ -588,8 +588,8 @@ class MHX_OT_TransferToIk(Transferer, FootSnapper, FrameRange):
         scn = context.scene
         self.auto = True
         self.setMhxIk(0.0)
-        lLegIkToAnkle = self.rig.get("MhaLegIkToAnkle_L", False)
-        rLegIkToAnkle = self.rig.get("MhaLegIkToAnkle_R", False)
+        lLegIkToAnkle = self.rig.MhaLegIkToAnkle_L
+        rLegIkToAnkle = self.rig.MhaLegIkToAnkle_R
         if self.useSpine:
             back = self.rig.pose.bones.get("ik_back")
             revback = self.rig.pose.bones.get("REV-back")
