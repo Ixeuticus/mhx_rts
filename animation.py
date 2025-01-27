@@ -344,14 +344,24 @@ class MHX_OT_EnforceAllLimits(LimitEnforcer, FrameRange, Basic):
 #-------------------------------------------------------------
 
 class Transferer:
-    useArms : BoolProperty(
-        name="Include Arms",
-        description="Include arms in FK/IK snapping",
+    useLeftArm : BoolProperty(
+        name="Left",
+        description="Include left arm in FK/IK snapping",
         default=False)
 
-    useLegs : BoolProperty(
-        name="Include Legs",
-        description="Include legs in FK/IK snapping",
+    useRightArm : BoolProperty(
+        name="Right",
+        description="Include right arm in FK/IK snapping",
+        default=False)
+
+    useLeftLeg : BoolProperty(
+        name="Left",
+        description="Include left arm in FK/IK snapping",
+        default=True)
+
+    useRightLeg : BoolProperty(
+        name="Right",
+        description="Include right arm in FK/IK snapping",
         default=True)
 
     useSpine : BoolProperty(
@@ -360,24 +370,36 @@ class Transferer:
         default = False)
 
     def draw(self, context):
-        self.layout.prop(self, "useArms")
-        self.layout.prop(self, "useLegs")
+        row = self.layout.row()
+        row.label(text="Include Arm")
+        row.prop(self, "useLeftArm")
+        row.prop(self, "useRightArm")
+        row = self.layout.row()
+        row.label(text="Include Leg")
+        row.prop(self, "useLeftLeg")
+        row.prop(self, "useRightLeg")
         self.layout.prop(self, "useSpine")
 
 
     def setMhxIk(self, value):
         ikLayers = []
         fkLayers = []
-        if self.useArms:
+        if self.useLeftArm:
             self.rig.MhaArmIk_L = value
+            ikLayers.append(L_LARMIK)
+            fkLayers.append(L_LARMFK)
+        if self.useRightArm:
             self.rig.MhaArmIk_R = value
-            ikLayers += [L_LARMIK, L_RARMIK]
-            fkLayers += [L_LARMFK, L_RARMFK]
-        if self.useLegs:
+            ikLayers.append(L_RARMIK)
+            fkLayers.append(L_RARMFK)
+        if self.useLeftLeg:
             self.rig.MhaLegIk_L = value
+            ikLayers.append(L_LLEGIK)
+            fkLayers.append(L_LLEGFK)
+        if self.useRightLeg:
             self.rig.MhaLegIk_R = value
-            ikLayers += [L_LLEGIK, L_RLEGIK]
-            fkLayers += [L_LLEGFK, L_RLEGFK]
+            ikLayers.append(L_RLEGIK)
+            fkLayers.append(L_RLEGFK)
         if self.useSpine:
             self.rig.MhaSpineIk = value
         if value:
@@ -535,11 +557,13 @@ class MHX_OT_TransferToFk(Transferer, FootSnapper, FrameRange, Bender):
         for n,frame in enumerate(frames):
             showProgress(n, frame, nFrames)
             self.setFrame(scn, frame)
-            if self.useArms:
+            if self.useLeftArm:
                 self.snapFkArm(lArmSnapFk, lArmSnapIk)
+            if self.useRightArm:
                 self.snapFkArm(rArmSnapFk, rArmSnapIk)
-            if self.useLegs:
+            if self.useLeftLeg:
                 self.snapFkLeg(lLegSnapFk, lLegSnapIk, lLegIkToAnkle)
+            if self.useRightLeg:
                 self.snapFkLeg(rLegSnapFk, rLegSnapIk, rLegIkToAnkle)
             if back and revback:
                 self.snapReverse(back, revback)
@@ -602,11 +626,13 @@ class MHX_OT_TransferToIk(Transferer, FootSnapper, FrameRange):
         for n,frame in enumerate(frames):
             showProgress(n, frame, nFrames)
             self.setFrame(scn, frame)
-            if self.useArms:
+            if self.useLeftArm:
                 self.snapIkArm(lArmSnapFk, lArmSnapIk)
+            if self.useRightArm:
                 self.snapIkArm(rArmSnapFk, rArmSnapIk)
-            if self.useLegs:
+            if self.useLeftLeg:
                 self.snapIkLeg(lLegSnapFk, lLegSnapIk, lLegIkToAnkle)
+            if self.useRightLeg:
                 self.snapIkLeg(rLegSnapFk, rLegSnapIk, rLegIkToAnkle)
             if back and revback:
                 self.snapReverse(back, revback)
@@ -636,24 +662,44 @@ class MHX_OT_ClearAnimation(FrameRange):
     bl_description = "Clear Animation For FK or IK Bones"
     bl_options = {'UNDO'}
 
-    clearArmFK : BoolProperty(
-        name = "Clear FK Arm",
-        description = "Clear Arm FK animation",
+    clearLeftArmFK : BoolProperty(
+        name = "Left FK",
+        description = "Clear Left Arm FK animation",
         default = False)
 
-    clearArmIK : BoolProperty(
-        name = "Clear IK Arm",
-        description = "Clear Arm IK animation",
+    clearRightArmFK : BoolProperty(
+        name = "Right FK",
+        description = "Clear Right Arm FK animation",
         default = False)
 
-    clearLegFK : BoolProperty(
-        name = "Clear FK Leg",
-        description = "Clear Leg FK animation",
+    clearLeftArmIK : BoolProperty(
+        name = "Left IK",
+        description = "Clear Left Arm IK animation",
         default = False)
 
-    clearLegIK : BoolProperty(
-        name = "Clear IK Leg",
-        description = "Clear Leg IK animation",
+    clearRightArmIK : BoolProperty(
+        name = "Right IK",
+        description = "Clear Right Arm IK animation",
+        default = False)
+
+    clearLeftLegFK : BoolProperty(
+        name = "Left FK",
+        description = "Clear Left Leg FK animation",
+        default = False)
+
+    clearRightLegFK : BoolProperty(
+        name = "Right FK",
+        description = "Clear Right Leg FK animation",
+        default = False)
+
+    clearLeftLegIK : BoolProperty(
+        name = "Left IK",
+        description = "Clear Left Leg IK animation",
+        default = False)
+
+    clearRightLegIK : BoolProperty(
+        name = "Right IK",
+        description = "Clear Right Leg IK animation",
         default = False)
 
     clearSpineFK : BoolProperty(
@@ -673,36 +719,54 @@ class MHX_OT_ClearAnimation(FrameRange):
 
     def draw(self, context):
         row = self.layout.row()
-        row.prop(self, "clearArmFK")
-        row.prop(self, "clearArmIK")
+        row.label(text = "Clear Arm FK")
+        row.prop(self, "clearLeftArmFK")
+        row.prop(self, "clearRightArmFK")
         row = self.layout.row()
-        row.prop(self, "clearLegFK")
-        row.prop(self, "clearLegIK")
+        row.label(text = "Clear Arm IK")
+        row.prop(self, "clearLeftArmIK")
+        row.prop(self, "clearRightArmIK")
         row = self.layout.row()
-        row.prop(self, "clearSpineFK")
-        row.prop(self, "clearSpineIK")
+        row.label(text = "Clear Leg FK")
+        row.prop(self, "clearLeftLegFK")
+        row.prop(self, "clearRightLegFK")
+        row = self.layout.row()
+        row.label(text = "Clear Leg IK")
+        row.prop(self, "clearLeftLegIK")
+        row.prop(self, "clearRightLegIK")
+        self.layout.prop(self, "clearSpineFK")
+        self.layout.prop(self, "clearSpineIK")
         self.layout.prop(self, "useEntireAnimation")
         if not self.useEntireAnimation:
             FrameRange.draw(self, context)
 
     def run(self, context):
+        def getSnapBones(key, suffix):
+            bnames = SnapBones[key]
+            return ["%s.%s" % (bname, suffix) for bname in bnames]
+
         startProgress("Clear animation")
         from .fkik import SnapBones
         rig = context.object
         checkVisible(rig)
         act = rig.animation_data.action
         bnames = []
-        if self.clearArmFK:
-            bnames += SnapBones["ArmFK"]
-        if self.clearArmIK:
-            bnames += SnapBones["ArmIK"]
-        if self.clearLegFK:
-            bnames += SnapBones["LegFK"]
-        if self.clearLegIK:
-            bnames += SnapBones["LegIK"]
-        lBnames = ["%s.L" % bname for bname in bnames]
-        rBnames = ["%s.R" % bname for bname in bnames]
-        bnames = []
+        if self.clearLeftArmFK:
+            bnames += getSnapBones("ArmFK", "L")
+        if self.clearRightArmFK:
+            bnames += getSnapBones("ArmFK", "R")
+        if self.clearLeftArmIK:
+            bnames += getSnapBones("ArmIK", "L")
+        if self.clearRightArmIK:
+            bnames += getSnapBones("ArmIK", "R")
+        if self.clearLeftLegFK:
+            bnames += getSnapBones("LegFK", "L")
+        if self.clearRightLegFK:
+            bnames += getSnapBones("LegFK", "R")
+        if self.clearLeftLegIK:
+            bnames += getSnapBones("LegIK", "L")
+        if self.clearRightLegIK:
+            bnames += getSnapBones("LegIK", "R")
         if self.clearSpineFK:
             bnames += ["back"]
         if self.clearSpineIK:
@@ -717,7 +781,7 @@ class MHX_OT_ClearAnimation(FrameRange):
                     fcus.append(fcu)
             return fcus
 
-        fcus = getFcurves(act, lBnames+rBnames+bnames)
+        fcus = getFcurves(act, bnames)
         if self.useEntireAnimation:
             for fcu in fcus:
                 act.fcurves.remove(fcu)
