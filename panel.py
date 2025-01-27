@@ -120,7 +120,7 @@ class MHX_PT_Properties(MhxPanel):
         row.prop(rig, propRef("MhaGaze_L"), text="Gaze Left")
         row.prop(rig, propRef("MhaGaze_R"), text="Gaze Right")
         if "MhaTongueIk" in rig.keys():
-            self.layout.prop(rig, propRef("MhaTongueIk", text="Tongue IK"))
+            self.layout.prop(rig, propRef("MhaTongueIk"), text="Tongue IK")
 
         self.layout.label(text = "Spine")
         if "MhaNeckFollowsSpine" in rig.keys():

@@ -927,6 +927,9 @@ class ToggleFkIk(Updater):
             fk = False
             ik = True
         rig[prop] = value
+        if (scn.tool_settings.use_keyframe_insert_auto or
+            isKeyed(rig, None, prop)):
+            rig.keyframe_insert(propRef(prop), frame=scn.frame_current)
         if scn.MhxUseSwitch:
             if fklayer != iklayer:
                 setRigLayer(rig, fklayer, fk)
@@ -934,9 +937,6 @@ class ToggleFkIk(Updater):
                     setRigLayer(rig, iklayer2, ik)
                 else:
                     setRigLayer(rig, iklayer, ik)
-            if (scn.tool_settings.use_keyframe_insert_auto or
-                isKeyed(rig, None, prop)):
-                rig.keyframe_insert(prop, frame=scn.frame_current)
         self.updatePose()
 
 
@@ -995,6 +995,8 @@ class SetFkIk(Updater):
         rig = context.object
         scn = context.scene
         rig[prop] = self.ik
+        if scn.tool_settings.use_keyframe_insert_auto:
+            rig.keyframe_insert(propRef(prop))
         if scn.MhxUseSwitch:
             setRigLayer(rig, fklayer, (1-self.ik))
             if prop2 and rig.get(prop2):
