@@ -7,7 +7,6 @@ from bpy.props import *
 from .utils import *
 from .layers import *
 from .fkik import Updater
-from .runtime.properties import initMhxProps
 
 # ---------------------------------------------------------------------
 #   Convert MHX actions from legacy to modern
@@ -262,7 +261,7 @@ class MHX_OT_UpdateMhx(MhxOperator):
         setMode('OBJECT')
         if bpy.app.version >= (4,0,0):
             updateCollections(rig)
-        rig.data.MhaFeatures |= F_IDPROPS
+        rig.data["MhaFeatures"] = rig.data.get("MhaFeatures") | F_IDPROPS
 
 
 def getConstraint(pb, ctype):
@@ -346,7 +345,8 @@ class MhxBaker:
             self.changeDrivers(rig, props)
         if rig.data.animation_data:
             self.changeDrivers(rig.data, props)
-        rig.DazRig = self.rigtype
+        rig["MhxRig"] = not self.useBake
+        rig["MhxBakedRig"] = self.useBake
 
 
 class MHX_OT_BakeMhx(MhxBaker, MhxOperator):
@@ -355,7 +355,7 @@ class MHX_OT_BakeMhx(MhxBaker, MhxOperator):
     bl_description = "Bake MHX properties to make MHX animations work\nalso if the MHX RTS add-on is disabled"
     bl_options = {'UNDO'}
 
-    rigtype = "baked-mhx"
+    useBake = True
 
     def setProps(self, rig, props):
         for prop in props:
@@ -377,7 +377,7 @@ class MHX_OT_UnbakeMhx(MhxBaker, MhxOperator):
     bl_description = "Remove baked MHX properties to use the MHX RTS add-on"
     bl_options = {'UNDO'}
 
-    rigtype = "mhx"
+    useBake = False
 
     def setProps(self, rig, props):
         return
@@ -447,10 +447,6 @@ classes = [
 ]
 
 def register():
-    bpy.types.Object.DazRig = StringProperty(
-        name = "Rig Type",
-        default = "")
-    initMhxProps()
     for cls in classes:
         bpy.utils.register_class(cls)
 

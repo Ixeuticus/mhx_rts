@@ -161,9 +161,9 @@ class Snapper(Updater, Basic):
             if self.prop:
                 self.rig[self.prop] = value
                 if self.auto:
-                    self.rig.keyframe_insert(self.prop, frame=scn.frame_current)
+                    self.rig.keyframe_insert(propRef(self.prop), frame=scn.frame_current)
         elif self.prop:
-            setattr(self.rig, self.prop, self.oldvalue)
+            self.rig[self.prop] = self.oldvalue
         self.updatePose()
 
 
@@ -182,10 +182,10 @@ class Snapper(Updater, Basic):
             else:
                 self.state[L_RLEGIK] = ik
             if self.auto:
-                self.rig.keyframe_insert("MhaArmIk_L", frame=scn.frame_current)
-                self.rig.keyframe_insert("MhaArmIk_R", frame=scn.frame_current)
-                self.rig.keyframe_insert("MhaLegIk_L", frame=scn.frame_current)
-                self.rig.keyframe_insert("MhaLegIk_R", frame=scn.frame_current)
+                self.rig.keyframe_insert(propRef("MhaArmIk_L"), frame=scn.frame_current)
+                self.rig.keyframe_insert(propRef("MhaArmIk_R"), frame=scn.frame_current)
+                self.rig.keyframe_insert(propRef("MhaLegIk_L"), frame=scn.frame_current)
+                self.rig.keyframe_insert(propRef("MhaLegIk_R"), frame=scn.frame_current)
         else:
             self.rig["MhaArmIk_L"] = self.oldvalues[0]
             self.rig["MhaArmIk_R"] = self.oldvalues[1]
@@ -421,7 +421,7 @@ class Snapper(Updater, Basic):
         fkbones, pboness, matss = self.getBonesMatrices(info)
         self.updatePose()
         self.clearFkIkBones(info, fkbones)
-        setattr(self.rig, prop, False)
+        self.rig[prop] = False
         self.updatePose()
         self.setLinkBones(pboness, matss)
 

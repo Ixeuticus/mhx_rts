@@ -22,9 +22,9 @@ class MHX_PT_Main(bpy.types.Panel):
         rig = context.object
         if rig is None:
             pass
-        elif rig.DazRig == "mhx":
+        elif rig.get("MhxRig"):
             self.layout.operator("mhx.bake_mhx")
-        elif rig.DazRig == "baked-mhx":
+        elif rig.get("MhxBakedRig"):
             self.layout.operator("mhx.unbake_mhx")
 
 #------------------------------------------------------------------------
@@ -35,7 +35,7 @@ class MhxPanel(bpy.types.Panel):
     @classmethod
     def poll(cls, context):
         ob = context.object
-        return (ob and (ob.DazRig == "mhx" or ob.get("MhxRig", False)))
+        return (ob and ob.get("MhxRig", False))
 
     def needsMhxUpdate(self, rig):
         if rig is None:
@@ -43,7 +43,7 @@ class MhxPanel(bpy.types.Panel):
         if bpy.app.version >= (4,0,0) and "Layer 1" in rig.data.collections.keys():
             self.layout.operator("mhx.update_mhx_blender4")
             return True
-        if not rig.data.MhaFeatures & F_IDPROPS:
+        if not rig.data.get("MhaFeatures") & F_IDPROPS:
             self.layout.operator("mhx.update_mhx")
             return True
         return False
@@ -115,27 +115,28 @@ class MHX_PT_Properties(MhxPanel):
             return
 
         self.layout.label(text = "Gaze")
-        self.layout.prop(rig, propRef("MhaGazeFollowsHead"))
+        self.layout.prop(rig, propRef("MhaGazeFollowsHead"), text="Gaze Follows Head")
         row = self.layout.row()
-        row.prop(rig, propRef("MhaGaze_L"))
-        row.prop(rig, propRef("MhaGaze_R"))
-        if rig.data.MhaFeatures & F_TONGUE:
-            self.layout.prop(rig, propRef("MhaTongueIk"))
+        row.prop(rig, propRef("MhaGaze_L"), text="Gaze Left")
+        row.prop(rig, propRef("MhaGaze_R"), text="Gaze Right")
+        if "MhaTongueIk" in rig.keys():
+            self.layout.prop(rig, propRef("MhaTongueIk", text="Tongue IK"))
 
         self.layout.label(text = "Spine")
-        self.layout.prop(rig, propRef("MhaNeckFollowsSpine"))
-        self.layout.prop(rig, propRef("MhaSpineIk"))
+        if "MhaNeckFollowsSpine" in rig.keys():
+            self.layout.prop(rig, propRef("MhaNeckFollowsSpine"), text="Neck Follows Spine")
+        self.layout.prop(rig, propRef("MhaSpineIk"), text="Spine IK")
         row = self.layout.row()
-        row.prop(rig, propRef("MhaSpineControl"))
-        row.prop(rig, propRef("MhaNeckControl"))
+        row.prop(rig, propRef("MhaSpineControl"), text="FK/IK Spine")
+        row.prop(rig, propRef("MhaNeckControl"), text="FK/IK Neck")
 
         self.layout.label(text = "Hinge")
         row = self.layout.row()
-        row.prop(rig, propRef("MhaArmHinge_L"))
-        row.prop(rig, propRef("MhaArmHinge_R"))
+        row.prop(rig, propRef("MhaArmHinge_L"), text="Arm Hinge Left")
+        row.prop(rig, propRef("MhaArmHinge_R"), text="Arm Hinge Right")
         row = self.layout.row()
-        row.prop(rig, propRef("MhaLegHinge_L"))
-        row.prop(rig, propRef("MhaLegHinge_R"))
+        row.prop(rig, propRef("MhaLegHinge_L"), text="Leg Hinge Left")
+        row.prop(rig, propRef("MhaLegHinge_R"), text="Leg Hinge Right")
         row = self.layout.row()
         op = row.operator("mhx.unhinge", text="Unhinge Left Arm")
         op.limb = "Arm"
@@ -153,15 +154,15 @@ class MHX_PT_Properties(MhxPanel):
 
         self.layout.label(text = "Hands And Fingers")
         row = self.layout.row()
-        row.prop(rig, propRef("MhaForearmFollow_L"))
-        row.prop(rig, propRef("MhaForearmFollow_R"))
+        row.prop(rig, propRef("MhaForearmFollow_L"), text="Forearm Follows Hand Left")
+        row.prop(rig, propRef("MhaForearmFollow_R"), text="Forearm Follows Hand Right")
         row = self.layout.row()
-        row.prop(rig, propRef("MhaFingerControl_L"))
-        row.prop(rig, propRef("MhaFingerControl_R"))
-        if rig.data.MhaFeatures & F_FINGER:
+        row.prop(rig, propRef("MhaFingerControl_L"), text="FK/IK Fingers Left")
+        row.prop(rig, propRef("MhaFingerControl_R"), text="FK/IK Fingers Right")
+        if "MhaFingerIk_L" in rig.keys():
             row = self.layout.row()
-            row.prop(rig, propRef("MhaFingerIk_L"))
-            row.prop(rig, propRef("MhaFingerIk_R"))
+            row.prop(rig, propRef("MhaFingerIk_L"), text="Finger IK Left")
+            row.prop(rig, propRef("MhaFingerIk_R"), text="Finger IK Right")
 
         self.layout.label(text = "Limits")
         row = self.layout.row()
@@ -170,34 +171,23 @@ class MHX_PT_Properties(MhxPanel):
 
         self.layout.label(text = "IK")
         row = self.layout.row()
-        row.prop(rig, propRef("MhaArmIk_L"))
-        row.prop(rig, propRef("MhaArmIk_R"))
+        row.prop(rig, propRef("MhaArmIk_L"), text="Arm IK Left")
+        row.prop(rig, propRef("MhaArmIk_R"), text="Arm IK Right")
         row = self.layout.row()
-        row.prop(rig, propRef("MhaLegIk_L"))
-        row.prop(rig, propRef("MhaLegIk_R"))
+        row.prop(rig, propRef("MhaLegIk_L"), text="Leg IK Left")
+        row.prop(rig, propRef("MhaLegIk_R"), text="Leg IK Left")
         if "foot.2.L" in rig.pose.bones.keys():
             row = self.layout.row()
-            row.prop(rig, propRef("MhaLegIkToAnkle_L"))
-            row.prop(rig, propRef("MhaLegIkToAnkle_R"))
-
-        '''
-        self.layout.label(text = "Pole Target Parents")
-        row = self.layout.row()
-        row.prop(rig, propRef("MhaElbowParent_L"))
-        row.prop(rig, propRef("MhaElbowParent_R"))
-        row = self.layout.row()
-        row.prop(rig, propRef("MhaKneeParent_L"))
-        row.prop(rig, propRef("MhaKneeParent_R"))
-        self.layout.operator("mhx.update_elbow_knee_parents")
-        '''
+            row.prop(rig, propRef("MhaLegIkToAnkle_L"), text="Ankle IK Left")
+            row.prop(rig, propRef("MhaLegIkToAnkle_R"), text="Ankle IK Right")
 
         self.layout.label(text = "Stretchiness")
         row = self.layout.row()
-        row.prop(rig, propRef("MhaArmStretch_L"))
-        row.prop(rig, propRef("MhaArmStretch_R"))
+        row.prop(rig, propRef("MhaArmStretch_L"), text="Arm Stretch Left")
+        row.prop(rig, propRef("MhaArmStretch_R"), text="Arm Stretch Right")
         row = self.layout.row()
-        row.prop(rig, propRef("MhaLegStretch_L"))
-        row.prop(rig, propRef("MhaLegStretch_R"))
+        row.prop(rig, propRef("MhaLegStretch_L"), text="Leg Stretch Left")
+        row.prop(rig, propRef("MhaLegStretch_R"), text="Leg Stretch Right")
 
         self.layout.label(text = "Toes Tarsal Parents")
         row = self.layout.row()
@@ -238,8 +228,8 @@ class MHX_PT_FKIKArmsLegs(MhxPanel):
         toggleFKIK(row, rig["MhaArmIk_L"], "mhx.toggle_fkik_left_arm")
         toggleFKIK(row, rig["MhaArmIk_R"], "mhx.toggle_fkik_right_arm")
         row = box.row()
-        row.prop(rig, propRef("MhaArmIk_L"))
-        row.prop(rig, propRef("MhaArmIk_R"))
+        row.prop(rig, propRef("MhaArmIk_L"), text="Arm IK Left")
+        row.prop(rig, propRef("MhaArmIk_R"), text="Arm IK Right")
         row = box.row()
         row.operator("mhx.snap_fk_left_arm")
         row.operator("mhx.snap_fk_right_arm")
@@ -256,8 +246,8 @@ class MHX_PT_FKIKArmsLegs(MhxPanel):
         toggleFKIK(row, rig["MhaLegIk_L"], "mhx.toggle_fkik_left_leg")
         toggleFKIK(row, rig["MhaLegIk_R"], "mhx.toggle_fkik_right_leg")
         row = box.row()
-        row.prop(rig, propRef("MhaLegIk_L"))
-        row.prop(rig, propRef("MhaLegIk_R"))
+        row.prop(rig, propRef("MhaLegIk_L"), text="Leg IK Left")
+        row.prop(rig, propRef("MhaLegIk_R"), text="Leg IK Right")
         row = box.row()
         row.operator("mhx.snap_fk_left_leg")
         row.operator("mhx.snap_fk_right_leg")
@@ -305,10 +295,10 @@ class MHX_PT_FKIKFingers(MhxPanel):
         box = self.layout.box()
         box.label(text = "Spine")
         row = box.row()
-        row.prop(rig, propRef("MhaSpineControl"))
-        row.prop(rig, propRef("MhaNeckControl"))
-        if rig.data.MhaFeatures & F_SPINE:
-            box.prop(rig, propRef("MhaSpineIk"))
+        row.prop(rig, propRef("MhaSpineControl"), text="FK/IK Spine")
+        row.prop(rig, propRef("MhaNeckControl"), text="FK/IK Neck")
+        if "MhaSpineIk" in rig.keys():
+            box.prop(rig, propRef("MhaSpineIk"), text="Spine IK")
             row = box.row()
             op = row.operator("mhx.snap_reverse", text="Snap FK")
             op.prop = "MhaSpineIk"
@@ -332,9 +322,9 @@ class MHX_PT_FKIKFingers(MhxPanel):
         row.label(text = "Left")
         row.label(text = "Right")
         row = box.row()
-        row.prop(rig, propRef("MhaFingerControl_L"))
-        row.prop(rig, propRef("MhaFingerControl_R"))
-        if rig.data.MhaFeatures & F_FINGER:
+        row.prop(rig, propRef("MhaFingerControl_L"), text="FK/IK Fingers Left")
+        row.prop(rig, propRef("MhaFingerControl_R"), text="FK/IK Fingers Right")
+        if "MhaFingerIk_L" in rig.keys():
             row = box.row()
             row.prop(rig, propRef("MhaFingerIk_L"), text="IK Influence")
             row.prop(rig, propRef("MhaFingerIk_R"), text="IK Influence")
@@ -343,19 +333,21 @@ class MHX_PT_FKIKFingers(MhxPanel):
             op = row.operator("mhx.snap_fingers")
             op.suffix = suffix
 
-        box = self.layout.box()
-        box.label(text = "Tongue")
-        box.prop(rig, propRef("MhaTongueControl"))
-        if rig.data.MhaFeatures & F_TONGUE:
-            box.prop(rig, propRef("MhaTongueIk"))
-        box.operator("mhx.snap_tongue")
+        if "MhaTongueControl" in rig.keys():
+            box = self.layout.box()
+            box.label(text = "Tongue")
+            box.prop(rig, propRef("MhaTongueControl"))
+            if "MhaTongueIk" in rig.keys():
+                box.prop(rig, propRef("MhaTongueIk"))
+            box.operator("mhx.snap_tongue")
 
-        box = self.layout.box()
-        box.label(text = "Shaft")
-        box.prop(rig, propRef("MhaShaftControl"))
-        if rig.data.MhaFeatures & F_SHAFT:
-            box.prop(rig, propRef("MhaShaftIk"))
-        box.operator("mhx.snap_shaft")
+        if "MhaShaftControl" in rig.keys():
+            box = self.layout.box()
+            box.label(text = "Shaft")
+            box.prop(rig, propRef("MhaShaftControl"), text="FK/IK Shaft")
+            if "MhaShaftIk" in rig.keys():
+                box.prop(rig, propRef("MhaShaftIk"), text="Shaft IK")
+            box.operator("mhx.snap_shaft")
 
         self.layout.operator("mhx.enforce_limits")
 
