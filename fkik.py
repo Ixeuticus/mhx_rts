@@ -154,7 +154,7 @@ class Snapper(Updater, Basic):
         scn = context.scene
         if scn.MhxUseSwitch:
             self.state[self.fk] = fk
-            if self.ik2 and self.rig[self.prop2]:
+            if self.ik2 and self.rig.get(self.prop2):
                 self.state[self.ik2] = ik
             else:
                 self.state[self.ik] = ik
