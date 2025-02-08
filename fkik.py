@@ -355,7 +355,7 @@ class Snapper(Updater, Basic):
 
         self.setWorldMatrix(handIk, handFk.matrix, True, True)
         if elbowPt:
-            if elbowPoleA:
+            if False and elbowPoleA:
                 self.setPoleTarget(handIk, elbowPt, elbowPoleA, forearmFk)
             else:
                 self.matchPoleTarget(elbowPt, uparmFk, forearmFk)
@@ -402,7 +402,7 @@ class Snapper(Updater, Basic):
                 self.matchPoseReverse(footRev, footFk)
             self.setWorldMatrix(ankleIk, footFk.matrix, True, False)
         if kneePt:
-            if kneePoleA:
+            if False and kneePoleA:
                 self.setPoleTarget(footInvIk, kneePt, kneePoleA, shinFk)
             else:
                 self.matchPoleTarget(kneePt, thighFk, shinFk)
