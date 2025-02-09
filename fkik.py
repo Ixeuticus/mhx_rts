@@ -144,7 +144,7 @@ class Snapper(Updater, Basic):
     def setupAll(self, context, value):
         checkVisible(context.object)
         setMode('OBJECT')
-        self.oldvalues = [self.rig["MhaArmIk_L"], self.rig["MhaArmIk_R"], self.rig["MhaLegIk_L"], self.rig["MhaLegIk_R"]]
+        self.oldvalues = [self.rig.get("MhaArmIk_L"), self.rig.get("MhaArmIk_R"), self.rig.get("MhaLegIk_L"), self.rig.get("MhaLegIk_R")]
         self.rig["MhaArmIk_L"] = self.rig["MhaArmIk_R"] = self.rig["MhaLegIk_L"] = self.rig["MhaLegIk_R"] = value
         self.auto = context.scene.tool_settings.use_keyframe_insert_auto
         self.updatePose()
@@ -258,7 +258,7 @@ class Snapper(Updater, Basic):
         self.setWorldMatrix(legIk, gmat, True, True)
 
 
-    def matchPoleTarget(self, pb, above, below):
+    def matchPoleTarget(self, pb, above, below, poleA):
         ay = above.y_axis
         by = below.y_axis
         az = above.z_axis
@@ -276,6 +276,8 @@ class Snapper(Updater, Basic):
         else:
             p = p0
         self.setWorldMatrix(pb, Matrix.Translation(p), True, False)
+        if poleA:
+            self.insertRotation(poleA, Matrix())
 
     #
     # https://bitbucket.org/Diffeomorphic/import_daz/issues/528/mhx-snap-ik-to-fk-can-set-pole-more
@@ -358,7 +360,7 @@ class Snapper(Updater, Basic):
             if False and elbowPoleA:
                 self.setPoleTarget(handIk, elbowPt, elbowPoleA, forearmFk)
             else:
-                self.matchPoleTarget(elbowPt, uparmFk, forearmFk)
+                self.matchPoleTarget(elbowPt, uparmFk, forearmFk, elbowPoleA)
         else:
             self.matchRotation(uparmIk, uparmFk)
         if not self.useApproximate:
@@ -405,7 +407,7 @@ class Snapper(Updater, Basic):
             if False and kneePoleA:
                 self.setPoleTarget(footInvIk, kneePt, kneePoleA, shinFk)
             else:
-                self.matchPoleTarget(kneePt, thighFk, shinFk)
+                self.matchPoleTarget(kneePt, thighFk, shinFk, kneePoleA)
         else:
             self.matchRotation(thighIk, thighFk)
         if not self.useApproximate:
@@ -599,7 +601,7 @@ class MHX_OT_MhxSnapFkLeftLeg(Snapper, HideOperator):
         self.setup(context, 1.0)
         snapFk,_cnsFk = self.getSnapBones("LegFK", "L")
         snapIk,_cnsIk = self.getSnapBones("LegIK", "L")
-        self.snapFkLeg(snapFk, snapIk, self.rig.get("MhaLegIkToAnkle_L", False))
+        self.snapFkLeg(snapFk, snapIk, self.rig.get("MhaLegIkToAnkle_L"))
         self.restore(context, 0.0, True, False)
 
 
@@ -621,7 +623,7 @@ class MHX_OT_MhxSnapFkRightLeg(Snapper, HideOperator):
         self.setup(context, 1.0)
         snapFk,_cnsFk = self.getSnapBones("LegFK", "R")
         snapIk,_cnsIk = self.getSnapBones("LegIK", "R")
-        self.snapFkLeg(snapFk, snapIk, self.rig.get("MhaLegIkToAnkle_R", False))
+        self.snapFkLeg(snapFk, snapIk, self.rig.get("MhaLegIkToAnkle_R"))
         self.restore(context, 0.0, True, False)
 
 
@@ -648,12 +650,12 @@ class MHX_OT_MhxSnapFkAll(Snapper, HideOperator):
         self.prop = "MhaLegIk_L"
         snapFk,_cnsFk = self.getSnapBones("LegFK", "L")
         snapIk,_cnsIk = self.getSnapBones("LegIK", "L")
-        self.snapFkLeg(snapFk, snapIk, self.rig.get("MhaLegIkToAnkle_L", False))
+        self.snapFkLeg(snapFk, snapIk, self.rig.get("MhaLegIkToAnkle_L"))
 
         self.prop = "MhaLegIk_R"
         snapFk,_cnsFk = self.getSnapBones("LegFK", "R")
         snapIk,_cnsIk = self.getSnapBones("LegIK", "R")
-        self.snapFkLeg(snapFk, snapIk, self.rig.get("MhaLegIkToAnkle_R", False))
+        self.snapFkLeg(snapFk, snapIk, self.rig.get("MhaLegIkToAnkle_R"))
 
         self.restoreAll(context, 0.0, True, False)
 
@@ -722,7 +724,7 @@ class MHX_OT_MhxSnapIkLeftLeg(FootSnapper, HideOperator):
         self.setup(context, 0.0)
         snapFk,_cnsFk = self.getSnapBones("LegFK", "L")
         snapIk,_cnsIk = self.getSnapBones("LegIK", "L")
-        self.snapIkLeg(snapFk, snapIk, self.rig.get("MhaLegIkToAnkle_L", False))
+        self.snapIkLeg(snapFk, snapIk, self.rig.get("MhaLegIkToAnkle_L"))
         self.restore(context, 1.0, False, True)
 
 
@@ -745,7 +747,7 @@ class MHX_OT_MhxSnapIkRightLeg(FootSnapper, HideOperator):
         self.setup(context, 0.0)
         snapFk,_cnsFk = self.getSnapBones("LegFK", "R")
         snapIk,_cnsIk = self.getSnapBones("LegIK", "R")
-        self.snapIkLeg(snapFk, snapIk, self.rig.get("MhaLegIkToAnkle_R", False))
+        self.snapIkLeg(snapFk, snapIk, self.rig.get("MhaLegIkToAnkle_R"))
         self.restore(context, 1.0, False, True)
 
 
@@ -773,12 +775,12 @@ class MHX_OT_MhxSnapIkAll(FootSnapper, HideOperator):
         self.prop = "MhaLegIk_L"
         snapFk,_cnsFk = self.getSnapBones("LegFK", "L")
         snapIk,_cnsIk = self.getSnapBones("LegIK", "L")
-        self.snapIkLeg(snapFk, snapIk, self.rig.get("MhaLegIkToAnkle_L", False))
+        self.snapIkLeg(snapFk, snapIk, self.rig.get("MhaLegIkToAnkle_L"))
 
         self.prop = "MhaLegIk_R"
         snapFk,_cnsFk = self.getSnapBones("LegFK", "R")
         snapIk,_cnsIk = self.getSnapBones("LegIK", "R")
-        self.snapIkLeg(snapFk, snapIk, self.rig.get("MhaLegIkToAnkle_R", False))
+        self.snapIkLeg(snapFk, snapIk, self.rig.get("MhaLegIkToAnkle_R"))
 
         self.restoreAll(context, 1.0, False, True)
 

@@ -465,21 +465,21 @@ class MHX_OT_TransferToLinks(Snapper, FrameRange):
         props = []
         infos = []
         if self.useSpine:
-            if self.rig["MhaSpineControl"]:
+            if self.rig.get("MhaSpineControl"):
                 infos.append(self.getSpineInfo())
                 props.append("MhaSpineControl")
-            if self.rig["MhaNeckControl"]:
+            if self.rig.get("MhaNeckControl"):
                 infos.append(self.getNeckHeadInfo())
                 props.append("MhaNeckControl")
         if self.useFingers:
-            if self.rig["MhaFingerControl_L"]:
+            if self.rig.get("MhaFingerControl_L"):
                 infos.append(self.getFingerInfo("L"))
                 props.append("MhaFingerControl_L")
-            if self.rig["MhaFingerControl_R"]:
+            if self.rig.get("MhaFingerControl_R"):
                 infos.append(self.getFingerInfo("R"))
                 props.append("MhaFingerControl_R")
         if self.useTongue:
-            if self.rig["MhaTongueControl"]:
+            if self.rig.get("MhaTongueControl"):
                 infos.append(self.getTongueInfo(self.rig))
                 props.append("MhaTongueControl")
 
@@ -545,8 +545,8 @@ class MHX_OT_TransferToFk(Transferer, FootSnapper, FrameRange, Bender):
         scn = context.scene
         self.auto = True
         self.setMhxIk(1.0)
-        lLegIkToAnkle = self.rig["MhaLegIkToAnkle_L"]
-        rLegIkToAnkle = self.rig["MhaLegIkToAnkle_R"]
+        lLegIkToAnkle = self.rig.get("MhaLegIkToAnkle_L")
+        rLegIkToAnkle = self.rig.get("MhaLegIkToAnkle_R")
         if self.useSpine:
             back = self.rig.pose.bones.get("back")
             revback = self.rig.pose.bones.get("REV-ik_back")
@@ -612,8 +612,8 @@ class MHX_OT_TransferToIk(Transferer, FootSnapper, FrameRange):
         scn = context.scene
         self.auto = True
         self.setMhxIk(0.0)
-        lLegIkToAnkle = self.rig["MhaLegIkToAnkle_L"]
-        rLegIkToAnkle = self.rig["MhaLegIkToAnkle_R"]
+        lLegIkToAnkle = self.rig.get("MhaLegIkToAnkle_L")
+        rLegIkToAnkle = self.rig.get("MhaLegIkToAnkle_R")
         if self.useSpine:
             back = self.rig.pose.bones.get("ik_back")
             revback = self.rig.pose.bones.get("REV-back")
