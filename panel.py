@@ -19,13 +19,7 @@ class MHX_PT_Main(bpy.types.Panel):
     bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
-        rig = context.object
-        if rig is None:
-            pass
-        elif rig.get("MhxRig"):
-            self.layout.operator("mhx.bake_mhx")
-        elif rig.get("MhxBakedRig"):
-            self.layout.operator("mhx.unbake_mhx")
+        return
 
 #------------------------------------------------------------------------
 #    Mhx Layers Panel
@@ -125,7 +119,8 @@ class MHX_PT_Properties(MhxPanel):
         self.layout.label(text = "Spine")
         if "MhaNeckFollowsSpine" in rig.keys():
             self.layout.prop(rig, propRef("MhaNeckFollowsSpine"), text="Neck Follows Spine")
-        self.layout.prop(rig, propRef("MhaSpineIk"), text="Spine IK")
+        if "MhaSpineIk" in rig.keys():
+            self.layout.prop(rig, propRef("MhaSpineIk"), text="Spine IK")
         row = self.layout.row()
         row.prop(rig, propRef("MhaSpineControl"), text="FK/IK Spine")
         row.prop(rig, propRef("MhaNeckControl"), text="FK/IK Neck")

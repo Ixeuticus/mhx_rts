@@ -325,72 +325,6 @@ def copyLocation(bone, target, rig, prop=None, expr="x", space='WORLD'):
     return cns
 
 #-------------------------------------------------------------
-#   Bake MHX
-#-------------------------------------------------------------
-
-def getProp(string):
-    if string[0:2] == '["' and string[-2:] == '"]':
-        return string[2:-2]
-    return None
-
-class MhxBaker:
-    def run(self, context):
-        rig = context.object
-        props = []
-        for prop in dir(rig):
-            if prop.startswith(("Mha", "Mhx")):
-                props.append(prop)
-        self.setProps(rig, props)
-        if rig.animation_data:
-            self.changeDrivers(rig, props)
-        if rig.data.animation_data:
-            self.changeDrivers(rig.data, props)
-        rig["MhxRig"] = not self.useBake
-        rig["MhxBakedRig"] = self.useBake
-
-
-class MHX_OT_BakeMhx(MhxBaker, MhxOperator):
-    bl_idname = "mhx.bake_mhx"
-    bl_label = "Bake MHX"
-    bl_description = "Bake MHX properties to make MHX animations work\nalso if the MHX RTS add-on is disabled"
-    bl_options = {'UNDO'}
-
-    useBake = True
-
-    def setProps(self, rig, props):
-        for prop in props:
-            x = getattr(rig, prop)
-            rig[prop] = x
-
-    def changeDrivers(self, rna, props):
-        for fcu in list(rna.animation_data.drivers):
-            for var in fcu.driver.variables:
-                for trg in var.targets:
-                    prop = trg.data_path
-                    if prop in props:
-                        trg.data_path = '["%s"]' % prop
-
-
-class MHX_OT_UnbakeMhx(MhxBaker, MhxOperator):
-    bl_idname = "mhx.unbake_mhx"
-    bl_label = "Unbake MHX"
-    bl_description = "Remove baked MHX properties to use the MHX RTS add-on"
-    bl_options = {'UNDO'}
-
-    useBake = False
-
-    def setProps(self, rig, props):
-        return
-
-    def changeDrivers(self, rna, props):
-        for fcu in list(rna.animation_data.drivers):
-            for var in fcu.driver.variables:
-                for trg in var.targets:
-                    prop = getProp(trg.data_path)
-                    if prop and prop in props:
-                        trg.data_path = prop
-
-#-------------------------------------------------------------
 #   Unhinge
 #-------------------------------------------------------------
 
@@ -441,8 +375,6 @@ classes = [
     MHX_OT_ConvertMhxActions,
     MHX_OT_UpdateMhxBlender4,
     MHX_OT_UpdateMhx,
-    MHX_OT_BakeMhx,
-    MHX_OT_UnbakeMhx,
     MHX_OT_Unhinge,
 ]
 
