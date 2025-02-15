@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2016-2024, Thomas Larsson
+# SPDX-FileCopyrightText: 2016-2025, Thomas Larsson
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 
@@ -12,7 +12,7 @@ from .buildnumber import BUILD
 #------------------------------------------------------------------------
 
 class MHX_PT_Main(bpy.types.Panel):
-    bl_label = "MHX (version 4.2.1.%04d)" % BUILD
+    bl_label = "MHX (version 4.4.0.%04d)" % BUILD
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_category = "MHX"
