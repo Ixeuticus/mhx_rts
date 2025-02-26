@@ -39,14 +39,11 @@ class FrameRange(HidePropsOperator, Updater, HasAction):
     def getActiveFrames(self):
         def getActiveFrames0(rig):
             active = {}
-            if rig.animation_data is None:
-                return active
-            action = rig.animation_data.action
-            if action is None:
-                return active
-            for fcu in action.fcurves:
-                for kp in fcu.keyframe_points:
-                    active[kp.co[0]] = True
+            if rig.animation_data and rig.animation_data.action:
+                fcurves = getActionSlot(rig.animation_data.action).fcurves
+                for fcu in fcurves:
+                    for kp in fcu.keyframe_points:
+                        active[kp.co[0]] = True
             return active
 
         active = getActiveFrames0(self.rig)
@@ -65,10 +62,10 @@ class FrameRange(HidePropsOperator, Updater, HasAction):
 
     def invoke(self, context, event):
         rig = context.object
-        adata = rig.animation_data
-        if adata and adata.action:
+        if rig.animation_data and rig.animation_data.action:
+            fcurves = getActionSlot(rig.animation_data.action).fcurves
             tmin = tmax = 1
-            for fcu in adata.action.fcurves:
+            for fcu in fcurves:
                 times = [kp.co[0] for kp in fcu.keyframe_points]
                 if times:
                     tmin = min(int(min(times)), tmin)
@@ -81,15 +78,12 @@ class FrameRange(HidePropsOperator, Updater, HasAction):
 
 
     def setInterpolation(self):
-        if not self.rig.animation_data:
-            return
-        act = self.rig.animation_data.action
-        if not act:
-            return
-        for fcu in act.fcurves:
-            for pt in fcu.keyframe_points:
-                pt.interpolation = 'LINEAR'
-            fcu.extrapolation = 'CONSTANT'
+        if self.rig.animation_data and self.rig.animation_data.action:
+            fcurves = getActionSlot(self.rig.animation_data.action).fcurves
+            for fcu in fcurves:
+                for pt in fcu.keyframe_points:
+                    pt.interpolation = 'LINEAR'
+                fcu.extrapolation = 'CONSTANT'
 
 #-------------------------------------------------------------
 #   Limbs bend positive
@@ -181,25 +175,26 @@ class MHX_OT_RemoveUnusedFcurves(MhxOperator, HasAction):
 
         rig = context.object
         checkVisible(rig)
-        act = rig.animation_data.action
-        for fcu in list(act.fcurves):
-            if isPropRef(fcu.data_path):
-                if trivial(fcu, 0.0):
-                    act.fcurves.remove(fcu)
-                continue
-            channel = fcu.data_path.rsplit(".")[-1]
-            if channel in ["location", "rotation_euler"]:
-                if trivial(fcu, 0.0):
-                    act.fcurves.remove(fcu)
-            elif channel == "scale":
-                if trivial(fcu, 1.0):
-                    act.fcurves.remove(fcu)
-            elif channel == "rotation_quaternion":
-                if fcu.array_index == 0:
+        if rig.animation_data and rig.animation_data.action:
+            fcurves = getActionSlot(rig.animation_data.action).fcurves
+            for fcu in list(fcurves):
+                if isPropRef(fcu.data_path):
+                    if trivial(fcu, 0.0):
+                        fcurves.remove(fcu)
+                    continue
+                channel = fcu.data_path.rsplit(".")[-1]
+                if channel in ["location", "rotation_euler"]:
+                    if trivial(fcu, 0.0):
+                        fcurves.remove(fcu)
+                elif channel == "scale":
                     if trivial(fcu, 1.0):
-                        act.fcurves.remove(fcu)
-                elif trivial(fcu, 0.0):
-                    act.fcurves.remove(fcu)
+                        fcurves.remove(fcu)
+                elif channel == "rotation_quaternion":
+                    if fcu.array_index == 0:
+                        if trivial(fcu, 1.0):
+                            fcurves.remove(fcu)
+                    elif trivial(fcu, 0.0):
+                        fcurves.remove(fcu)
 
 #-------------------------------------------------------------
 #
@@ -640,14 +635,13 @@ class MHX_OT_TransferToIk(Transferer, FootSnapper, FrameRange):
 
 
     def removeIkTwistFcurves(self):
-        if self.rig.animation_data:
-            act = self.rig.animation_data.action
-            if act:
-                for fcu in list(act.fcurves):
-                    words = fcu.data_path.split('"')
-                    if (words[0] == "pose.bones[" and
-                        ".ik.twist." in words[1]):
-                        act.fcurves.remove(fcu)
+        if self.rig.animation_data and self.rig.animation_data.action:
+            fcurves = getActionSlot(self.rig.animation_data.action).fcurves
+            for fcu in list(fcurves):
+                words = fcu.data_path.split('"')
+                if (words[0] == "pose.bones[" and
+                    ".ik.twist." in words[1]):
+                    fcurves.remove(fcu)
         for pb in self.rig.pose.bones:
             if ".ik.twist." in pb.name:
                 pb.location = pb.rotation_euler = (0,0,0)
@@ -745,53 +739,54 @@ class MHX_OT_ClearAnimation(FrameRange):
             bnames = SnapBones[key]
             return ["%s.%s" % (bname, suffix) for bname in bnames]
 
-        startProgress("Clear animation")
-        from .fkik import SnapBones
-        rig = context.object
-        checkVisible(rig)
-        act = rig.animation_data.action
-        bnames = []
-        if self.clearLeftArmFK:
-            bnames += getSnapBones("ArmFK", "L")
-        if self.clearRightArmFK:
-            bnames += getSnapBones("ArmFK", "R")
-        if self.clearLeftArmIK:
-            bnames += getSnapBones("ArmIK", "L")
-        if self.clearRightArmIK:
-            bnames += getSnapBones("ArmIK", "R")
-        if self.clearLeftLegFK:
-            bnames += getSnapBones("LegFK", "L")
-        if self.clearRightLegFK:
-            bnames += getSnapBones("LegFK", "R")
-        if self.clearLeftLegIK:
-            bnames += getSnapBones("LegIK", "L")
-        if self.clearRightLegIK:
-            bnames += getSnapBones("LegIK", "R")
-        if self.clearSpineFK:
-            bnames += ["back"]
-        if self.clearSpineIK:
-            bnames += ["ik_back"]
-
-        def getFcurves(act, bnames):
+        def getFcurves(fcurves):
+            bnames = []
+            if self.clearLeftArmFK:
+                bnames += getSnapBones("ArmFK", "L")
+            if self.clearRightArmFK:
+                bnames += getSnapBones("ArmFK", "R")
+            if self.clearLeftArmIK:
+                bnames += getSnapBones("ArmIK", "L")
+            if self.clearRightArmIK:
+                bnames += getSnapBones("ArmIK", "R")
+            if self.clearLeftLegFK:
+                bnames += getSnapBones("LegFK", "L")
+            if self.clearRightLegFK:
+                bnames += getSnapBones("LegFK", "R")
+            if self.clearLeftLegIK:
+                bnames += getSnapBones("LegIK", "L")
+            if self.clearRightLegIK:
+                bnames += getSnapBones("LegIK", "R")
+            if self.clearSpineFK:
+                bnames += ["back"]
+            if self.clearSpineIK:
+                bnames += ["ik_back"]
             fcus = []
-            for fcu in act.fcurves:
+            for fcu in fcurves:
                 words = fcu.data_path.split('"')
                 if (words[0] == "pose.bones[" and
                     words[1] in bnames):
                     fcus.append(fcu)
             return fcus
 
-        fcus = getFcurves(act, bnames)
-        if self.useEntireAnimation:
-            for fcu in fcus:
-                act.fcurves.remove(fcu)
-        else:
-            for fcu in fcus:
-                fcu.keyframe_points.sort()
-                kps = [(kp.co[0],kp) for kp in fcu.keyframe_points if kp.co[0] >= self.startFrame and kp.co[0] <= self.endFrame]
-                kps.reverse()
-                for x,kp in kps:
-                    fcu.keyframe_points.remove(kp, fast=True)
+        from .fkik import SnapBones
+        startProgress("Clear animation")
+        fcus = None
+        rig = context.object
+        checkVisible(rig)
+        if rig.animation_data and rig.animation_data.action:
+            fcurves = getActionSlot(rig.animation_data.action).fcurves
+            fcus = getFcurves(fcurves)
+            if self.useEntireAnimation:
+                for fcu in fcus:
+                    fcurves.remove(fcu)
+            else:
+                for fcu in fcus:
+                    fcu.keyframe_points.sort()
+                    kps = [(kp.co[0],kp) for kp in fcu.keyframe_points if kp.co[0] >= self.startFrame and kp.co[0] <= self.endFrame]
+                    kps.reverse()
+                    for x,kp in kps:
+                        fcu.keyframe_points.remove(kp, fast=True)
         if fcus:
             msg = "Animation cleared"
         else:
@@ -937,17 +932,15 @@ class MHX_OT_ShiftBoneFCurves(FrameRange, Basic):
 
     def run(self, context):
         checkVisible(self.rig)
+        if not (self.rig.animation_data and self.rig.animation_data.action):
+            return
+        fcurves = getActionSlot(self.rig.animation_data.action).fcurves
         startProgress("Shift animation")
         self.auto = True
         scn = context.scene
         frames = [scn.frame_current] + self.getActiveFrames()
         nFrames = len(frames)
-        if not self.rig.animation_data:
-            return
-        act = self.rig.animation_data.action
-        if not act:
-            return
-        basemats, useLoc = self.getBaseMatrices(act, frames, False)
+        basemats, useLoc = self.getBaseMatrices(fcurves, frames, False)
 
         deltaMat = {}
         orders = {}
@@ -970,28 +963,28 @@ class MHX_OT_ShiftBoneFCurves(FrameRange, Basic):
         displayMessage("Animation shifted")
 
 
-    def getBaseMatrices(self, act, frames, useAll):
-        fcurves = { "location" : {}, "rotation_euler" : {}, "rotation_quaternion" : {} }
+    def getBaseMatrices(self, fcurves, frames, useAll):
+        fstruct = { "location" : {}, "rotation_euler" : {}, "rotation_quaternion" : {} }
         nidxs = { "location" : 3, "rotation_euler" : 3, "rotation_quaternion" : 4 }
-        for fcu in act.fcurves:
+        for fcu in fcurves:
             words = fcu.data_path.split('"')
             if words[0] != "pose.bones[":
                 continue
             bname = words[1]
             channel = words[2].rsplit(".")[-1]
-            if (channel in fcurves.keys() and
+            if (channel in fstruct.keys() and
                 bname in self.rig.pose.bones.keys()):
                 pb = self.rig.pose.bones[bname]
             else:
                 continue
             if pb.bone.select:
-                if bname not in fcurves[channel].keys():
-                    fcurves[channel][bname] = nidxs[channel]*[None]
-                fcurves[channel][bname][fcu.array_index] = fcu
+                if bname not in fstruct[channel].keys():
+                    fstruct[channel][bname] = nidxs[channel]*[None]
+                fstruct[channel][bname][fcu.array_index] = fcu
 
         basemats = {}
         useLoc = {}
-        for bname,fcus in fcurves["rotation_euler"].items():
+        for bname,fcus in fstruct["rotation_euler"].items():
             useLoc[bname] = False
             order = self.rig.pose.bones[bname].rotation_mode
             fcu0,fcu1,fcu2 = fcus
@@ -1000,7 +993,7 @@ class MHX_OT_ShiftBoneFCurves(FrameRange, Basic):
                 euler = Euler((self.getValue(fcu0, frame, 0),self.getValue(fcu1, frame, 0), self.getValue(fcu2, frame, 0)), order)
                 rmats.append(euler.to_matrix().to_4x4())
 
-        for bname,fcus in fcurves["rotation_quaternion"].items():
+        for bname,fcus in fstruct["rotation_quaternion"].items():
             useLoc[bname] = False
             fcu0,fcu1,fcu2,fcu3 = fcus
             rmats = basemats[bname] = []
@@ -1008,7 +1001,7 @@ class MHX_OT_ShiftBoneFCurves(FrameRange, Basic):
                 quat = Quaternion((self.getValue(fcu0, frame, 1), self.getValue(fcu1, frame, 0), self.getValue(fcu2, frame, 0), self.getValue(fcu3, frame, 0)))
                 rmats.append(quat.to_matrix().to_4x4())
 
-        for bname,fcus in fcurves["location"].items():
+        for bname,fcus in fstruct["location"].items():
             useLoc[bname] = True
             fcu0,fcu1,fcu2 = fcus
             tmats = []

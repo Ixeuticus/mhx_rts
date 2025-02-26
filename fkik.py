@@ -78,13 +78,12 @@ class Basic:
 
 
     def findBoneFCurves(self, pb, channel):
-        if self.rig.animation_data is None:
+        if self.rig.animation_data and self.rig.animation_data.action:
+            fcurves = getActionSlot(self.rig.animation_data.action).fcurves
+            path = 'pose.bones["%s"].%s' % (pb.name, self.getTrueChannel(pb, channel))
+            return [fcu for fcu in fcurves if fcu.data_path == path]
+        else:
             return []
-        act = self.rig.animation_data.action
-        if act is None:
-            return []
-        path = 'pose.bones["%s"].%s' % (pb.name, self.getTrueChannel(pb, channel))
-        return [fcu for fcu in act.fcurves if fcu.data_path == path]
 
 
     def getTrueChannel(self, pb, channel):
