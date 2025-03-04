@@ -12,10 +12,10 @@ D = pi/180
 #-------------------------------------------------------------
 
 if bpy.app.version < (4,4,0):
-    def getActionSlot(act, id_type='OBJECT'):
+    def getActionBag(act, id_type='OBJECT'):
         return act
 else:
-    def getActionSlot(act, id_type='OBJECT'):
+    def getActionBag(act, id_type='OBJECT'):
         strip = act.layers[0].strips[0]
         for slot in act.slots:
             if slot.target_id_type == id_type:

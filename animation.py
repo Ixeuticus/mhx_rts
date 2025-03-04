@@ -40,7 +40,7 @@ class FrameRange(HidePropsOperator, Updater, HasAction):
         def getActiveFrames0(rig):
             active = {}
             if rig.animation_data and rig.animation_data.action:
-                fcurves = getActionSlot(rig.animation_data.action).fcurves
+                fcurves = getActionBag(rig.animation_data.action).fcurves
                 for fcu in fcurves:
                     for kp in fcu.keyframe_points:
                         active[kp.co[0]] = True
@@ -63,7 +63,7 @@ class FrameRange(HidePropsOperator, Updater, HasAction):
     def invoke(self, context, event):
         rig = context.object
         if rig.animation_data and rig.animation_data.action:
-            fcurves = getActionSlot(rig.animation_data.action).fcurves
+            fcurves = getActionBag(rig.animation_data.action).fcurves
             tmin = tmax = 1
             for fcu in fcurves:
                 times = [kp.co[0] for kp in fcu.keyframe_points]
@@ -79,7 +79,7 @@ class FrameRange(HidePropsOperator, Updater, HasAction):
 
     def setInterpolation(self):
         if self.rig.animation_data and self.rig.animation_data.action:
-            fcurves = getActionSlot(self.rig.animation_data.action).fcurves
+            fcurves = getActionBag(self.rig.animation_data.action).fcurves
             for fcu in fcurves:
                 for pt in fcu.keyframe_points:
                     pt.interpolation = 'LINEAR'
@@ -176,7 +176,7 @@ class MHX_OT_RemoveUnusedFcurves(MhxOperator, HasAction):
         rig = context.object
         checkVisible(rig)
         if rig.animation_data and rig.animation_data.action:
-            fcurves = getActionSlot(rig.animation_data.action).fcurves
+            fcurves = getActionBag(rig.animation_data.action).fcurves
             for fcu in list(fcurves):
                 if isPropRef(fcu.data_path):
                     if trivial(fcu, 0.0):
@@ -636,7 +636,7 @@ class MHX_OT_TransferToIk(Transferer, FootSnapper, FrameRange):
 
     def removeIkTwistFcurves(self):
         if self.rig.animation_data and self.rig.animation_data.action:
-            fcurves = getActionSlot(self.rig.animation_data.action).fcurves
+            fcurves = getActionBag(self.rig.animation_data.action).fcurves
             for fcu in list(fcurves):
                 words = fcu.data_path.split('"')
                 if (words[0] == "pose.bones[" and
@@ -775,7 +775,7 @@ class MHX_OT_ClearAnimation(FrameRange):
         rig = context.object
         checkVisible(rig)
         if rig.animation_data and rig.animation_data.action:
-            fcurves = getActionSlot(rig.animation_data.action).fcurves
+            fcurves = getActionBag(rig.animation_data.action).fcurves
             fcus = getFcurves(fcurves)
             if self.useEntireAnimation:
                 for fcu in fcus:
@@ -934,7 +934,7 @@ class MHX_OT_ShiftBoneFCurves(FrameRange, Basic):
         checkVisible(self.rig)
         if not (self.rig.animation_data and self.rig.animation_data.action):
             return
-        fcurves = getActionSlot(self.rig.animation_data.action).fcurves
+        fcurves = getActionBag(self.rig.animation_data.action).fcurves
         startProgress("Shift animation")
         self.auto = True
         scn = context.scene
