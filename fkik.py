@@ -908,6 +908,26 @@ class MHX_OT_MhxClearFingers(FootClearer, HideOperator):
                   "f_index", "f_middle", "f_ring", "f_pinky")
     skipBones = ("hand.ik")
 
+
+class MHX_OT_MhxClearTongue(FootClearer, HideOperator):
+    bl_idname = "mhx.clear_tongue"
+    bl_label = "Clear Tongue"
+    bl_description = "Clear pose for tongue"
+    bl_options = {'UNDO'}
+
+    clearBones = ("tongue", "mtongue")
+    skipBones = ("none")
+
+
+class MHX_OT_MhxClearFace(FootClearer, HideOperator):
+    bl_idname = "mhx.clear_face"
+    bl_label = "Clear Face"
+    bl_description = "Clear pose for face bones"
+    bl_options = {'UNDO'}
+
+    clearBones = ("brow", "nose", "lip", "mouth", "eye")
+    skipBones = ("none")
+
 #----------------------------------------------------------
 #   Toggle FK - IK
 #----------------------------------------------------------
@@ -1169,6 +1189,8 @@ classes = [
     MHX_OT_MhxSnapShaft,
     MHX_OT_MhxClearFeet,
     MHX_OT_MhxClearFingers,
+    MHX_OT_MhxClearTongue,
+    MHX_OT_MhxClearFace,
     MHX_OT_MhxToggleFkIkLeftArm,
     MHX_OT_MhxToggleFkIkRightArm,
     MHX_OT_MhxToggleFkIkLeftLeg,
