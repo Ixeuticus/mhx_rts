@@ -26,7 +26,7 @@ bl_info = {
     "tracker_url": "https://bitbucket.org/Diffeomorphic/import_daz/issues?status=new&status=open",
     "category": "Animation"}
 
-Modules = ["utils", "layers", "fkik", "props", "animation", "panel"]
+Modules = ["utils", "layers", "fkik", "props", "animation", "mhx_update", "panel"]
 
 if "bpy" in locals():
     print("Reloading MHX RTS v %d.%d.%d" % bl_info["version"])
@@ -52,12 +52,14 @@ def register():
     fkik.register()
     props.register()
     animation.register()
+    mhx_update.register()
     panel.register()
     for cls in classes:
         bpy.utils.register_class(cls)
 
 def unregister():
     panel.unregister()
+    mhx_update.unregister()
     animation.unregister()
     props.unregister()
     fkik.unregister()

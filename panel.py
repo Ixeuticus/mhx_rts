@@ -37,7 +37,7 @@ class MhxPanel(bpy.types.Panel):
         if bpy.app.version >= (4,0,0) and "Layer 1" in rig.data.collections.keys():
             self.layout.operator("mhx.update_mhx_blender4")
             return True
-        if not rig.data.get("MhaFeatures") & F_IDPROPS:
+        if not rig.data.get("MhaFeatures", 0) & F_IDPROPS:
             self.layout.operator("mhx.update_mhx")
             return True
         return False
@@ -378,6 +378,8 @@ class MHX_PT_Animation(MhxPanel):
         self.layout.operator("mhx.transfer_to_fk")
         self.layout.operator("mhx.transfer_to_links")
         self.layout.operator("mhx.floor_ik_feet")
+        self.layout.separator()
+        self.layout.operator("mhx.update_mhx_animation")
 
 #-------------------------------------------------------------
 #   Initialize
