@@ -293,8 +293,8 @@ class MHX_PT_FKIKFingers(MhxPanel):
         box = self.layout.box()
         box.label(text = "Spine")
         row = box.row()
-        row.prop(rig, propRef("MhaSpineControl"), text="FK/IK Spine")
-        row.prop(rig, propRef("MhaNeckControl"), text="FK/IK Neck")
+        row.prop(rig, propRef("MhaSpineControl"), text="Spine FK/IK")
+        row.prop(rig, propRef("MhaNeckControl"), text="Neck FK/IK")
         if "MhaSpineIk" in rig.keys():
             box.prop(rig, propRef("MhaSpineIk"), text="Spine IK")
             row = box.row()
@@ -320,8 +320,8 @@ class MHX_PT_FKIKFingers(MhxPanel):
         row.label(text = "Left")
         row.label(text = "Right")
         row = box.row()
-        row.prop(rig, propRef("MhaFingerControl_L"), text="FK/IK Fingers Left")
-        row.prop(rig, propRef("MhaFingerControl_R"), text="FK/IK Fingers Right")
+        row.prop(rig, propRef("MhaFingerControl_L"), text="Fingers FK/IK Left")
+        row.prop(rig, propRef("MhaFingerControl_R"), text="Fingers FK/IK Right")
         if "MhaFingerIk_L" in rig.keys():
             row = box.row()
             row.prop(rig, propRef("MhaFingerIk_L"), text="IK Influence")
@@ -333,18 +333,24 @@ class MHX_PT_FKIKFingers(MhxPanel):
 
         if "MhaTongueControl" in rig.keys():
             box = self.layout.box()
-            box.label(text = "Tongue")
-            box.prop(rig, propRef("MhaTongueControl"))
+            box.prop(rig, propRef("MhaTongueControl"), text="Tongue FK/IK")
             if "MhaTongueIk" in rig.keys():
-                box.prop(rig, propRef("MhaTongueIk"))
+                box.prop(rig, propRef("MhaTongueIk"), text="Tongue IK")
+                parprops = [prop for prop in rig.keys() if prop.startswith("MhaTongue_")]
+                for parprop in parprops:
+                    text = "%s Parent" % parprop[10:].capitalize()
+                    box.prop(rig, propRef(parprop), text=text)
             box.operator("mhx.snap_tongue")
 
         if "MhaShaftControl" in rig.keys():
             box = self.layout.box()
-            box.label(text = "Shaft")
-            box.prop(rig, propRef("MhaShaftControl"), text="FK/IK Shaft")
+            box.prop(rig, propRef("MhaShaftControl"), text="Shaft FK/IK")
             if "MhaShaftIk" in rig.keys():
                 box.prop(rig, propRef("MhaShaftIk"), text="Shaft IK")
+                parprops = [prop for prop in rig.keys() if prop.startswith("MhaShaft_")]
+                for parprop in parprops:
+                    text = "%s Parent" % parprop[9:].capitalize()
+                    box.prop(rig, propRef(parprop), text=text)
             box.operator("mhx.snap_shaft")
 
         self.layout.operator("mhx.enforce_limits")
