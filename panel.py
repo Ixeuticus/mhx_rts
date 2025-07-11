@@ -12,7 +12,7 @@ from .buildnumber import BUILD
 #------------------------------------------------------------------------
 
 class MHX_PT_Main(bpy.types.Panel):
-    bl_label = "MHX (version 4.4.0.%04d)" % BUILD
+    bl_label = "MHX (version 4.5.0.%04d)" % BUILD
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_category = "MHX"
