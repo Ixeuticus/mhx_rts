@@ -266,7 +266,7 @@ class HideOperator(MhxOperator):
             for coll in self.rig.data.collections:
                 self.state[coll.name] = coll.is_visible
                 coll.is_visible = True
-        self.hideStatus = []
+        self.hideStatus = {}
         self.layerColls = []
         self.hideLayerColls(context.view_layer.layer_collection)
 
@@ -279,7 +279,7 @@ class HideOperator(MhxOperator):
                 coll.is_visible = self.state[coll.name]
         for layer in self.layerColls:
             layer.exclude = False
-        for ob,select,hide,viewport,render in self.hideStatus:
+        for ob,select,hide,viewport,render in self.hideStatus.values():
             ob.hide_set(hide)
             ob.hide_viewport = viewport
             ob.hide_render = render
@@ -297,8 +297,8 @@ class HideOperator(MhxOperator):
         for ob in layer.collection.objects:
             if ob == self.rig:
                 ok = False
-            else:
-                self.hideStatus.append((ob, ob.select_get(), ob.hide_get(), ob.hide_viewport, ob.hide_render))
+            elif ob.name not in self.hideStatus.keys():
+                self.hideStatus[ob.name] = (ob, ob.select_get(), ob.hide_get(), ob.hide_viewport, ob.hide_render)
                 ob.hide_set(True)
                 ob.hide_viewport = True
                 ob.hide_render = True

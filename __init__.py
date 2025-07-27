@@ -17,8 +17,8 @@
 bl_info = {
     "name": "MHX Runtime System",
     "author": "Thomas Larsson",
-    "version": (4,4,0),
-    "blender": (4,4,0),
+    "version": (4,5,0),
+    "blender": (4,5,0),
     "location": "UI > MHX",
     "description": "Runtime system for MHX rig (DAZ Importer)",
     "warning": "",
