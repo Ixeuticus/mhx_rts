@@ -16,12 +16,12 @@ if bpy.app.version < (4,4,0):
         return act
 else:
     def getActionBag(act, id_type='OBJECT'):
-        strip = act.layers[0].strips[0]
-        for slot in act.slots:
-            if slot.target_id_type == id_type:
-                return strip.channelbag(slot)
-        slot = act.slots[0]
-        return strip.channelbag(slot)
+        if act.layers:
+            strip = act.layers[0].strips[0]
+            for slot in act.slots:
+                if slot.target_id_type == id_type:
+                    return strip.channelbag(slot, ensure=True)
+        return act
 
 #-------------------------------------------------------------
 #   Blender 4
