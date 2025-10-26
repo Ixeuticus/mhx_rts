@@ -977,7 +977,7 @@ class MHX_OT_ShiftBoneFCurves(FrameRange, Basic):
                 pb = self.rig.pose.bones[bname]
             else:
                 continue
-            if pb.bone.select:
+            if P2B(pb).select:
                 if bname not in fstruct[channel].keys():
                     fstruct[channel][bname] = nidxs[channel]*[None]
                 fstruct[channel][bname][fcu.array_index] = fcu
