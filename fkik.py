@@ -432,32 +432,31 @@ class Snapper(Updater, Basic):
         pboness = []
         matss = []
         fkbones = []
-        for fkname,bnames in zip(fknames, bnamess):
+        for fkname,ikname,bnames in zip(fknames, iknames, bnamess):
             pbones = [self.rig.pose.bones.get(bname) for bname in bnames]
             pbones = [pb for pb in pbones if pb]
             defbones = [self.rig.pose.bones.get("DEF-%s" % pb.name) for pb in pbones]
-            if not defbones:
-                continue
-            elif defbones[0]:
+            if defbones and defbones[0]:
                 mats = [pb.matrix.copy() for pb in defbones]
             else:
                 mats = [pb.matrix.copy() for pb in pbones]
             fkbone = self.rig.pose.bones.get(fkname)
-            if fkbone is None:
-                continue
-            pboness.append(pbones)
-            matss.append(mats)
-            fkbones.append(fkbone)
+            ikbone = self.rig.pose.bones.get(ikname)
+            if fkbone or ikbone:
+                pboness.append(pbones)
+                matss.append(mats)
+                fkbones.append(fkbone)
         return fkbones, pboness, matss
 
 
     def clearFkIkBones(self, info, fkbones):
         fknames, iknames, bnamess = info
         for fkname,ikname,fkbone in zip(fknames,iknames,fkbones):
-            fkbone.matrix_basis = Matrix()
-            self.insertLocation(fkbone)
-            self.insertRotation(fkbone)
-            self.insertScale(fkbone)
+            if fkbone:
+                fkbone.matrix_basis = Matrix()
+                self.insertLocation(fkbone)
+                self.insertRotation(fkbone)
+                self.insertScale(fkbone)
             ikbone = self.rig.pose.bones.get(ikname)
             if ikbone:
                 ikbone.matrix_basis = Matrix()
@@ -513,7 +512,7 @@ class Snapper(Updater, Basic):
 
         tonguebones = [bone.name for bone in rig.data.bones if isTongue(bone.name)]
         tonguebones.sort()
-        return ["tongue"], ["ik_tongue"], [tonguebones]
+        return ["tongue"], ["ik_%s" % tonguebones[-1]], [tonguebones]
 
 
     def getShaftInfo(self, rig):
@@ -522,7 +521,7 @@ class Snapper(Updater, Basic):
 
         shaftbones = [bone.name for bone in rig.data.bones if isShaft(bone.name)]
         shaftbones.sort()
-        return ["shaft"], ["ik_shaft"], [shaftbones]
+        return ["shaft"], ["ik_%s" % shaftbones[-1]], [shaftbones]
 
 
 
