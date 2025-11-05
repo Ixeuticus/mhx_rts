@@ -66,7 +66,7 @@ class MHX_OT_ConvertMhxActions(MhxOperator):
             }
         for item in self.getSelectedItems():
             act = bpy.data.actions[item.name]
-            fcurves = getActionBag(act).fcurves
+            fcurves = getActionFcurves(act)
             for fcu in fcurves:
                 for old,new in replace.items():
                     if old in fcu.data_path:

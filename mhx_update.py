@@ -18,11 +18,10 @@ class MHX_OT_UpdateMhx(MhxOperator):
 
     def run(self, context):
         rig = context.object
-        if rig.animation_data and rig.animation_data.action:
-            fcurves = getActionBag(rig.animation_data.action).fcurves
-            for fcu in list(fcurves):
-                if fcu.data_path.startswith("Mha"):
-                    fcu.data_path = propRef(fcu.data_path)
+        fcurves = getRnaFcurves(rig)
+        for fcu in list(fcurves):
+            if fcu.data_path.startswith("Mha"):
+                fcu.data_path = propRef(fcu.data_path)
 
 #-------------------------------------------------------------
 #   Register

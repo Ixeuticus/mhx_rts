@@ -39,11 +39,10 @@ class FrameRange(HidePropsOperator, Updater, HasAction):
     def getActiveFrames(self):
         def getActiveFrames0(rig):
             active = {}
-            if rig.animation_data and rig.animation_data.action:
-                fcurves = getActionBag(rig.animation_data.action).fcurves
-                for fcu in fcurves:
-                    for kp in fcu.keyframe_points:
-                        active[kp.co[0]] = True
+            fcurves = getRnaFcurves(rig)
+            for fcu in fcurves:
+                for kp in fcu.keyframe_points:
+                    active[kp.co[0]] = True
             return active
 
         active = getActiveFrames0(self.rig)
@@ -62,8 +61,8 @@ class FrameRange(HidePropsOperator, Updater, HasAction):
 
     def invoke(self, context, event):
         rig = context.object
-        if rig.animation_data and rig.animation_data.action:
-            fcurves = getActionBag(rig.animation_data.action).fcurves
+        fcurves = getRnaFcurves(rig)
+        if fcurves:
             tmin = tmax = 1
             for fcu in fcurves:
                 times = [kp.co[0] for kp in fcu.keyframe_points]
@@ -78,12 +77,11 @@ class FrameRange(HidePropsOperator, Updater, HasAction):
 
 
     def setInterpolation(self):
-        if self.rig.animation_data and self.rig.animation_data.action:
-            fcurves = getActionBag(self.rig.animation_data.action).fcurves
-            for fcu in fcurves:
-                for pt in fcu.keyframe_points:
-                    pt.interpolation = 'LINEAR'
-                fcu.extrapolation = 'CONSTANT'
+        fcurves = getRnaFcurves(rig)
+        for fcu in fcurves:
+            for pt in fcu.keyframe_points:
+                pt.interpolation = 'LINEAR'
+            fcu.extrapolation = 'CONSTANT'
 
 #-------------------------------------------------------------
 #   Limbs bend positive
@@ -175,26 +173,25 @@ class MHX_OT_RemoveUnusedFcurves(MhxOperator, HasAction):
 
         rig = context.object
         checkVisible(rig)
-        if rig.animation_data and rig.animation_data.action:
-            fcurves = getActionBag(rig.animation_data.action).fcurves
-            for fcu in list(fcurves):
-                if isPropRef(fcu.data_path):
-                    if trivial(fcu, 0.0):
-                        fcurves.remove(fcu)
-                    continue
-                channel = fcu.data_path.rsplit(".")[-1]
-                if channel in ["location", "rotation_euler"]:
-                    if trivial(fcu, 0.0):
-                        fcurves.remove(fcu)
-                elif channel == "scale":
+        fcurves = getRnaFcurves(rig)
+        for fcu in list(fcurves):
+            if isPropRef(fcu.data_path):
+                if trivial(fcu, 0.0):
+                    fcurves.remove(fcu)
+                continue
+            channel = fcu.data_path.rsplit(".")[-1]
+            if channel in ["location", "rotation_euler"]:
+                if trivial(fcu, 0.0):
+                    fcurves.remove(fcu)
+            elif channel == "scale":
+                if trivial(fcu, 1.0):
+                    fcurves.remove(fcu)
+            elif channel == "rotation_quaternion":
+                if fcu.array_index == 0:
                     if trivial(fcu, 1.0):
                         fcurves.remove(fcu)
-                elif channel == "rotation_quaternion":
-                    if fcu.array_index == 0:
-                        if trivial(fcu, 1.0):
-                            fcurves.remove(fcu)
-                    elif trivial(fcu, 0.0):
-                        fcurves.remove(fcu)
+                elif trivial(fcu, 0.0):
+                    fcurves.remove(fcu)
 
 #-------------------------------------------------------------
 #
@@ -635,13 +632,12 @@ class MHX_OT_TransferToIk(Transferer, FootSnapper, FrameRange):
 
 
     def removeIkTwistFcurves(self):
-        if self.rig.animation_data and self.rig.animation_data.action:
-            fcurves = getActionBag(self.rig.animation_data.action).fcurves
-            for fcu in list(fcurves):
-                words = fcu.data_path.split('"')
-                if (words[0] == "pose.bones[" and
-                    ".ik.twist." in words[1]):
-                    fcurves.remove(fcu)
+        fcurves = getRnaFcurves(self.rig)
+        for fcu in list(fcurves):
+            words = fcu.data_path.split('"')
+            if (words[0] == "pose.bones[" and
+                ".ik.twist." in words[1]):
+                fcurves.remove(fcu)
         for pb in self.rig.pose.bones:
             if ".ik.twist." in pb.name:
                 pb.location = pb.rotation_euler = (0,0,0)
@@ -774,19 +770,18 @@ class MHX_OT_ClearAnimation(FrameRange):
         fcus = None
         rig = context.object
         checkVisible(rig)
-        if rig.animation_data and rig.animation_data.action:
-            fcurves = getActionBag(rig.animation_data.action).fcurves
-            fcus = getFcurves(fcurves)
-            if self.useEntireAnimation:
-                for fcu in fcus:
-                    fcurves.remove(fcu)
-            else:
-                for fcu in fcus:
-                    fcu.keyframe_points.sort()
-                    kps = [(kp.co[0],kp) for kp in fcu.keyframe_points if kp.co[0] >= self.startFrame and kp.co[0] <= self.endFrame]
-                    kps.reverse()
-                    for x,kp in kps:
-                        fcu.keyframe_points.remove(kp, fast=True)
+        fcurves = getRnaFcurves(rig)
+        fcus = getFcurves(fcurves)
+        if self.useEntireAnimation:
+            for fcu in fcus:
+                fcurves.remove(fcu)
+        else:
+            for fcu in fcus:
+                fcu.keyframe_points.sort()
+                kps = [(kp.co[0],kp) for kp in fcu.keyframe_points if kp.co[0] >= self.startFrame and kp.co[0] <= self.endFrame]
+                kps.reverse()
+                for x,kp in kps:
+                    fcu.keyframe_points.remove(kp, fast=True)
         if fcus:
             msg = "Animation cleared"
         else:
@@ -932,9 +927,7 @@ class MHX_OT_ShiftBoneFCurves(FrameRange, Basic):
 
     def run(self, context):
         checkVisible(self.rig)
-        if not (self.rig.animation_data and self.rig.animation_data.action):
-            return
-        fcurves = getActionBag(self.rig.animation_data.action).fcurves
+        fcurves = getRnaFcurves(self.rig)
         startProgress("Shift animation")
         self.auto = True
         scn = context.scene

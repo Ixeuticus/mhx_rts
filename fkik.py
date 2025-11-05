@@ -78,12 +78,9 @@ class Basic:
 
 
     def findBoneFCurves(self, pb, channel):
-        if self.rig.animation_data and self.rig.animation_data.action:
-            fcurves = getActionBag(self.rig.animation_data.action).fcurves
-            path = 'pose.bones["%s"].%s' % (pb.name, self.getTrueChannel(pb, channel))
-            return [fcu for fcu in fcurves if fcu.data_path == path]
-        else:
-            return []
+        fcurves = getRnaFcurves(self.rig)
+        path = 'pose.bones["%s"].%s' % (pb.name, self.getTrueChannel(pb, channel))
+        return [fcu for fcu in fcurves if fcu.data_path == path]
 
 
     def getTrueChannel(self, pb, channel):
