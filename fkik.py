@@ -243,12 +243,8 @@ class Snapper(Updater, Basic):
         tHead = toeFk.matrix.to_translation()
         tTail = tHead + toeFk.y_axis * toeFk.bone.length
         if self.useRotation:
-            y = tTail - tHead
-            y.normalize()
-            z = toeFk.z_axis
-            x = y.cross(z)
-            gmat = Matrix((x,y,z))
-            gmat.transpose()
+            y = toeFk.y_axis
+            gmat = toeFk.matrix.to_3x3()
         else:
             gmat = legIk.bone.matrix_local.to_3x3()
             y = gmat.col[1]
@@ -415,7 +411,7 @@ class Snapper(Updater, Basic):
             else:
                 self.matchPoseReverse(toeRev, toeFk)
                 if tarsalRev:
-                    self.matchPoseReverse(tarsalRev, toeFk)
+                    self.matchPoseReverse(tarsalRev, tarsalFk)
                 self.matchPoseReverse(footRev, footFk)
             self.setWorldMatrix(ankleIk, footFk.matrix, True, False)
         if kneePt:
