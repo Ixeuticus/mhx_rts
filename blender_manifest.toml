@@ -1,7 +1,7 @@
 schema_version = "1.0.0"
 
 id = "mhx_rts"
-version = "5.0.0"
+version = "5.1.0"
 name = "MHX Runtime System"
 tagline = "Runtime system for MHX rig (DAZ Importer)"
 maintainer = "Thomas Larsson <thomas.larsson.01@gmail.com>"
