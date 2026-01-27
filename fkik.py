@@ -403,7 +403,7 @@ class Snapper(Updater, Basic):
             toe2 = foot2.children[0]
             self.matchRotation(toe2, toeFk)
         else:
-            if toeInvFk:
+            if False and toeInvFk:
                 self.matchRotation(toeRev, toeInvFk)
                 if tarsalRev:
                     self.matchRotation(tarsalRev, tarsalInvFk)

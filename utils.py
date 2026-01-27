@@ -109,15 +109,13 @@ def baseRef(prop):
     else:
         return prop
 
-def isKeyed(rig, pb, path):
-    if rig.animation_data:
-        act = rig.animation_data.action
-        if act:
-            if pb:
-                path = ('pose.bones["%s"].%s' % (pb.name, path))
-            for fcu in act.fcurves:
-                if fcu.data_path == path:
-                    return True
+def isKeyed(rig, pb, channel):
+    fcurves = getRnaFcurves(rig)
+    if fcurves and pb:
+        path = ('pose.bones["%s"].%s' % (pb.name, channel))
+        for fcu in fcurves:
+            if fcu.data_path == path:
+                return True
     return False
 
 
