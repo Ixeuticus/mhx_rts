@@ -30,9 +30,14 @@ Modules = ["utils", "layers", "fkik", "props", "animation", "mhx_update", "panel
 
 if "bpy" in locals():
     print("Reloading MHX RTS v %d.%d.%d" % bl_info["version"])
-    import imp
-    for modname in Modules:
-        exec("imp.reload(%s)" % modname)
+    if bpy.app.version < (5,0,0):
+        import imp
+        for modname in Modules:
+            exec("imp.reload(%s)" % modname)
+    else:
+        import importlib
+        for modname in Modules:
+            exec("importlib.reload(%s)" % modname)
 else:
     print("Loading MHX RTS v %d.%d.%d" % bl_info["version"])
     import bpy
