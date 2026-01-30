@@ -1,5 +1,5 @@
 #  MHX Runtime System
-#  Copyright (c) 2016-2025, Thomas Larsson
+#  Copyright (c) 2016-2026, Thomas Larsson
 #
 #  This program is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -32,7 +32,7 @@ if "bpy" in locals():
     print("Reloading MHX RTS v %d.%d.%d" % bl_info["version"])
     if bpy.app.version < (5,0,0):
         import imp
-    else
+    else:
         import importlib as imp
     for modname in Modules:
         exec("imp.reload(%s)" % modname)
