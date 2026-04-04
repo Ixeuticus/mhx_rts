@@ -17,12 +17,12 @@
 bl_info = {
     "name": "MHX Runtime System",
     "author": "Thomas Larsson",
-    "version": (5,1,0),
-    "blender": (5,1,0),
+    "version": (5,2,0),
+    "blender": (5,2,0),
     "location": "UI > MHX",
     "description": "Runtime system for MHX rig (DAZ Importer)",
     "warning": "",
-    "doc_url": "https://bitbucket.org/Diffeomorphic/mhx_rts/wiki/Home",
+    "doc_url": "https://github.com/Diffeomorphic/mhx_rts/wiki",
     "tracker_url": "https://bitbucket.org/Diffeomorphic/import_daz/issues?status=new&status=open",
     "category": "Animation"}
 

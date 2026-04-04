@@ -1,19 +1,19 @@
 schema_version = "1.0.0"
 
 id = "mhx_rts"
-version = "5.1.0"
+version = "5.2.0"
 name = "MHX Runtime System"
 tagline = "Runtime system for MHX rig (DAZ Importer)"
 maintainer = "Thomas Larsson <thomas.larsson.01@gmail.com>"
 type = "add-on"
-website = "https://bitbucket.org/Diffeomorphic/mhx_rts/wiki/Home/"
+website = "https://github.com/Diffeomorphic/mhx_rts/wiki"
 tags = ["Animation"]
 blender_version_min = "4.2.0"
 license = [
   "SPDX:GPL-2.0-or-later",
 ]
 copyright = [
-  "2016-2025 Thomas Larsson",
+  "2016-2026 Thomas Larsson",
 ]
 
 [build]
