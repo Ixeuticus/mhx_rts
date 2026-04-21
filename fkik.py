@@ -13,8 +13,12 @@ from .layers import *
 #------------------------------------------------------------------
 
 class Updater:
-    def updatePose(self):
+    def updatePose(self, rig=None):
         bpy.context.view_layer.update()
+        if rig:
+            rig.update_tag()
+        elif self.rig:
+            self.rig.update_tag()
 
     def updateScene(self):
         deps = bpy.context.evaluated_depsgraph_get()
@@ -138,7 +142,7 @@ class Snapper(Updater, Basic):
         self.auto = scn.tool_settings.use_keyframe_insert_auto
         if change:
             self.rig[self.prop] = value
-            self.updatePose()
+            self.updatePose(rig)
 
 
     def setupAll(self, context, value):
@@ -969,7 +973,7 @@ class ToggleFkIk(Updater):
                     setRigLayer(rig, iklayer2, ik)
                 else:
                     setRigLayer(rig, iklayer, ik)
-        self.updatePose()
+        self.updatePose(rig)
 
 
 class MHX_OT_MhxToggleFkIkLeftArm(MhxOperator, ToggleFkIk):
@@ -1035,7 +1039,7 @@ class SetFkIk(Updater):
                 setRigLayer(rig, iklayer2, self.ik)
             else:
                 setRigLayer(rig, iklayer, self.ik)
-        self.updatePose()
+        self.updatePose(rig)
 
 
 class MHX_OT_SetFkAll(SetFkIk, MhxOperator):
