@@ -438,10 +438,16 @@ class MHX_OT_TransferToLinks(Snapper, FrameRange):
         description="Include tongue in snapping",
         default=False)
 
+    useShaft : BoolProperty(
+        name="Include Shaft",
+        description = "Include shaft in snapping",
+        default = False)
+
     def draw(self, context):
         self.layout.prop(self, "useSpine")
         self.layout.prop(self, "useFingers")
         self.layout.prop(self, "useTongue")
+        self.layout.prop(self, "useShaft")
         FrameRange.draw(self, context)
 
     def run(self, context):
@@ -474,6 +480,10 @@ class MHX_OT_TransferToLinks(Snapper, FrameRange):
             if self.rig.get("MhaTongueControl"):
                 infos.append(self.getTongueInfo(self.rig))
                 props.append("MhaTongueControl")
+        if self.useShaft:
+            if self.rig.get("MhaShaftControl"):
+                infos.append(self.getShaftInfo(self.rig))
+                props.append("MhaShaftControl")
 
         scn = context.scene
         self.auto = True
